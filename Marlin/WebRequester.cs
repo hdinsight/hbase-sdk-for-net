@@ -20,17 +20,19 @@
             InitCache();
         }
 
-        public Stream IssueWebRequest(string endpoint, Stream input = null)
+        public HttpWebResponse IssueWebRequest(string endpoint, string method = "GET", Stream input = null)
         {
-            return IssueWebRequestAsync(endpoint, input).Result;
+            return IssueWebRequestAsync(endpoint, method, input).Result;
         }
 
-        public async Task<Stream> IssueWebRequestAsync(string endpoint, Stream input = null)
+        public async Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method = "GET", Stream input = null)
         {
             var httpWebRequest = WebRequest.CreateHttp(new Uri(_credentials.ClusterUri, RestEndpointBase + endpoint));
             httpWebRequest.Credentials = _credentialCache;
             httpWebRequest.PreAuthenticate = true;
+            httpWebRequest.Method = method;
             httpWebRequest.Accept = _contentType;
+            httpWebRequest.ContentType = _contentType;
 
             if (input != null)
             {
@@ -40,7 +42,7 @@
                 }
             }
 
-            return (await httpWebRequest.GetResponseAsync()).GetResponseStream();
+            return (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
         }
 
         private void InitCache()

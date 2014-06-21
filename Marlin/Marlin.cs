@@ -67,6 +67,10 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMH:...:6
 */
 namespace Marlin
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
     using ProtoBuf;
@@ -112,10 +116,7 @@ namespace Marlin
 
         public async Task<Version> GetVersionAsync()
         {
-            using (var responseStream = await _requester.IssueWebRequestAsync("version"))
-            {
-                return Serializer.Deserialize<Version>(responseStream);
-            }
+            return await GetRequestAndDeserialize<Version>("version");
         }
 
         public TableList ListTables()
@@ -125,9 +126,182 @@ namespace Marlin
 
         public async Task<TableList> ListTablesAsync()
         {
-            using (var responseStream = await _requester.IssueWebRequestAsync(""))
+            return await GetRequestAndDeserialize<TableList>("");
+        }
+
+        public StorageClusterStatus GetStorageClusterStatus()
+        {
+            return GetStorageClusterStatusAsync().Result;
+        }
+
+        public async Task<StorageClusterStatus> GetStorageClusterStatusAsync()
+        {
+            return await GetRequestAndDeserialize<StorageClusterStatus>("/status/cluster");
+        }
+
+        public TableSchema GetTableSchema(string table)
+        {
+            return GetTableSchemaAsync(table).Result;
+        }
+
+        public async Task<TableSchema> GetTableSchemaAsync(string table)
+        {
+            if (table == null || !table.Any()) { throw new ArgumentException("Table was either null or empty!"); }
+            return await GetRequestAndDeserialize<TableSchema>(table + "/schema");
+        }
+
+        public TableInfo GetTableInfo(string table)
+        {
+            return GetTableInfoAsync(table).Result;
+        }
+
+        public async Task<TableInfo> GetTableInfoAsync(string table)
+        {
+            if (table == null || !table.Any()) { throw new ArgumentException("Table was either null or empty!"); }
+            return await GetRequestAndDeserialize<TableInfo>(table + "/regions");
+        }
+
+        /// <summary>
+        /// Creates a table and/or fully replaces its schema.
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        /// <param name="schema">the schema</param>
+        /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
+        public bool CreateTable(string tableName, TableSchema schema)
+        {
+            return CreateTableAsync(tableName, schema).Result;
+        }
+
+        /// <summary>
+        /// Creates a table and/or fully replaces its schema.
+        /// </summary>
+        /// <param name="table">the table name</param>
+        /// <param name="schema">the schema</param>
+        /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
+        public async Task<bool> CreateTableAsync(string table, TableSchema schema)
+        {
+            if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            if (schema == null) { throw new ArgumentException("Schema was null!"); }
+            var webResponse = await PutRequest<TableSchema>(table + "/schema", schema);
+
+            if (webResponse.StatusCode == HttpStatusCode.Created) { return true; }
+            // table already exits
+            if (webResponse.StatusCode == HttpStatusCode.OK) { return false; }
+
+            // throw the exception otherwise
+            using (var output = new StreamReader(webResponse.GetResponseStream()))
             {
-                return Serializer.Deserialize<TableList>(responseStream);
+                var message = output.ReadToEnd();
+                throw new WebException(
+                    string.Format(
+                    "Couldn't create table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
+                    table, webResponse.StatusCode, message));
+            }
+        }
+
+        /// <summary>
+        /// Modifies a table schema. 
+        /// If necessary it creates a new table with the given schema. 
+        /// If something went wrong, a WebException is thrown.
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        /// <param name="schema">the schema</param>
+        public void ModifyTableSchema(string tableName, TableSchema schema)
+        {
+            ModifyTableSchemaAsync(tableName, schema).Wait();
+        }
+
+        /// <summary>
+        /// Modifies a table schema. 
+        /// If necessary it creates a new table with the given schema. 
+        /// If something went wrong, a WebException is thrown.
+        /// </summary>
+        /// <param name="table">the table name</param>
+        /// <param name="schema">the schema</param>
+        public async Task ModifyTableSchemaAsync(string table, TableSchema schema)
+        {
+            if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            if (schema == null) { throw new ArgumentException("Schema was null!"); }
+            var webResponse = await PostRequest<TableSchema>(table + "/schema", schema);
+            if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
+            {
+                using (var output = new StreamReader(webResponse.GetResponseStream()))
+                {
+                    var message = output.ReadToEnd();
+                    throw new WebException(
+                        string.Format(
+                        "Couldn't modify table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
+                        table, webResponse.StatusCode, message));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes a table.
+        /// If something went wrong, a WebException is thrown.
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        public void DeleteTable(string tableName)
+        {
+            DeleteTableAsync(tableName).Wait();
+        }
+
+        /// <summary>
+        /// Deletes a table.
+        /// If something went wrong, a WebException is thrown.
+        /// </summary>
+        /// <param name="table">the table name</param>
+        public async Task DeleteTableAsync(string table)
+        {
+            if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            var webResponse = await DeleteRequest<TableSchema>(table + "/schema", null);
+
+            if (webResponse.StatusCode != HttpStatusCode.OK)
+            {
+                using (var output = new StreamReader(webResponse.GetResponseStream()))
+                {
+                    var message = output.ReadToEnd();
+                    throw new WebException(
+                        string.Format(
+                        "Couldn't delete table {0}! Response code was: {1}, expected 200! Response body was: {2}",
+                        table, webResponse.StatusCode, message));
+                }
+            }
+        }
+
+        internal async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request)
+        {
+            return await ExecuteMethod("PUT", endpoint, request);
+        }
+
+        internal async Task<HttpWebResponse> DeleteRequest<TReq>(string endpoint, TReq request)
+        {
+            return await ExecuteMethod("DELETE", endpoint, request);
+        }
+
+        internal async Task<HttpWebResponse> PostRequest<TReq>(string endpoint, TReq request)
+        {
+            return await ExecuteMethod("POST", endpoint, request);
+        }
+
+        internal async Task<HttpWebResponse> ExecuteMethod<TReq>(string method, string endpoint, TReq request)
+        {
+            // TODO make the buffer size configurable 
+            using (var input = new MemoryStream())
+            {
+                if (request != null)
+                {
+                    Serializer.Serialize(input, request);
+                }
+                return await _requester.IssueWebRequestAsync(endpoint, method: method, input: input);
+            }
+        }
+
+        internal async Task<T> GetRequestAndDeserialize<T>(string endpoint)
+        {
+            using (var responseStream = (await _requester.IssueWebRequestAsync(endpoint, method: "GET")).GetResponseStream())
+            {
+                return Serializer.Deserialize<T>(responseStream);
             }
         }
     }
