@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Marlin;
-using NUnit.Framework.Constraints;
-
-namespace MarlinTests
+﻿namespace MarlinTests
 {
     using NUnit.Framework;
+    using System;
+    using System.Collections.Generic;
+    using Marlin;
 
     [TestFixture]
     public class ClusterCredentialsTest

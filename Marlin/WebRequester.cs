@@ -36,6 +36,8 @@
 
             if (input != null)
             {
+                // seek to the beginning, so we copy everything in this buffer
+                input.Seek(0, SeekOrigin.Begin);
                 using (var req = httpWebRequest.GetRequestStream())
                 {
                     await input.CopyToAsync(req);

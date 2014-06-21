@@ -164,25 +164,23 @@ namespace Marlin
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
-        /// <param name="tableName">the table name</param>
         /// <param name="schema">the schema</param>
         /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
-        public bool CreateTable(string tableName, TableSchema schema)
+        public bool CreateTable(TableSchema schema)
         {
-            return CreateTableAsync(tableName, schema).Result;
+            return CreateTableAsync(schema).Result;
         }
 
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
-        /// <param name="table">the table name</param>
         /// <param name="schema">the schema</param>
         /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
-        public async Task<bool> CreateTableAsync(string table, TableSchema schema)
+        public async Task<bool> CreateTableAsync(TableSchema schema)
         {
-            if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
             if (schema == null) { throw new ArgumentException("Schema was null!"); }
-            var webResponse = await PutRequest<TableSchema>(table + "/schema", schema);
+            if (schema.name == null || !schema.name.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            var webResponse = await PutRequest(schema.name + "/schema", schema);
 
             if (webResponse.StatusCode == HttpStatusCode.Created) { return true; }
             // table already exits
@@ -195,7 +193,7 @@ namespace Marlin
                 throw new WebException(
                     string.Format(
                     "Couldn't create table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
-                    table, webResponse.StatusCode, message));
+                    schema.name, webResponse.StatusCode, message));
             }
         }
 
@@ -267,6 +265,55 @@ namespace Marlin
                         table, webResponse.StatusCode, message));
                 }
             }
+        }
+
+        /// <summary>
+        /// Stores the given cells in the supplied table.
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="cells">the cells to insert</param>
+        public void StoreCells(string table, CellSet cells)
+        {
+            StoreCellsAsync(table, cells).Wait();
+        }
+
+        /// <summary>
+        /// Stores the given cells in the supplied table.
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="cells">the cells to insert</param>
+        /// <returns>a task that is awaitable, signifying the end of this operation</returns>
+        public async Task StoreCellsAsync(string table, CellSet cells)
+        {
+            if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            if (cells == null) { throw new ArgumentException("CellSet was null!"); }
+
+            // note the fake row key to insert a set of cells
+            var webResponse = await PutRequest(table + "/somefalsekey", cells);
+            if (webResponse.StatusCode != HttpStatusCode.OK)
+            {
+                using (var output = new StreamReader(webResponse.GetResponseStream()))
+                {
+                    var message = output.ReadToEnd();
+                    throw new WebException(
+                        string.Format(
+                        "Couldn't insert into table {0}! Response code was: {1}, expected 200! Response body was: {2}",
+                        table, webResponse.StatusCode, message));
+                }
+            }
+        }
+
+        public CellSet GetCells(string tablename, string rowKey)
+        {
+            return GetCellsAsync(tablename, rowKey).Result;
+        }
+
+        // TODO add timestamp, versions and column queries
+        public async Task<CellSet> GetCellsAsync(string tableName, string rowKey)
+        {
+            if (tableName == null || !tableName.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            if (rowKey == null) { throw new ArgumentException("RowKey was null!"); }
+            return await GetRequestAndDeserialize<CellSet>(tableName + "/" + rowKey);
         }
 
         internal async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request)
