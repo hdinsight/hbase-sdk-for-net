@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Collections.Generic;
     using System.IO;
+    using System.Runtime.InteropServices;
     using System.Security;
 
     public class ClusterCredentials
@@ -14,14 +15,31 @@
 
         public SecureString ClusterPassword { get; set; }
 
+        internal String ClusterPasswordAsString
+        {
+            get
+            {
+                IntPtr ptr = IntPtr.Zero;
+                try
+                {
+                    ptr = Marshal.SecureStringToBSTR(ClusterPassword);
+                    return Marshal.PtrToStringBSTR(ptr);
+                }
+                finally
+                {
+                    Marshal.FreeBSTR(ptr);
+                }
+            }
+        }
+
         /// <summary>
         /// Reads the cluster credentials from a file found under the given path.
-        /// This file needs to contain exactly three lines, where the first is the cluster REST uri, the second the username and the third is the password.
+        /// This file needs to contain exactly three lines, where the first is the cluster uri, the second the username and the third is the password.
         /// (Bad luck if your username/password contains either \r or \n!).
         /// 
         /// A possible example is:
         /// 
-        /// https://csharpazurehbase.azurehdinsight.net/hbaserest
+        /// https://csharpazurehbase.azurehdinsight.net/
         /// admin
         /// _mySup3rS4f3P4ssW0rd.
         /// 

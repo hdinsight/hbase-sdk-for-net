@@ -14,16 +14,21 @@ var credentials = ClusterCredentials.FromFile("credentials.txt");
 var marlin = new Marlin(credentials);
 var version = marlin.GetVersion();
 Console.WriteLine(version);
+
+// yields:
+RestVersion: 0.0.2, JvmVersion: Azul Systems, Inc. 1.7.0_55-24.55-b03, OsVersion: Windows Server 2012 R2 6.3 amd64, ServerVersion: jetty/6.1.26, JerseyVersion: 1.8, ExtensionObject: 
 ```
 
+
+
 The credentials text file contains exactly three lines:
-- Azure HDInsight REST URL
+- Azure HDInsight URL
 - Azure HDInsight Username
 - Azure HDInsight Password
  
 An example looks like this:
 ```
-https://azurehbase.azurehdinsight.net/hbaserest
+https://azurehbase.azurehdinsight.net
 admin
 _mySup3rS4f3P4ssW0rd.
 ```

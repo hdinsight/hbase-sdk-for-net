@@ -10,54 +10,59 @@
 // Generated from: VersionMessage.proto
 namespace org.apache.hadoop.hbase.rest.protobuf.generated
 {
-  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"Version")]
-  public partial class Version : global::ProtoBuf.IExtensible
-  {
-    public Version() {}
-    
-    private string _restVersion = "";
-    [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name=@"restVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string restVersion
+    [global::System.Serializable, global::ProtoBuf.ProtoContract(Name = @"Version")]
+    public partial class Version : global::ProtoBuf.IExtensible
     {
-      get { return _restVersion; }
-      set { _restVersion = value; }
+        public Version() { }
+
+        private string _restVersion = "";
+        [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name = @"restVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string restVersion
+        {
+            get { return _restVersion; }
+            set { _restVersion = value; }
+        }
+        private string _jvmVersion = "";
+        [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name = @"jvmVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string jvmVersion
+        {
+            get { return _jvmVersion; }
+            set { _jvmVersion = value; }
+        }
+        private string _osVersion = "";
+        [global::ProtoBuf.ProtoMember(3, IsRequired = false, Name = @"osVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string osVersion
+        {
+            get { return _osVersion; }
+            set { _osVersion = value; }
+        }
+        private string _serverVersion = "";
+        [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name = @"serverVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string serverVersion
+        {
+            get { return _serverVersion; }
+            set { _serverVersion = value; }
+        }
+        private string _jerseyVersion = "";
+        [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name = @"jerseyVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string jerseyVersion
+        {
+            get { return _jerseyVersion; }
+            set { _jerseyVersion = value; }
+        }
+        private global::ProtoBuf.IExtension extensionObject;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+        { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+
+        public override string ToString()
+        {
+            return string.Format("RestVersion: {0}, JvmVersion: {1}, OsVersion: {2}, ServerVersion: {3}, JerseyVersion: {4}, ExtensionObject: {5}", _restVersion, _jvmVersion, _osVersion, _serverVersion, _jerseyVersion, extensionObject);
+        }
     }
-    private string _jvmVersion = "";
-    [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"jvmVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string jvmVersion
-    {
-      get { return _jvmVersion; }
-      set { _jvmVersion = value; }
-    }
-    private string _osVersion = "";
-    [global::ProtoBuf.ProtoMember(3, IsRequired = false, Name=@"osVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string osVersion
-    {
-      get { return _osVersion; }
-      set { _osVersion = value; }
-    }
-    private string _serverVersion = "";
-    [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name=@"serverVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string serverVersion
-    {
-      get { return _serverVersion; }
-      set { _serverVersion = value; }
-    }
-    private string _jerseyVersion = "";
-    [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"jerseyVersion", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string jerseyVersion
-    {
-      get { return _jerseyVersion; }
-      set { _jerseyVersion = value; }
-    }
-    private global::ProtoBuf.IExtension extensionObject;
-    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
-  }
-  
+
 }

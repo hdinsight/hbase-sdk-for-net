@@ -60,16 +60,7 @@ namespace MarlinTests
             ClusterCredentials creds = ClusterCredentials.FromFileInternal(failList);
             Assert.AreEqual(new Uri(failList[0]), creds.ClusterUri);
             Assert.AreEqual(failList[1], creds.UserName);
-            IntPtr ptr = IntPtr.Zero;
-            try
-            {
-                ptr = Marshal.SecureStringToBSTR(creds.ClusterPassword);
-                Assert.AreEqual(failList[2], Marshal.PtrToStringBSTR(ptr));
-            }
-            finally
-            {
-                Marshal.FreeBSTR(ptr);
-            }
+            Assert.AreEqual(failList[2], creds.ClusterPasswordAsString);
         }
     }
 }

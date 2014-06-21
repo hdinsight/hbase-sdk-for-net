@@ -70,6 +70,7 @@ namespace Marlin
     using System.Threading.Tasks;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
     using ProtoBuf;
+    using Version = org.apache.hadoop.hbase.rest.protobuf.generated.Version;
 
     /// <summary>
     /// Marlin is a C# connector to HBase. 
@@ -114,6 +115,19 @@ namespace Marlin
             using (var responseStream = await _requester.IssueWebRequestAsync("version"))
             {
                 return Serializer.Deserialize<Version>(responseStream);
+            }
+        }
+
+        public TableList ListTables()
+        {
+            return ListTablesAsync().Result;
+        }
+
+        public async Task<TableList> ListTablesAsync()
+        {
+            using (var responseStream = await _requester.IssueWebRequestAsync(""))
+            {
+                return Serializer.Deserialize<TableList>(responseStream);
             }
         }
     }
