@@ -90,7 +90,7 @@
             CellSet.Row row = new CellSet.Row() { key = Encoding.UTF8.GetBytes(testKey) };
             set.rows.Add(row);
 
-            var value = new Cell() { column = Encoding.UTF8.GetBytes("d"), data = Encoding.UTF8.GetBytes(testValue) };
+            var value = new Cell() { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
             marlin.StoreCells(_testTableName, set);
 
