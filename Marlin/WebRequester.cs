@@ -7,7 +7,9 @@
 
     public class WebRequester
     {
-        private const string RestEndpointBase = "hbaserest/";
+        public const string RestEndpointBase = "hbaserest/";
+        public const string RestEndpointBaseZero = "hbaserest0/";
+
         private readonly ClusterCredentials _credentials;
         private readonly CredentialCache _credentialCache;
         private readonly string _contentType;
@@ -25,9 +27,10 @@
             return IssueWebRequestAsync(endpoint, method, input).Result;
         }
 
-        public async Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method = "GET", Stream input = null)
+        public async Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)
         {
-            var httpWebRequest = WebRequest.CreateHttp(new Uri(_credentials.ClusterUri, RestEndpointBase + endpoint));
+            var baseEndPoint = alternativeEndpointBase ?? RestEndpointBase;
+            var httpWebRequest = WebRequest.CreateHttp(new Uri(_credentials.ClusterUri, baseEndPoint + endpoint));
             httpWebRequest.Credentials = _credentialCache;
             httpWebRequest.PreAuthenticate = true;
             httpWebRequest.Method = method;

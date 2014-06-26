@@ -90,6 +90,29 @@ Console.WriteLine(Encoding.UTF8.GetString(cells.rows[0].values[0].data));
 // with the previous insert, it should yield: "the force is strong in this column"
 ```
 
+Scanning over rows looks like this:
+
+```csharp
+
+var marlin = new Marlin(_credentials);
+// assume the table has integer keys and we want data between keys 25 and 35
+var scanSettings = new Scanner()
+{
+	batch = 10,
+	startRow = BitConverter.GetBytes(25),
+	endRow = BitConverter.GetBytes(35)
+};
+var scannerInfo = marlin.CreateScanner(_testTableName, scanSettings);
+CellSet next = null;
+while ((next = marlin.ScannerGetNext(scannerInfo)) != null)
+{
+	foreach (var row in next.rows)
+		// read the rows
+}            
+
+```
+
+
 Naming
 ======
 

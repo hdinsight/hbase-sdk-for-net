@@ -220,7 +220,7 @@ namespace Marlin
         {
             if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
             if (schema == null) { throw new ArgumentException("Schema was null!"); }
-            var webResponse = await PostRequest<TableSchema>(table + "/schema", schema);
+            var webResponse = await PostRequest(table + "/schema", schema);
             if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
             {
                 using (var output = new StreamReader(webResponse.GetResponseStream()))
@@ -316,22 +316,102 @@ namespace Marlin
             return await GetRequestAndDeserialize<CellSet>(tableName + "/" + rowKey);
         }
 
-        internal async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request)
+        /// <summary>
+        /// Creates a scanner on the server side.
+        /// The resulting ScannerInformation can be used to read query the CellSets returned by this scanner in the #ScannerGetNext/Async method.
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
+        /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
+        public ScannerInformation CreateScanner(string tableName, Scanner scannerSettings)
         {
-            return await ExecuteMethod("PUT", endpoint, request);
+            return CreateScannerAsync(tableName, scannerSettings).Result;
         }
 
-        internal async Task<HttpWebResponse> DeleteRequest<TReq>(string endpoint, TReq request)
+        /// <summary>
+        /// Creates a scanner on the server side.
+        /// The resulting ScannerInformation can be used to read query the CellSets returned by this scanner in the #ScannerGetNext/Async method.
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
+        /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
+        public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings)
         {
-            return await ExecuteMethod("DELETE", endpoint, request);
+            if (tableName == null || !tableName.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
+            if (scannerSettings == null) { throw new ArgumentException("ScannerSettings was null!"); }
+
+            var response = await PostRequest(tableName + "/scanner", scannerSettings, WebRequester.RestEndpointBaseZero);
+            if (response.StatusCode != HttpStatusCode.Created)
+            {
+                using (var output = new StreamReader(response.GetResponseStream()))
+                {
+                    var message = output.ReadToEnd();
+                    throw new WebException(
+                      string.Format(
+                      "Couldn't create a scanner for table {0}! Response code was: {1}, expected 201! Response body was: {2}",
+                      tableName, response.StatusCode, message));
+                }
+            }
+            var location = response.Headers.Get("Location");
+            if (location == null) throw new ArgumentException("Couldn't find header 'Location' in the response!");
+            return new ScannerInformation() { TableName = tableName, Location = new Uri(location) };
         }
 
-        internal async Task<HttpWebResponse> PostRequest<TReq>(string endpoint, TReq request)
+        /// <summary>
+        /// Scans the next set of messages.
+        /// </summary>
+        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <returns>a cellset, or null if the scanner is exhausted</returns>
+        public CellSet ScannerGetNext(ScannerInformation scannerInfo)
         {
-            return await ExecuteMethod("POST", endpoint, request);
+            return ScannerGetNextAsync(scannerInfo).Result;
         }
 
-        internal async Task<HttpWebResponse> ExecuteMethod<TReq>(string method, string endpoint, TReq request)
+        /// <summary>
+        /// Scans the next set of messages.
+        /// </summary>
+        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <returns>a cellset, or null if the scanner is exhausted</returns>
+        public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo)
+        {
+            if (scannerInfo == null) { throw new ArgumentException("ScannerInformation was null!"); }
+
+            var webResponse = await GetRequest(
+                scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId,
+                WebRequester.RestEndpointBaseZero);
+
+            if (webResponse.StatusCode == HttpStatusCode.OK)
+            {
+                return Serializer.Deserialize<CellSet>(webResponse.GetResponseStream());
+            }
+
+            return null;
+        }
+
+        internal async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
+        {
+            return await ExecuteMethod("PUT", endpoint, request, alternativeEndpointBase);
+        }
+
+        internal async Task<HttpWebResponse> DeleteRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
+        {
+            return await ExecuteMethod("DELETE", endpoint, request, alternativeEndpointBase);
+        }
+
+        internal async Task<HttpWebResponse> PostRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
+        {
+            return await ExecuteMethod("POST", endpoint, request, alternativeEndpointBase);
+        }
+
+        internal async Task<HttpWebResponse> GetRequest(
+            string endpoint,
+            string alternativeEndpointBase = null)
+        {
+            return await _requester.IssueWebRequestAsync(endpoint, "GET", null,
+                alternativeEndpointBase: alternativeEndpointBase);
+        }
+
+        internal async Task<HttpWebResponse> ExecuteMethod<TReq>(string method, string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
         {
             // TODO make the buffer size configurable 
             using (var input = new MemoryStream())
@@ -340,13 +420,14 @@ namespace Marlin
                 {
                     Serializer.Serialize(input, request);
                 }
-                return await _requester.IssueWebRequestAsync(endpoint, method: method, input: input);
+                return await _requester.IssueWebRequestAsync(endpoint, method: method, input: input, alternativeEndpointBase: alternativeEndpointBase);
             }
         }
 
-        internal async Task<T> GetRequestAndDeserialize<T>(string endpoint)
+        internal async Task<T> GetRequestAndDeserialize<T>(string endpoint, string alternativeEndpointBase = null)
         {
-            using (var responseStream = (await _requester.IssueWebRequestAsync(endpoint, method: "GET")).GetResponseStream())
+            using (var responseStream = (await _requester.IssueWebRequestAsync(
+                endpoint, "GET", alternativeEndpointBase: alternativeEndpointBase)).GetResponseStream())
             {
                 return Serializer.Deserialize<T>(responseStream);
             }

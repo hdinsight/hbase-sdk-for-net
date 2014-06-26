@@ -1,6 +1,8 @@
 ﻿namespace MarlinTests
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Text;
     using Marlin;
     using NUnit.Framework;
@@ -37,6 +39,72 @@
             {
                 marlin.DeleteTable(name);
             }
+        }
+
+        [Test]
+        public void TestScannerCreation()
+        {
+            var marlin = new Marlin(_credentials);
+            var batchSetting = new Scanner() { batch = 2 };
+            var scannerInfo = marlin.CreateScanner(_testTableName, batchSetting);
+            Assert.AreEqual(_testTableName, scannerInfo.TableName);
+            Assert.IsTrue(scannerInfo.Location.Authority.StartsWith("headnode"),
+                "returned location didn't start with \"headnode\", it was: {0}", scannerInfo.Location);
+        }
+
+        [Test]
+        public void TestFullScan()
+        {
+            var marlin = new Marlin(_credentials);
+
+            StoreTestData(marlin);
+
+            // full range scan
+            var scanSettings = new Scanner() { batch = 10 };
+            var scannerInfo = marlin.CreateScanner(_testTableName, scanSettings);
+
+            CellSet next = null;
+            var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
+            while ((next = marlin.ScannerGetNext(scannerInfo)) != null)
+            {
+                Assert.AreEqual(10, next.rows.Count);
+                foreach (var row in next.rows)
+                {
+                    int k = BitConverter.ToInt32(row.key, 0);
+                    expectedSet.Remove(k);
+                }
+            }
+            Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
+        }
+
+        [Test]
+        public void TestSubsetScan()
+        {
+            var marlin = new Marlin(_credentials);
+            int startRow = 15;
+            int endRow = 15 + 13;
+            StoreTestData(marlin);
+
+            // subset range scan
+            var scanSettings = new Scanner()
+            {
+                batch = 10,
+                startRow = BitConverter.GetBytes(startRow),
+                endRow = BitConverter.GetBytes(endRow)
+            };
+            var scannerInfo = marlin.CreateScanner(_testTableName, scanSettings);
+
+            CellSet next = null;
+            var expectedSet = new HashSet<int>(Enumerable.Range(startRow, endRow - startRow));
+            while ((next = marlin.ScannerGetNext(scannerInfo)) != null)
+            {
+                foreach (var row in next.rows)
+                {
+                    int k = BitConverter.ToInt32(row.key, 0);
+                    expectedSet.Remove(k);
+                }
+            }
+            Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
         }
 
         [Test]
@@ -100,5 +168,24 @@
             Assert.AreEqual(testValue, Encoding.UTF8.GetString(cells.rows[0].values[0].data));
         }
 
+        private void StoreTestData(Marlin marlin)
+        {
+            // we are going to insert the keys 0 to 100 and then do some range queries on that
+            var testValue = "the force is strong in this column";
+            CellSet set = new CellSet();
+            for (int i = 0; i < 100; i++)
+            {
+                CellSet.Row row = new CellSet.Row() { key = BitConverter.GetBytes(i) };
+                var value = new Cell()
+                {
+                    column = Encoding.UTF8.GetBytes("d:starwars"),
+                    data = Encoding.UTF8.GetBytes(testValue)
+                };
+                row.values.Add(value);
+                set.rows.Add(row);
+            }
+
+            marlin.StoreCells(_testTableName, set);
+        }
     }
 }
