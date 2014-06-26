@@ -9,8 +9,6 @@ Missing features
 ================
 
 There are some core features missing that are documented in the [Stargate wiki](http://wiki.apache.org/hadoop/Hbase/Stargate "stargate docs"):
-- Single cell stores / retrieves
-- Scans
 - Enhancements to existing methods e.g. multi-cell stores with timestamps, versions or specific columns
 
 _Besides that..._
