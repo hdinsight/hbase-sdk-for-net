@@ -52,7 +52,55 @@
             return FromFileInternal(lines);
         }
 
-        internal static unsafe ClusterCredentials FromFileInternal(List<string> lines)
+        /// <summary>
+        /// Creates new cluster credentials.
+        /// </summary>
+        /// <param name="clusterUri">the cluster uri</param>
+        /// <param name="username">the username of the cluster</param>
+        /// <param name="password">the password</param>
+        /// <returns>the cluster credentials</returns>
+        public unsafe static ClusterCredentials Create(Uri clusterUri, string username, string password)
+        {
+            if (password == null || !password.Any())
+            {
+                throw new ArgumentException("Supplied password is null or empty!");
+            }
+
+            SecureString pw = null;
+            unsafe
+            {
+                fixed (char* cPtr = password)
+                {
+                    pw = new SecureString(cPtr, password.Length);
+                }
+            }
+            return Create(clusterUri, username, pw);
+        }
+
+        /// <summary>
+        /// Creates new cluster credentials.
+        /// </summary>
+        /// <param name="clusterUri">the cluster uri</param>
+        /// <param name="username">the username of the cluster</param>
+        /// <param name="password">the secure string password</param>
+        /// <returns>the cluster credentials</returns>
+        public static ClusterCredentials Create(Uri clusterUri, string username, SecureString password)
+        {
+            var userName = username;
+            if (userName == null || !userName.Any())
+            {
+                throw new ArgumentException("Supplied username is null or empty!");
+            }
+
+            if (password == null)
+            {
+                throw new ArgumentException("Supplied password is null!");
+            }
+
+            return new ClusterCredentials() { ClusterPassword = password, ClusterUri = clusterUri, UserName = userName };
+        }
+
+        internal static ClusterCredentials FromFileInternal(List<string> lines)
         {
             if (lines.Count() != 3)
             {
@@ -61,28 +109,7 @@
                         "first containing the cluster url, second the username, third the password. " +
                         "Given {0} lines!", lines.Count()));
             }
-
-            var clusterUri = new Uri(lines[0]);
-            var userName = lines[1];
-            if (userName == null || !userName.Any())
-            {
-                throw new ArgumentException("Supplied username is null or empty!");
-            }
-
-            var passString = lines[2];
-            if (passString == null || !passString.Any())
-            {
-                throw new ArgumentException("Supplied password is null or empty!");
-            }
-            SecureString pw = null;
-            unsafe
-            {
-                fixed (char* cPtr = passString)
-                {
-                    pw = new SecureString(cPtr, passString.Length);
-                }
-            }
-            return new ClusterCredentials() { ClusterPassword = pw, ClusterUri = clusterUri, UserName = userName };
+            return Create(new Uri(lines[0]), lines[1], lines[2]);
         }
     }
 }
