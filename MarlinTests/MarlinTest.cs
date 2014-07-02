@@ -37,7 +37,10 @@
             var tables = marlin.ListTables();
             foreach (var name in tables.name)
             {
-                marlin.DeleteTable(name);
+                if (name.StartsWith("marlintest"))
+                {
+                    marlin.DeleteTable(name);
+                }
             }
         }
 

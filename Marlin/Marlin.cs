@@ -180,20 +180,30 @@ namespace Marlin
         {
             if (schema == null) { throw new ArgumentException("Schema was null!"); }
             if (schema.name == null || !schema.name.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
-            var webResponse = await PutRequest(schema.name + "/schema", schema);
-
-            if (webResponse.StatusCode == HttpStatusCode.Created) { return true; }
-            // table already exits
-            if (webResponse.StatusCode == HttpStatusCode.OK) { return false; }
-
-            // throw the exception otherwise
-            using (var output = new StreamReader(webResponse.GetResponseStream()))
+            using (var webResponse = await PutRequest(schema.name + "/schema", schema))
             {
-                var message = output.ReadToEnd();
-                throw new WebException(
-                    string.Format(
-                    "Couldn't create table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
-                    schema.name, webResponse.StatusCode, message));
+
+                if (webResponse.StatusCode == HttpStatusCode.Created)
+                {
+                    return true;
+                }
+                // table already exits
+                if (webResponse.StatusCode == HttpStatusCode.OK)
+                {
+                    return false;
+                }
+
+                // throw the exception otherwise
+                using (var output = new StreamReader(webResponse.GetResponseStream()))
+                {
+                    var message = output.ReadToEnd();
+                    throw new WebException(
+                        string.Format(
+                            "Couldn't create table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
+                            schema.name,
+                            webResponse.StatusCode,
+                            message));
+                }
             }
         }
 
@@ -220,16 +230,20 @@ namespace Marlin
         {
             if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
             if (schema == null) { throw new ArgumentException("Schema was null!"); }
-            var webResponse = await PostRequest(table + "/schema", schema);
-            if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
+            using (var webResponse = await PostRequest(table + "/schema", schema))
             {
-                using (var output = new StreamReader(webResponse.GetResponseStream()))
+                if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
                 {
-                    var message = output.ReadToEnd();
-                    throw new WebException(
-                        string.Format(
-                        "Couldn't modify table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
-                        table, webResponse.StatusCode, message));
+                    using (var output = new StreamReader(webResponse.GetResponseStream()))
+                    {
+                        var message = output.ReadToEnd();
+                        throw new WebException(
+                            string.Format(
+                                "Couldn't modify table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
+                                table,
+                                webResponse.StatusCode,
+                                message));
+                    }
                 }
             }
         }
@@ -252,17 +266,19 @@ namespace Marlin
         public async Task DeleteTableAsync(string table)
         {
             if (table == null || !table.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
-            var webResponse = await DeleteRequest<TableSchema>(table + "/schema", null);
-
-            if (webResponse.StatusCode != HttpStatusCode.OK)
+            using (var webResponse = await DeleteRequest<TableSchema>(table + "/schema", null))
             {
-                using (var output = new StreamReader(webResponse.GetResponseStream()))
+
+                if (webResponse.StatusCode != HttpStatusCode.OK)
                 {
-                    var message = output.ReadToEnd();
-                    throw new WebException(
-                        string.Format(
-                        "Couldn't delete table {0}! Response code was: {1}, expected 200! Response body was: {2}",
-                        table, webResponse.StatusCode, message));
+                    using (var output = new StreamReader(webResponse.GetResponseStream()))
+                    {
+                        var message = output.ReadToEnd();
+                        throw new WebException(
+                            string.Format(
+                            "Couldn't delete table {0}! Response code was: {1}, expected 200! Response body was: {2}",
+                            table, webResponse.StatusCode, message));
+                    }
                 }
             }
         }
@@ -289,16 +305,20 @@ namespace Marlin
             if (cells == null) { throw new ArgumentException("CellSet was null!"); }
 
             // note the fake row key to insert a set of cells
-            var webResponse = await PutRequest(table + "/somefalsekey", cells);
-            if (webResponse.StatusCode != HttpStatusCode.OK)
+            using (var webResponse = await PutRequest(table + "/somefalsekey", cells))
             {
-                using (var output = new StreamReader(webResponse.GetResponseStream()))
+                if (webResponse.StatusCode != HttpStatusCode.OK)
                 {
-                    var message = output.ReadToEnd();
-                    throw new WebException(
-                        string.Format(
-                        "Couldn't insert into table {0}! Response code was: {1}, expected 200! Response body was: {2}",
-                        table, webResponse.StatusCode, message));
+                    using (var output = new StreamReader(webResponse.GetResponseStream()))
+                    {
+                        var message = output.ReadToEnd();
+                        throw new WebException(
+                            string.Format(
+                                "Couldn't insert into table {0}! Response code was: {1}, expected 200! Response body was: {2}",
+                                table,
+                                webResponse.StatusCode,
+                                message));
+                    }
                 }
             }
         }
@@ -340,21 +360,27 @@ namespace Marlin
             if (tableName == null || !tableName.Any()) { throw new ArgumentException("TableName was either null or empty!"); }
             if (scannerSettings == null) { throw new ArgumentException("ScannerSettings was null!"); }
 
-            var response = await PostRequest(tableName + "/scanner", scannerSettings, WebRequester.RestEndpointBaseZero);
-            if (response.StatusCode != HttpStatusCode.Created)
+            using (
+                var response =
+                    await PostRequest(tableName + "/scanner", scannerSettings, WebRequester.RestEndpointBaseZero))
             {
-                using (var output = new StreamReader(response.GetResponseStream()))
+                if (response.StatusCode != HttpStatusCode.Created)
                 {
-                    var message = output.ReadToEnd();
-                    throw new WebException(
-                      string.Format(
-                      "Couldn't create a scanner for table {0}! Response code was: {1}, expected 201! Response body was: {2}",
-                      tableName, response.StatusCode, message));
+                    using (var output = new StreamReader(response.GetResponseStream()))
+                    {
+                        var message = output.ReadToEnd();
+                        throw new WebException(
+                            string.Format(
+                                "Couldn't create a scanner for table {0}! Response code was: {1}, expected 201! Response body was: {2}",
+                                tableName,
+                                response.StatusCode,
+                                message));
+                    }
                 }
+                var location = response.Headers.Get("Location");
+                if (location == null) throw new ArgumentException("Couldn't find header 'Location' in the response!");
+                return new ScannerInformation() { TableName = tableName, Location = new Uri(location) };
             }
-            var location = response.Headers.Get("Location");
-            if (location == null) throw new ArgumentException("Couldn't find header 'Location' in the response!");
-            return new ScannerInformation() { TableName = tableName, Location = new Uri(location) };
         }
 
         /// <summary>
@@ -376,16 +402,15 @@ namespace Marlin
         {
             if (scannerInfo == null) { throw new ArgumentException("ScannerInformation was null!"); }
 
-            var webResponse = await GetRequest(
-                scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId,
-                WebRequester.RestEndpointBaseZero);
-
-            if (webResponse.StatusCode == HttpStatusCode.OK)
+            using (var webResponse = await GetRequest(scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId, WebRequester.RestEndpointBaseZero))
             {
-                return Serializer.Deserialize<CellSet>(webResponse.GetResponseStream());
-            }
+                if (webResponse.StatusCode == HttpStatusCode.OK)
+                {
+                    return Serializer.Deserialize<CellSet>(webResponse.GetResponseStream());
+                }
 
-            return null;
+                return null;
+            }
         }
 
         internal async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
@@ -426,10 +451,12 @@ namespace Marlin
 
         internal async Task<T> GetRequestAndDeserialize<T>(string endpoint, string alternativeEndpointBase = null)
         {
-            using (var responseStream = (await _requester.IssueWebRequestAsync(
-                endpoint, "GET", alternativeEndpointBase: alternativeEndpointBase)).GetResponseStream())
+            using (var response = await _requester.IssueWebRequestAsync(endpoint, "GET", alternativeEndpointBase: alternativeEndpointBase))
             {
-                return Serializer.Deserialize<T>(responseStream);
+                using (var responseStream = response.GetResponseStream())
+                {
+                    return Serializer.Deserialize<T>(responseStream);
+                }
             }
         }
     }
