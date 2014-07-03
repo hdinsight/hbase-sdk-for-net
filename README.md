@@ -109,14 +109,3 @@ while ((next = marlin.ScannerGetNext(scannerInfo)) != null)
 }            
 
 ```
-
-
-Naming
-======
-
-The name "Marlin" follows the convention of Skype's data team.
-We name parts of our real-time pipeline (even the pipeline itself!) after cool fishes. 
-Famous Microsoft internal names are Ray, Whaleshark or BlobFish.
-
-Since the Marlin counts as one of the fastest fishes on earth, we aim to be the fastest C# library when querying HBase on HDInsight.
-
