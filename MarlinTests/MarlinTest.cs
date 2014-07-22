@@ -126,8 +126,9 @@
         {
             var marlin = new Marlin(_credentials);
             var tables = marlin.ListTables();
-            Assert.AreEqual(1, tables.name.Count);
-            Assert.AreEqual(_testTableName, tables.name[0]);
+            var testtables = tables.name.Where(item => item.StartsWith("marlintest")).ToList();
+            Assert.AreEqual(1, testtables.Count);
+            Assert.AreEqual(_testTableName, testtables[0]);
         }
 
         [Test]
