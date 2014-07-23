@@ -15,20 +15,26 @@
 namespace Microsoft.HBase.Client
 {
     using System;
+    using System.Collections;
+    using System.Linq;
 
-    public class ScannerInformation
+    internal static class ArgumentGuardExtensions
     {
-        public string TableName { get; internal set; }
-
-        public Uri Location { get; internal set; }
-
-        public string ScannerId
+        internal static void ArgumentNotNull([ValidatedNotNull] this object value, string argumentName)
         {
-            get
+            if (ReferenceEquals(value, null))
             {
-                return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/'));
+                throw new ArgumentNullException(argumentName ?? string.Empty);
             }
         }
 
+        internal static void ArgumentNotNullNorEmpty([ValidatedNotNull] this IEnumerable value, string paramName)
+        {
+            value.ArgumentNotNull(paramName);
+            if (!value.Cast<object>().Any())
+            {
+                throw new ArgumentEmptyException(paramName ?? string.Empty, null, null);
+            }
+        }
     }
 }

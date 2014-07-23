@@ -25,6 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>..\..\..\Projects\marlin\Test.FxCop.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,9 +36,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
@@ -57,9 +55,26 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="ClusterCredentialsTest.cs" />
+    <Compile Include="ClusterCredentialsFactory.cs" />
+    <Compile Include="ClusterCredentialsFactoryTests.cs" />
+    <Compile Include="ClusterCredentialsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MarlinTest.cs" />
+    <Compile Include="HBaseClients.cs" />
+    <Compile Include="Utilities\AssertEqualityComparer.cs" />
+    <Compile Include="Utilities\Catch.cs" />
+    <Compile Include="Utilities\ContextSpecification.cs" />
+    <Compile Include="Utilities\DisposableContextSpecification.cs" />
+    <Compile Include="Utilities\EnumerableExtensions.cs" />
+    <Compile Include="Utilities\GeneralComparisonOperator.cs" />
+    <Compile Include="Utilities\ObjectExtensions.cs" />
+    <Compile Include="Utilities\Pair.cs" />
+    <Compile Include="Utilities\SecureStringExtensions.cs" />
+    <Compile Include="Utilities\ShouldExtensionMethods.cs" />
+    <Compile Include="Utilities\StringExtensions.cs" />
+    <Compile Include="Utilities\TestAssemblyInitializeCleanup.cs" />
+    <Compile Include="Utilities\TestBase.cs" />
+    <Compile Include="Utilities\TestHelp.cs" />
+    <Compile Include="Utilities\TestRunMode.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -69,6 +84,11 @@
       <Project>{256f1a52-d499-4086-83b4-ae13a515ae1d}</Project>
       <Name>Marlin</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDictionary Include="..\FxCopCustomDictionary.xml">
+      <Link>FxCopCustomDictionary.xml</Link>
+    </CodeAnalysisDictionary>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

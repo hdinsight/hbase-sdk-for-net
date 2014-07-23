@@ -12,23 +12,13 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Tests.Utilities
 {
-    using System;
-
-    public class ScannerInformation
+    internal static class TestRunMode
     {
-        public string TableName { get; internal set; }
-
-        public Uri Location { get; internal set; }
-
-        public string ScannerId
-        {
-            get
-            {
-                return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/'));
-            }
-        }
-
+        internal const string CheckIn = "CheckIn";
+        internal const string LongRunning = "LongRunning";
+        internal const string Nightly = "Nightly";
+        internal const string Weekly = "Weekly";
     }
 }

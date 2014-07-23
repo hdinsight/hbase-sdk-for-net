@@ -16,19 +16,11 @@ namespace Microsoft.HBase.Client
 {
     using System;
 
-    public class ScannerInformation
+    /// <summary>
+    /// Instructs Code Analysis to treat a method as a validation method for a given parameter and not fire 1062 when it is used.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Parameter)]
+    internal sealed class ValidatedNotNullAttribute : Attribute
     {
-        public string TableName { get; internal set; }
-
-        public Uri Location { get; internal set; }
-
-        public string ScannerId
-        {
-            get
-            {
-                return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/'));
-            }
-        }
-
     }
 }

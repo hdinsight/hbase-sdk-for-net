@@ -12,23 +12,17 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Tests.Utilities
 {
-    using System;
-
-    public class ScannerInformation
+    internal static class TestHelp
     {
-        public string TableName { get; internal set; }
-
-        public Uri Location { get; internal set; }
-
-        public string ScannerId
+        internal static T[] Array<T>(params T[] input)
         {
-            get
-            {
-                return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/'));
-            }
+            return input;
         }
 
+        internal static void DoNothing(params object[] inputs)
+        {
+        }
     }
 }

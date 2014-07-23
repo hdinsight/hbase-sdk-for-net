@@ -1,115 +1,134 @@
-﻿namespace Marlin
+﻿// Copyright (c) Microsoft Corporation
+// All rights reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License.  You may obtain a copy
+// of the License at http://www.apache.org/licenses/LICENSE-2.0
+// 
+// THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+// WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+// 
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+namespace Microsoft.HBase.Client
 {
     using System;
-    using System.Linq;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Runtime.InteropServices;
+    using System.Diagnostics.CodeAnalysis;
     using System.Security;
+    using System.Threading;
 
-    public class ClusterCredentials
+    /// <summary>
+    /// Credentials for an HBase cluster.
+    /// </summary>
+    public class ClusterCredentials : IDisposable
     {
-        public Uri ClusterUri { get; set; }
+        private SecureString _clusterPassword;
+        private int _disposed;
 
-        public string UserName { get; set; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClusterCredentials"/> class.
+        /// </summary>
+        /// <param name="clusterUri">The cluster URI.</param>
+        /// <param name="userName">The username.</param>
+        /// <param name="password">The password.</param>
+        public ClusterCredentials(Uri clusterUri, string userName, string password)
+        {
+            clusterUri.ArgumentNotNull("clusterUri");
+            userName.ArgumentNotNullNorEmpty("username");
+            password.ArgumentNotNullNorEmpty("password");
 
-        public SecureString ClusterPassword { get; set; }
+            ClusterUri = clusterUri;
+            UserName = userName;
+            _clusterPassword = password.ToSecureString();
+            _clusterPassword.MakeReadOnly();
+        }
 
-        internal String ClusterPasswordAsString
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClusterCredentials"/> class.
+        /// </summary>
+        /// <param name="clusterUri">The cluster URI.</param>
+        /// <param name="userName">The username.</param>
+        /// <param name="password">The password.</param>
+        public ClusterCredentials(Uri clusterUri, string userName, SecureString password)
+        {
+            clusterUri.ArgumentNotNull("clusterUri");
+            userName.ArgumentNotNullNorEmpty("username");
+            password.ArgumentNotNull("securePassword");
+
+            ClusterUri = clusterUri;
+            UserName = userName;
+            _clusterPassword = password.Copy();
+            _clusterPassword.MakeReadOnly();
+        }
+
+        /// <inheritdoc/>
+        [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                // already disposed or disposing
+                return;
+            }
+
+            Dispose(true);
+
+            // Use SupressFinalize in case a subclass of this type implements a finalizer.
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing"> 
+        /// Use <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources. 
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_clusterPassword != null)
+                {
+                    _clusterPassword.Dispose();
+                    _clusterPassword = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the cluster password.
+        /// </summary>
+        /// <value>
+        /// The cluster password.
+        /// </value>
+        public SecureString ClusterPassword
         {
             get
             {
-                IntPtr ptr = IntPtr.Zero;
-                try
+                if (_disposed != 0)
                 {
-                    ptr = Marshal.SecureStringToBSTR(ClusterPassword);
-                    return Marshal.PtrToStringBSTR(ptr);
+                    throw new ObjectDisposedException(GetType().Name);
                 }
-                finally
-                {
-                    Marshal.FreeBSTR(ptr);
-                }
+                return _clusterPassword.Copy();
             }
         }
 
         /// <summary>
-        /// Reads the cluster credentials from a file found under the given path.
-        /// This file needs to contain exactly three lines, where the first is the cluster uri, the second the username and the third is the password.
-        /// (Bad luck if your username/password contains either \r or \n!).
-        /// 
-        /// A possible example is:
-        /// 
-        /// https://csharpazurehbase.azurehdinsight.net/
-        /// admin
-        /// _mySup3rS4f3P4ssW0rd.
-        /// 
+        /// Gets the cluster URI.
         /// </summary>
-        /// <param name="path">a file system path that contains a text file with the credentials</param>
-        /// <returns>a ClusterCredentials object with the cluster uri, user and the password</returns>
-        public static ClusterCredentials FromFile(string path)
-        {
-            var lines = File.ReadAllLines(path).ToList();
-            return FromFileInternal(lines);
-        }
+        /// <value>
+        /// The cluster URI.
+        /// </value>
+        public Uri ClusterUri { get; private set; }
 
         /// <summary>
-        /// Creates new cluster credentials.
+        /// Gets the name of the user.
         /// </summary>
-        /// <param name="clusterUri">the cluster uri</param>
-        /// <param name="username">the username of the cluster</param>
-        /// <param name="password">the password</param>
-        /// <returns>the cluster credentials</returns>
-        public unsafe static ClusterCredentials Create(Uri clusterUri, string username, string password)
-        {
-            if (password == null || !password.Any())
-            {
-                throw new ArgumentException("Supplied password is null or empty!");
-            }
-
-            SecureString pw = null;
-            unsafe
-            {
-                fixed (char* cPtr = password)
-                {
-                    pw = new SecureString(cPtr, password.Length);
-                }
-            }
-            return Create(clusterUri, username, pw);
-        }
-
-        /// <summary>
-        /// Creates new cluster credentials.
-        /// </summary>
-        /// <param name="clusterUri">the cluster uri</param>
-        /// <param name="username">the username of the cluster</param>
-        /// <param name="password">the secure string password</param>
-        /// <returns>the cluster credentials</returns>
-        public static ClusterCredentials Create(Uri clusterUri, string username, SecureString password)
-        {
-            var userName = username;
-            if (userName == null || !userName.Any())
-            {
-                throw new ArgumentException("Supplied username is null or empty!");
-            }
-
-            if (password == null)
-            {
-                throw new ArgumentException("Supplied password is null!");
-            }
-
-            return new ClusterCredentials() { ClusterPassword = password, ClusterUri = clusterUri, UserName = userName };
-        }
-
-        internal static ClusterCredentials FromFileInternal(List<string> lines)
-        {
-            if (lines.Count() != 3)
-            {
-                throw new ArgumentException(
-                    string.Format("Expected the credentials file to have three lines, " +
-                        "first containing the cluster url, second the username, third the password. " +
-                        "Given {0} lines!", lines.Count()));
-            }
-            return Create(new Uri(lines[0]), lines[1], lines[2]);
-        }
+        /// <value>
+        /// The name of the user.
+        /// </value>
+        public string UserName { get; private set; }
     }
 }

@@ -1,11 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.HBase.Client", "Microsoft.HBase.Client\Microsoft.HBase.Client.csproj", "{256F1A52-D499-4086-83B4-AE13A515AE1D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.HBase.Client.Tests", "Microsoft.HBase.Client.Tests\Microsoft.HBase.Client.Tests.csproj", "{30A575C3-71C8-4D13-91E0-6AE0359C6A8D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6A268A29-9EE7-4AA3-A29D-CDD7B6EC96C6}"
+	ProjectSection(SolutionItems) = preProject
+		Production.FxCop.ruleset = Production.FxCop.ruleset
+		Test.FxCop.ruleset = Test.FxCop.ruleset
+		TestSettings.testsettings = TestSettings.testsettings
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
