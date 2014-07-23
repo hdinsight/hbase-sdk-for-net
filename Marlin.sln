@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marlin", "Marlin\Marlin.csproj", "{256F1A52-D499-4086-83B4-AE13A515AE1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.HBase.Client", "Microsoft.HBase.Client\Microsoft.HBase.Client.csproj", "{256F1A52-D499-4086-83B4-AE13A515AE1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarlinTests", "MarlinTests\MarlinTests.csproj", "{30A575C3-71C8-4D13-91E0-6AE0359C6A8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.HBase.Client.Tests", "Microsoft.HBase.Client.Tests\Microsoft.HBase.Client.Tests.csproj", "{30A575C3-71C8-4D13-91E0-6AE0359C6A8D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

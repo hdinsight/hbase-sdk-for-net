@@ -7,8 +7,8 @@
     <ProjectGuid>{256F1A52-D499-4086-83B4-AE13A515AE1D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Marlin</RootNamespace>
-    <AssemblyName>Marlin</AssemblyName>
+    <RootNamespace>Microsoft.HBase.Client</RootNamespace>
+    <AssemblyName>Microsoft.HBase.Client</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

@@ -6,8 +6,8 @@
     <ProjectGuid>{30A575C3-71C8-4D13-91E0-6AE0359C6A8D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MarlinTests</RootNamespace>
-    <AssemblyName>MarlinTests</AssemblyName>
+    <RootNamespace>Microsoft.HBase.Client.Tests</RootNamespace>
+    <AssemblyName>Microsoft.HBase.Client.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -65,7 +65,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Marlin\Marlin.csproj">
+    <ProjectReference Include="..\Microsoft.HBase.Client\Microsoft.HBase.Client.csproj">
       <Project>{256f1a52-d499-4086-83b4-ae13a515ae1d}</Project>
       <Name>Marlin</Name>
     </ProjectReference>
