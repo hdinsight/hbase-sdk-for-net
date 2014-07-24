@@ -18,11 +18,12 @@ namespace Microsoft.HBase.Client
     using System.Diagnostics.CodeAnalysis;
     using System.Security;
     using System.Threading;
+    using Microsoft.HBase.Client.Internal;
 
     /// <summary>
     /// Credentials for an HBase cluster.
     /// </summary>
-    public class ClusterCredentials : IDisposable
+    public sealed class ClusterCredentials : IDisposable
     {
         private SecureString _clusterPassword;
         private int _disposed;
@@ -85,7 +86,7 @@ namespace Microsoft.HBase.Client
         /// <param name="disposing"> 
         /// Use <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources. 
         /// </param>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {

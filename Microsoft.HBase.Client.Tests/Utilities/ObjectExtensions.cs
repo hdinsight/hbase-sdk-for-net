@@ -12,6 +12,7 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
     using System;
@@ -23,7 +24,7 @@ namespace Microsoft.HBase.Client.Tests.Utilities
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-    using Microsoft.HBase.Client.Tests.Utilities;
+    using Microsoft.HBase.Client.Internal;
 
     /// <summary>
     /// Extends the object system for testing.

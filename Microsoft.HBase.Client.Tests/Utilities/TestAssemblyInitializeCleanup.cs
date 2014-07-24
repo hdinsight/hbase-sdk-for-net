@@ -12,6 +12,7 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
     using System;
@@ -20,7 +21,6 @@ namespace Microsoft.HBase.Client.Tests.Utilities
     using System.Linq;
     using System.Reflection;
     using System.Threading;
-    using Microsoft.HBase.Client;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -49,7 +49,7 @@ namespace Microsoft.HBase.Client.Tests.Utilities
         {
             // populate assemblies under test.
             var types = new List<Type>();
-            types.Add(typeof(HBaseClient));
+            types.Add(typeof(ClusterCredentials));
             var assemblies = new List<Assembly>();
             foreach (Type t in types)
             {

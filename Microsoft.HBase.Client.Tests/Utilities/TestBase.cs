@@ -12,16 +12,15 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
-    using System.Collections.Generic;
+    using System.Collections.Immutable;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    /// <summary>
-    /// Base class for HealthModel tests.
-    /// </summary>
     [TestClass]
     public abstract class TestBase
     {
@@ -54,9 +53,15 @@ namespace Microsoft.HBase.Client.Tests.Utilities
         /// <summary>
         /// Gets the collection of assemblies under test.
         /// </summary>
-        protected IEnumerable<Assembly> AssembliesUnderTest
+        [SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
+        protected ImmutableHashSet<Assembly> GetAssembliesUnderTest()
         {
-            get { return TestAssemblyInitializeCleanup.AssembliesUnderTest; }
+            ImmutableHashSet<Assembly> rv = ImmutableHashSet<Assembly>.Empty;
+            foreach (Assembly asm in TestAssemblyInitializeCleanup.AssembliesUnderTest)
+            {
+                rv = rv.Add(asm);
+            }
+            return rv;
         }
     }
 }

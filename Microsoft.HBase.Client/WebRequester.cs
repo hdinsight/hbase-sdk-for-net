@@ -20,8 +20,12 @@ namespace Microsoft.HBase.Client
     using System.IO;
     using System.Net;
     using System.Threading.Tasks;
+    using Microsoft.HBase.Client.Internal;
 
-    public class WebRequester
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class WebRequester
     {
         public const string RestEndpointBase = "hbaserest/";
         public const string RestEndpointBaseZero = "hbaserest0/";
@@ -30,6 +34,11 @@ namespace Microsoft.HBase.Client
         private readonly CredentialCache _credentialCache;
         private readonly ClusterCredentials _credentials;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WebRequester"/> class.
+        /// </summary>
+        /// <param name="credentials">The credentials.</param>
+        /// <param name="contentType">Type of the content.</param>
         [SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "TODO: Review")]
         public WebRequester(ClusterCredentials credentials, string contentType = "application/x-protobuf")
         {
@@ -41,12 +50,27 @@ namespace Microsoft.HBase.Client
             InitCache();
         }
 
+        /// <summary>
+        /// Issues the web request.
+        /// </summary>
+        /// <param name="endpoint">The endpoint.</param>
+        /// <param name="method">The method.</param>
+        /// <param name="input">The input.</param>
+        /// <returns></returns>
         [SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "TODO: Review")]
         public HttpWebResponse IssueWebRequest(string endpoint, string method = "GET", Stream input = null)
         {
             return IssueWebRequestAsync(endpoint, method, input).Result;
         }
 
+        /// <summary>
+        /// Issues the web request asynchronous.
+        /// </summary>
+        /// <param name="endpoint">The endpoint.</param>
+        /// <param name="method">The method.</param>
+        /// <param name="input">The input.</param>
+        /// <param name="alternativeEndpointBase">The alternative endpoint base.</param>
+        /// <returns></returns>
         [SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "TODO: Review")]
         public async Task<HttpWebResponse> IssueWebRequestAsync(
             string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)

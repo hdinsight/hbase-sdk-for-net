@@ -12,6 +12,7 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
     using System;
@@ -20,7 +21,6 @@ namespace Microsoft.HBase.Client.Tests.Utilities
     using System.Globalization;
     using System.Linq;
     using System.Text;
-    using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     // ReSharper disable PossibleMultipleEnumeration

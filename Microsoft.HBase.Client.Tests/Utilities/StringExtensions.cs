@@ -12,6 +12,7 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
     using System;
@@ -179,17 +180,17 @@ namespace Microsoft.HBase.Client.Tests.Utilities
                 throw new InvalidOperationException("Unable to convert type.");
             }
         }
-        
+
         internal static ushort ToUInt16Ic(this string thisValue)
         {
             return ushort.Parse(thisValue, CultureInfo.InvariantCulture);
         }
-        
+
         internal static uint ToUInt32Ic(this string thisValue)
         {
             return uint.Parse(thisValue, CultureInfo.InvariantCulture);
         }
-        
+
         internal static ulong ToUInt64Ic(this string thisValue)
         {
             return ulong.Parse(thisValue, CultureInfo.InvariantCulture);

@@ -20,6 +20,7 @@ namespace Microsoft.HBase.Client
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
+    using Microsoft.HBase.Client.Internal;
     using ProtoBuf;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
 
@@ -33,21 +34,24 @@ namespace Microsoft.HBase.Client
     /// 
     /// <code>
     /// var credentials = ClusterCredentials.FromFile("credentials.txt");
-    /// var marlin = new Marlin(credentials);
-    /// 
-    /// var version = await marlin.GetVersionAsync();
+    /// var client = new HBaseClient(credentials);
+    /// var version = await client.GetVersionAsync();
     /// 
     /// Console.WriteLine(version);
-    /// 
     /// </code>
     /// </summary>
-    public class HBaseClient
+    public sealed class HBaseClient
     {
         private readonly WebRequester _requester;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HBaseClient"/> class.
+        /// </summary>
+        /// <param name="credentials">The credentials.</param>
         public HBaseClient(ClusterCredentials credentials)
         {
             credentials.ArgumentNotNull("credentials");
+
             _requester = new WebRequester(credentials);
         }
 
@@ -72,14 +76,8 @@ namespace Microsoft.HBase.Client
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
         public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings)
         {
-            if (tableName == null || !tableName.Any())
-            {
-                throw new ArgumentException("TableName was either null or empty!");
-            }
-            if (scannerSettings == null)
-            {
-                throw new ArgumentException("ScannerSettings was null!");
-            }
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            scannerSettings.ArgumentNotNull("scannerSettings");
 
             using (HttpWebResponse response = await PostRequest(tableName + "/scanner", scannerSettings, WebRequester.RestEndpointBaseZero))
             {
@@ -101,7 +99,7 @@ namespace Microsoft.HBase.Client
                 {
                     throw new ArgumentException("Couldn't find header 'Location' in the response!");
                 }
-                return new ScannerInformation { TableName = tableName, Location = new Uri(location) };
+                return new ScannerInformation(new Uri(location), tableName);
             }
         }
 
@@ -195,78 +193,134 @@ namespace Microsoft.HBase.Client
             }
         }
 
+        /// <summary>
+        /// Gets the cells.
+        /// </summary>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="rowKey">The row key.</param>
+        /// <returns></returns>
         public CellSet GetCells(string tableName, string rowKey)
         {
             return GetCellsAsync(tableName, rowKey).Result;
         }
 
-        // TODO add timestamp, versions and column queries
+
+        /// <summary>
+        /// Gets the cells asynchronously.
+        /// </summary>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="rowKey">The row key.</param>
+        /// <returns></returns>
         public async Task<CellSet> GetCellsAsync(string tableName, string rowKey)
         {
-            if (tableName == null || !tableName.Any())
-            {
-                throw new ArgumentException("TableName was either null or empty!");
-            }
-            if (rowKey == null)
-            {
-                throw new ArgumentException("RowKey was null!");
-            }
+            // TODO add timestamp, versions and column queries
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            rowKey.ArgumentNotNull("rowKey");
+
             return await GetRequestAndDeserialize<CellSet>(tableName + "/" + rowKey);
         }
 
+        /// <summary>
+        /// Gets the storage cluster status.
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public StorageClusterStatus GetStorageClusterStatus()
         {
             return GetStorageClusterStatusAsync().Result;
         }
 
+        /// <summary>
+        /// Gets the storage cluster status asynchronous.
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public async Task<StorageClusterStatus> GetStorageClusterStatusAsync()
         {
             return await GetRequestAndDeserialize<StorageClusterStatus>("/status/cluster");
         }
 
+        /// <summary>
+        /// Gets the table information.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns>
+        /// </returns>
         public TableInfo GetTableInfo(string table)
         {
             return GetTableInfoAsync(table).Result;
         }
 
+        /// <summary>
+        /// Gets the table information asynchronously.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns></returns>
         public async Task<TableInfo> GetTableInfoAsync(string table)
         {
-            if (table == null || !table.Any())
-            {
-                throw new ArgumentException("Table was either null or empty!");
-            }
+            table.ArgumentNotNullNorEmpty("table");
+            
             return await GetRequestAndDeserialize<TableInfo>(table + "/regions");
         }
 
+        /// <summary>
+        /// Gets the table schema.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns>
+        /// </returns>
         public TableSchema GetTableSchema(string table)
         {
             return GetTableSchemaAsync(table).Result;
         }
 
+        /// <summary>
+        /// Gets the table schema asynchronously.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns>
+        /// </returns>
         public async Task<TableSchema> GetTableSchemaAsync(string table)
         {
-            if (table == null || !table.Any())
-            {
-                throw new ArgumentException("Table was either null or empty!");
-            }
+            table.ArgumentNotNullNorEmpty("table");
+
             return await GetRequestAndDeserialize<TableSchema>(table + "/schema");
         }
 
+        /// <summary>
+        /// Gets the version.
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public org.apache.hadoop.hbase.rest.protobuf.generated.Version GetVersion()
         {
             return GetVersionAsync().Result;
         }
 
+        /// <summary>
+        /// Gets the version asynchronously.
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public async Task<org.apache.hadoop.hbase.rest.protobuf.generated.Version> GetVersionAsync()
         {
             return await GetRequestAndDeserialize<org.apache.hadoop.hbase.rest.protobuf.generated.Version>("version");
         }
 
+        /// <summary>
+        /// Lists the tables.
+        /// </summary>
+        /// <returns></returns>
         public TableList ListTables()
         {
             return ListTablesAsync().Result;
         }
 
+        /// <summary>
+        /// Lists the tables asynchronously.
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public async Task<TableList> ListTablesAsync()
         {
             return await GetRequestAndDeserialize<TableList>("");

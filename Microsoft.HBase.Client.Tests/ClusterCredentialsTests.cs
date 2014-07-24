@@ -18,6 +18,7 @@ namespace Microsoft.HBase.Client.Tests
     using System;
     using System.Collections.Generic;
     using System.Security;
+    using Microsoft.HBase.Client.Internal;
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -41,6 +42,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_have_the_expected_password()
         {
             SecureString pwd = fromString.ClusterPassword;
@@ -56,6 +58,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_have_the_expected_uri()
         {
             fromString.ClusterUri.ShouldEqual(expectedUri);
@@ -63,6 +66,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_have_the_expected_user_name()
         {
             fromString.UserName.ShouldEqual(expectedUserName);
@@ -86,6 +90,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_throw_when_I_get_the_password()
         {
             typeof(ObjectDisposedException).ShouldBeThrownBy(() => DisposableHelp.SafeCreate(() => target.ClusterPassword));
@@ -101,6 +106,7 @@ namespace Microsoft.HBase.Client.Tests
         private readonly Uri validUri = new Uri("https://someurl.de/");
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_reject_empty_user_names()
         {
             typeof(ArgumentEmptyException).ShouldBeThrownBy(
@@ -110,6 +116,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_reject_null_passwords()
         {
             typeof(ArgumentNullException).ShouldBeThrownBy(
@@ -119,6 +126,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_reject_null_uris()
         {
             typeof(ArgumentNullException).ShouldBeThrownBy(
@@ -128,6 +136,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_reject_null_user_names()
         {
             typeof(ArgumentNullException).ShouldBeThrownBy(

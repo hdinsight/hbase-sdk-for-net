@@ -12,12 +12,12 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Internal
 {
     using System;
 
     /// <summary>
-    /// Instructs Code Analysis to treat a method as a validation method for a given parameter and not fire 1062 when it is used.
+    /// Instructs Code Analysis to treat a method as a validation method for a given parameter and not fire CA1062 when it is used.
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter)]
     internal sealed class ValidatedNotNullAttribute : Attribute

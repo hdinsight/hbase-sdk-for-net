@@ -12,13 +12,13 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.HBase.Client.Tests.Utilities;
 
     internal static class EnumerableExtensions
     {

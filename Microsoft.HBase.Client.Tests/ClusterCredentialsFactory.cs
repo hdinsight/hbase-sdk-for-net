@@ -20,6 +20,7 @@ namespace Microsoft.HBase.Client.Tests
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using Microsoft.HBase.Client.Internal;
 
     internal static class ClusterCredentialsFactory
     {

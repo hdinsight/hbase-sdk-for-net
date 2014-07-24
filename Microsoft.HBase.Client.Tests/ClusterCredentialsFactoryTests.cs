@@ -18,6 +18,7 @@ namespace Microsoft.HBase.Client.Tests
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using Microsoft.HBase.Client.Internal;
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,6 +28,7 @@ namespace Microsoft.HBase.Client.Tests
     public class When_I_call_ClusterCredentialsFactory_CreateFromList : DisposableContextSpecification
     {
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_throw_when_the_list_is_null()
         {
             var ane =
@@ -36,6 +38,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_throw_when_the_list_is_too_long()
         {
             var lst = new List<string> { Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString() };
@@ -46,6 +49,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_throw_when_the_list_is_too_short()
         {
             var lst = new List<string>();
@@ -77,6 +81,7 @@ namespace Microsoft.HBase.Client.Tests
     public class When_I_call_ClusterCredentialsFactory_CreateFromFile
     {
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_throw_the_file_does_not_exist()
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), Guid.NewGuid().ToString());
@@ -87,6 +92,7 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public void It_should_throw_when_the_path_is_null()
         {
             var ane =

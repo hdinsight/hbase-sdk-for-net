@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <TestSettings name="TestSettings" id="1d4b629c-8d6d-45d6-8ee3-4e74fe8a4ecb" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Description>These are default test settings for a local test run for monitoring projects.  This file is required to be included in your *.sln file in order execute tests with the R# test runner.</Description>
+  <Description>These are default test settings for a local test run.  This file is required to be included in your *.sln file in order execute tests with the R# test runner.</Description>
   <Deployment enabled="false" />
   <Execution>
     <TestTypeSpecific>

@@ -12,14 +12,14 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Internal
 {
     using System;
 
     /// <summary>
     /// Helper utilities for working with IDisposable.
     /// </summary>
-    public static class DisposableHelp
+    internal static class DisposableHelp
     {
         /// <summary>
         /// Safely creates a disposable object with a default constructor.
