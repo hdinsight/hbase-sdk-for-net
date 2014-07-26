@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Default Production Code Analysis Rules"
+  Description="This rule set contains all rules, less those temporarily or permanently disabled."
+  ToolsVersion="10.0">
+   <IncludeAll Action="Warning" />
+   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+
+      <!-- Production Rules -->
+      <!-- CA1004 - Microsoft.Design: Generic methods should provide type parameter -->
+      <Rule Id="CA1004" Action="None" />
+
+      <!-- CA1006 - Microsoft.Design: Do not nest generic types in member signatures -->
+      <Rule Id="CA1006" Action="None" />
+
+      <!-- CA1011 - Microsoft.Design: Consider passing base types as parameters -->
+      <Rule Id="CA1011" Action="None" />
+
+      <!-- CA1020 - Microsoft.Design: Avoid namespaces with few types -->
+      <Rule Id="CA1020" Action="None" />
+
+      <!-- CA1024 - Microsoft.Design: Use properties where appropriate -->
+      <Rule Id="CA1024" Action="None" />
+
+      <!-- CA1040 - Microsoft.Design: Avoid empty interfaces -->
+      <Rule Id="CA1040" Action="None" />
+
+      <!-- CA1500 - Variable names should not match field names -->
+      <Rule Id="CA1500" Action="None" />
+
+      <!-- CA1822 - Microsoft.Performance: Mark Members As Static -->
+      <Rule Id="CA1822" Action="None" />
+
+      <!-- CA2210 - Microsoft.Design: Assemblies should have valid strong names -->
+      <Rule Id="CA2210" Action="None" />
+   </Rules>
+</RuleSet>
