@@ -45,7 +45,7 @@
     <IntermediateOutputPath>..\obj\release\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>..\bin\release\$(AssemblyName)</OutputPath>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\..\..\Projects\marlin\Test.FxCop.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>..\Test.FxCop.ruleset</CodeAnalysisRuleSet>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
