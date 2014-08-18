@@ -36,7 +36,7 @@ namespace Microsoft.HBase.Client.Internal
         /// <returns>
         /// The disposable object that has been safely created.
         /// </returns>
-        public static T SafeCreate<T>() where T : class, IDisposable, new()
+        internal static T SafeCreate<T>() where T : class, IDisposable, new()
         {
             T rv = null;
             try
@@ -72,7 +72,7 @@ namespace Microsoft.HBase.Client.Internal
         /// <returns>
         /// The disposable object that has been safely created.
         /// </returns>
-        public static T SafeCreate<T>(Func<T> factory) where T : class, IDisposable
+        internal static T SafeCreate<T>(Func<T> factory) where T : class, IDisposable
         {
             factory.ArgumentNotNull("factory");
 

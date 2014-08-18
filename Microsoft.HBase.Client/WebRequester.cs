@@ -16,7 +16,6 @@
 namespace Microsoft.HBase.Client
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Net;
     using System.Threading.Tasks;
@@ -39,7 +38,6 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="credentials">The credentials.</param>
         /// <param name="contentType">Type of the content.</param>
-        [SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "TODO: Review")]
         public WebRequester(ClusterCredentials credentials, string contentType = "application/x-protobuf")
         {
             credentials.ArgumentNotNull("credentials");
@@ -57,7 +55,6 @@ namespace Microsoft.HBase.Client
         /// <param name="method">The method.</param>
         /// <param name="input">The input.</param>
         /// <returns></returns>
-        [SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "TODO: Review")]
         public HttpWebResponse IssueWebRequest(string endpoint, string method = "GET", Stream input = null)
         {
             return IssueWebRequestAsync(endpoint, method, input).Result;
@@ -71,7 +68,6 @@ namespace Microsoft.HBase.Client
         /// <param name="input">The input.</param>
         /// <param name="alternativeEndpointBase">The alternative endpoint base.</param>
         /// <returns></returns>
-        [SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "TODO: Review")]
         public async Task<HttpWebResponse> IssueWebRequestAsync(
             string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)
         {

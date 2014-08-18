@@ -26,7 +26,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <IntermediateOutputPath>..\obj\debug\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>..\bin\debug\$(AssemblyName)</OutputPath>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -77,6 +77,8 @@
     <Compile Include="ClusterCredentialsFactory.cs" />
     <Compile Include="ClusterCredentialsFactoryTests.cs" />
     <Compile Include="ClusterCredentialsTests.cs" />
+    <Compile Include="FilterTestRecord.cs" />
+    <Compile Include="FilterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HBaseClientTests.cs" />
     <Compile Include="PublicInternalArchitectureTests.cs" />

@@ -26,7 +26,10 @@ namespace Microsoft.HBase.Client.Tests
     [TestClass]
     public class HBaseClientTests : DisposableContextSpecification
     {
+        // TODO: add test for ModifyTableSchema
+        // 
         private const string TestTablePrefix = "marlintest";
+
         private ClusterCredentials _credentials;
         private readonly Random _random = new Random();
 

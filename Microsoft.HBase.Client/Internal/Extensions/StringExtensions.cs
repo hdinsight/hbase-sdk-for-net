@@ -12,6 +12,7 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Internal
 {
     using System;
@@ -19,6 +20,18 @@ namespace Microsoft.HBase.Client.Internal
 
     internal static class StringExtensions
     {
+        /// <summary>
+        /// Determines whether the specified string is not null or empty.
+        /// </summary>
+        /// <param name = "value">The string.</param>
+        /// <returns>
+        /// <c>true</c> if the specified string is not null or empty; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsNotNullOrEmpty(this string value)
+        {
+            return string.IsNullOrEmpty(value);
+        }
+
         /// <summary>
         /// Transforms a string into a SecureString.
         /// </summary>

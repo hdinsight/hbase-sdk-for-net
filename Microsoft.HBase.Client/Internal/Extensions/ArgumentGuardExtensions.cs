@@ -12,10 +12,12 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+
 namespace Microsoft.HBase.Client.Internal
 {
     using System;
     using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     internal static class ArgumentGuardExtensions
@@ -25,6 +27,16 @@ namespace Microsoft.HBase.Client.Internal
             if (ReferenceEquals(value, null))
             {
                 throw new ArgumentNullException(argumentName ?? string.Empty);
+            }
+        }
+
+        internal static void ArgumentNotNullNorContainsNull<T>([ValidatedNotNull] this IEnumerable<T> value, string paramName) where T : class
+        {
+            value.ArgumentNotNull(paramName);
+
+            if ((from v in value where ReferenceEquals(v, null) select v).Any())
+            {
+                throw new ArgumentContainsNullException(paramName ?? string.Empty, null, null);
             }
         }
 

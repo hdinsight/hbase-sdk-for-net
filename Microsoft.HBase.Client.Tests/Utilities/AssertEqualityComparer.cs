@@ -109,7 +109,7 @@ namespace Microsoft.HBase.Client.Tests.Utilities
                 }
             }
 
-            // Last case, rely on Object.Equals
+            // Last case, rely on Object.Equals(...)
             return object.Equals(x, y);
         }
 
