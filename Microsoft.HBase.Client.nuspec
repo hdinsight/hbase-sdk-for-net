@@ -13,6 +13,6 @@
     <description>$description$</description>
     <releaseNotes>(pre-release)</releaseNotes>
     <copyright>Copyright © Microsoft Corporation</copyright>
-    <tags>Microsoft HBase</tags>
+    <tags>Microsoft HDInsight HBase</tags>
   </metadata>
 </package>
