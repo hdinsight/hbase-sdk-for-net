@@ -17,16 +17,16 @@ namespace Microsoft.HBase.Client
 {
     using System;
     using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.HBase.Client.Internal;
-    using ProtoBuf;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
+    using ProtoBuf;
 
     /// <summary>
     /// A C# connector to HBase. 
-    /// 
+    /// </summary>
+    /// <remarks>
     /// It currently targets HBase 0.96.2 and HDInsight 3.0 on Microsoft Azure.
     /// The communication works through HBase REST (StarGate) which uses ProtoBuf as a serialization format.
     /// 
@@ -39,7 +39,7 @@ namespace Microsoft.HBase.Client
     /// 
     /// Console.WriteLine(version);
     /// </code>
-    /// </summary>
+    /// </remarks>
     public sealed class HBaseClient
     {
         private readonly WebRequester _requester;
@@ -120,14 +120,13 @@ namespace Microsoft.HBase.Client
         /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
         public async Task<bool> CreateTableAsync(TableSchema schema)
         {
-            if (schema == null)
+            schema.ArgumentNotNull("schema");
+
+            if (string.IsNullOrEmpty(schema.name))
             {
-                throw new ArgumentException("Schema was null!");
+                throw new ArgumentException("schema.name was either null or empty!", "schema");
             }
-            if (schema.name == null || !schema.name.Any())
-            {
-                throw new ArgumentException("TableName was either null or empty!");
-            }
+
             using (HttpWebResponse webResponse = await PutRequest(schema.name + "/schema", schema))
             {
                 if (webResponse.StatusCode == HttpStatusCode.Created)
@@ -171,10 +170,8 @@ namespace Microsoft.HBase.Client
         /// <param name="table">the table name</param>
         public async Task DeleteTableAsync(string table)
         {
-            if (table == null || !table.Any())
-            {
-                throw new ArgumentException("TableName was either null or empty!");
-            }
+            table.ArgumentNotNullNorEmpty("table");
+
             using (HttpWebResponse webResponse = await DeleteRequest<TableSchema>(table + "/schema", null))
             {
                 if (webResponse.StatusCode != HttpStatusCode.OK)
@@ -203,7 +200,6 @@ namespace Microsoft.HBase.Client
         {
             return GetCellsAsync(tableName, rowKey).Result;
         }
-
 
         /// <summary>
         /// Gets the cells asynchronously.
@@ -259,7 +255,7 @@ namespace Microsoft.HBase.Client
         public async Task<TableInfo> GetTableInfoAsync(string table)
         {
             table.ArgumentNotNullNorEmpty("table");
-            
+
             return await GetRequestAndDeserialize<TableInfo>(table + "/regions");
         }
 
@@ -347,14 +343,9 @@ namespace Microsoft.HBase.Client
         /// <param name="schema">the schema</param>
         public async Task ModifyTableSchemaAsync(string table, TableSchema schema)
         {
-            if (table == null || !table.Any())
-            {
-                throw new ArgumentException("TableName was either null or empty!");
-            }
-            if (schema == null)
-            {
-                throw new ArgumentException("Schema was null!");
-            }
+            table.ArgumentNotNullNorEmpty("table");
+            schema.ArgumentNotNull("schema");
+
             using (HttpWebResponse webResponse = await PostRequest(table + "/schema", schema))
             {
                 if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
@@ -390,10 +381,7 @@ namespace Microsoft.HBase.Client
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
         public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo)
         {
-            if (scannerInfo == null)
-            {
-                throw new ArgumentException("ScannerInformation was null!");
-            }
+            scannerInfo.ArgumentNotNull("scannerInfo");
 
             using (
                 HttpWebResponse webResponse =
@@ -426,15 +414,9 @@ namespace Microsoft.HBase.Client
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
         public async Task StoreCellsAsync(string table, CellSet cells)
         {
-            if (table == null || !table.Any())
-            {
-                throw new ArgumentException("TableName was either null or empty!");
-            }
-            if (cells == null)
-            {
-                throw new ArgumentException("CellSet was null!");
-            }
-
+            table.ArgumentNotNullNorEmpty("table");
+            cells.ArgumentNotNull("cells");
+            
             // note the fake row key to insert a set of cells
             using (HttpWebResponse webResponse = await PutRequest(table + "/somefalsekey", cells))
             {
@@ -454,13 +436,13 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        internal async Task<HttpWebResponse> DeleteRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null)
+        private async Task<HttpWebResponse> DeleteRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null)
             where TReq : class
         {
             return await ExecuteMethod("DELETE", endpoint, request, alternativeEndpointBase);
         }
 
-        internal async Task<HttpWebResponse> ExecuteMethod<TReq>(string method, string endpoint, TReq request, string alternativeEndpointBase = null)
+        private async Task<HttpWebResponse> ExecuteMethod<TReq>(string method, string endpoint, TReq request, string alternativeEndpointBase = null)
             where TReq : class
         {
             // TODO make the buffer size configurable 
@@ -474,12 +456,12 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        internal async Task<HttpWebResponse> GetRequest(string endpoint, string alternativeEndpointBase = null)
+        private async Task<HttpWebResponse> GetRequest(string endpoint, string alternativeEndpointBase = null)
         {
             return await _requester.IssueWebRequestAsync(endpoint, "GET", null, alternativeEndpointBase: alternativeEndpointBase);
         }
 
-        internal async Task<T> GetRequestAndDeserialize<T>(string endpoint, string alternativeEndpointBase = null)
+        private async Task<T> GetRequestAndDeserialize<T>(string endpoint, string alternativeEndpointBase = null)
         {
             using (HttpWebResponse response = await _requester.IssueWebRequestAsync(endpoint, "GET", alternativeEndpointBase: alternativeEndpointBase)
                 )
@@ -491,13 +473,12 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        internal async Task<HttpWebResponse> PostRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null)
-            where TReq : class
+        private async Task<HttpWebResponse> PostRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
         {
             return await ExecuteMethod("POST", endpoint, request, alternativeEndpointBase);
         }
 
-        internal async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
+        private async Task<HttpWebResponse> PutRequest<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null) where TReq : class
         {
             return await ExecuteMethod("PUT", endpoint, request, alternativeEndpointBase);
         }
