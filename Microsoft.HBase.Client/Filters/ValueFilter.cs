@@ -19,25 +19,23 @@ namespace Microsoft.HBase.Client.Filters
     using Microsoft.HBase.Client.Internal;
 
     /// <summary>
-    /// This filter is used to filter based on the column family.
+    /// This filter is used to filter based on column value.
     /// </summary>
-    public class FamilyFilter : CompareFilter
+    public class ValueFilter : CompareFilter
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="FamilyFilter"/> class.
+        /// Initializes a new instance of the <see cref="ValueFilter"/> class.
         /// </summary>
-        /// <param name="familyCompareOp">The family compare op.</param>
-        /// <param name="familyComparator">The family comparator.</param>
-        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">familyCompareOp</exception>
-        public FamilyFilter(CompareOp familyCompareOp, ByteArrayComparable familyComparator) : base(familyCompareOp, familyComparator)
+        /// <param name="valueCompareOp">The value compare op.</param>
+        /// <param name="valueComparator">The value comparator.</param>
+        public ValueFilter(CompareOp valueCompareOp, ByteArrayComparable valueComparator) : base(valueCompareOp, valueComparator)
         {
         }
 
         /// <inheritdoc/>
         public override string ToEncodedString()
         {
-            const string filterPattern = @"{{""type"":""FamilyFilter"",""op"":""{0}"",""comparator"":{{{1}}}}}";
-
+            const string filterPattern = @"{{""type"":""ValueFilter"",""op"":""{0}"",""comparator"":{{{1}}}}}";
             return string.Format(CultureInfo.InvariantCulture, filterPattern, CompareOperation.ToCodeName(), Comparator.ToEncodedString());
         }
     }

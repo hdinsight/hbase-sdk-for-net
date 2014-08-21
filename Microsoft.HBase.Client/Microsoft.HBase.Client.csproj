@@ -61,6 +61,8 @@
     <Compile Include="Filters\BinaryPrefixComparator.cs" />
     <Compile Include="Filters\BitComparator.cs" />
     <Compile Include="Filters\ByteArrayComparable.cs" />
+    <Compile Include="Filters\FilterList.cs" />
+    <Compile Include="Filters\InclusiveStopFilter.cs" />
     <Compile Include="Filters\FamilyFilter.cs" />
     <Compile Include="Filters\ColumnRangeFilter.cs" />
     <Compile Include="Filters\ColumnPrefixFilter.cs" />
@@ -70,12 +72,26 @@
     <Compile Include="Filters\KeyOnlyFilter.cs" />
     <Compile Include="Filters\CompareFilter.cs" />
     <Compile Include="Filters\DependentColumnFilter.cs" />
+    <Compile Include="Filters\MultipleColumnPrefixFilter.cs" />
     <Compile Include="Filters\NullComparator.cs" />
+    <Compile Include="Filters\PageFilter.cs" />
+    <Compile Include="Filters\PrefixFilter.cs" />
+    <Compile Include="Filters\QualifierFilter.cs" />
+    <Compile Include="Filters\RandomRowFilter.cs" />
+    <Compile Include="Filters\RegexStringComparator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Filters\RowFilter.cs" />
     <Compile Include="Filters\SingleColumnValueExcludeFilter.cs" />
     <Compile Include="Filters\SingleColumnValueFilter.cs" />
     <Compile Include="Filters\Filter.cs" />
+    <Compile Include="Filters\SkipFilter.cs" />
     <Compile Include="Filters\SubstringComparator.cs" />
+    <Compile Include="Filters\TimestampsFilter.cs" />
+    <Compile Include="Filters\ValueFilter.cs" />
+    <Compile Include="Filters\WhileMatchFilter.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Internal\ByteArrayEqualityComparer.cs" />
     <Compile Include="Internal\Extensions\ObjectExtensions.cs" />
     <Compile Include="Internal\ValidatedNotNullAttribute.cs" />
     <Compile Include="ClusterCredentials.cs" />

@@ -15,30 +15,32 @@
 
 namespace Microsoft.HBase.Client.Filters
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
-    using Microsoft.HBase.Client.Internal;
+    using System.Text;
 
     /// <summary>
-    /// This filter is used to filter based on the column family.
+    /// This comparator is for use with CompareFilter implementations, such as RowFilter, QualifierFilter, and 
+    /// ValueFilter, for filtering based on the value of a given column.
     /// </summary>
-    public class FamilyFilter : CompareFilter
+    public class RegexStringComparator : ByteArrayComparable
     {
+        // note:  could not get "flags" to stringify, so it has been removed.
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="FamilyFilter"/> class.
+        /// Initializes a new instance of the <see cref="RegexStringComparator"/> class.
         /// </summary>
-        /// <param name="familyCompareOp">The family compare op.</param>
-        /// <param name="familyComparator">The family comparator.</param>
-        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">familyCompareOp</exception>
-        public FamilyFilter(CompareOp familyCompareOp, ByteArrayComparable familyComparator) : base(familyCompareOp, familyComparator)
+        /// <param name="expr">The regular expression as a string.</param>
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "expr")]
+        public RegexStringComparator(string expr) : base(expr == null ? null : Encoding.UTF8.GetBytes(expr))
         {
         }
 
         /// <inheritdoc/>
         public override string ToEncodedString()
         {
-            const string filterPattern = @"{{""type"":""FamilyFilter"",""op"":""{0}"",""comparator"":{{{1}}}}}";
-
-            return string.Format(CultureInfo.InvariantCulture, filterPattern, CompareOperation.ToCodeName(), Comparator.ToEncodedString());
+            const string pattern = @"""type"":""RegexStringComparator"", ""value"":""{0}""";
+            return string.Format(CultureInfo.InvariantCulture, pattern, Encoding.UTF8.GetString(Value));
         }
     }
 }

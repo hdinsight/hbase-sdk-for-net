@@ -16,7 +16,6 @@
 namespace Microsoft.HBase.Client.Filters
 {
     using System;
-    using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using Microsoft.HBase.Client.Internal;
@@ -43,32 +42,15 @@ namespace Microsoft.HBase.Client.Filters
             byte[] qualifier,
             bool dropDependentColumn,
             CompareOp valueCompareOp,
-            ByteArrayComparable valueComparator)
+            ByteArrayComparable valueComparator) : base(valueCompareOp, valueComparator)
         {
             family.ArgumentNotNull("family");
             qualifier.ArgumentNotNull("qualifier");
 
-            if (!Enum.IsDefined(typeof(CompareOp), valueCompareOp))
-            {
-                throw new InvalidEnumArgumentException("valueCompareOp", (int)valueCompareOp, typeof(CompareOp));
-            }
-
-            valueComparator.ArgumentNotNull("valueComparator");
-
             _family = (byte[])family.Clone();
             _qualifier = (byte[])qualifier.Clone();
             DropDependentColumn = dropDependentColumn;
-            CompareOperation = valueCompareOp;
-            ValueComparator = valueComparator;
         }
-
-        /// <summary>
-        /// Gets the compare operation.
-        /// </summary>
-        /// <value>
-        /// The compare operation.
-        /// </value>
-        public CompareOp CompareOperation { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether or not the dependent column should be dropped.
@@ -102,14 +84,6 @@ namespace Microsoft.HBase.Client.Filters
             get { return (byte[])_qualifier.Clone(); }
         }
 
-        /// <summary>
-        /// Gets the value comparator.
-        /// </summary>
-        /// <value>
-        /// The value comparator.
-        /// </value>
-        public ByteArrayComparable ValueComparator { get; private set; }
-
         /// <inheritdoc/>
         [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
         public override string ToEncodedString()
@@ -124,7 +98,7 @@ namespace Microsoft.HBase.Client.Filters
                 Convert.ToBase64String(Family),
                 Convert.ToBase64String(Qualifier),
                 DropDependentColumn.ToString(CultureInfo.InvariantCulture).ToLowerInvariant(),
-                ValueComparator.ToEncodedString());
+                Comparator.ToEncodedString());
         }
     }
 }

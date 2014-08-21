@@ -16,29 +16,34 @@
 namespace Microsoft.HBase.Client.Filters
 {
     using System.Globalization;
-    using Microsoft.HBase.Client.Internal;
 
     /// <summary>
-    /// This filter is used to filter based on the column family.
+    ///  A filter that includes rows based on a chance. 
     /// </summary>
-    public class FamilyFilter : CompareFilter
+    public class RandomRowFilter : Filter
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="FamilyFilter"/> class.
+        /// Initializes a new instance of the <see cref="RandomRowFilter"/> class.
         /// </summary>
-        /// <param name="familyCompareOp">The family compare op.</param>
-        /// <param name="familyComparator">The family comparator.</param>
-        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">familyCompareOp</exception>
-        public FamilyFilter(CompareOp familyCompareOp, ByteArrayComparable familyComparator) : base(familyCompareOp, familyComparator)
+        /// <param name="chance">The chance.</param>
+        public RandomRowFilter(float chance)
         {
+            Chance = chance;
         }
+
+        /// <summary>
+        /// Gets the chance.
+        /// </summary>
+        /// <value>
+        /// The chance.
+        /// </value>
+        public float Chance { get; private set; }
 
         /// <inheritdoc/>
         public override string ToEncodedString()
         {
-            const string filterPattern = @"{{""type"":""FamilyFilter"",""op"":""{0}"",""comparator"":{{{1}}}}}";
-
-            return string.Format(CultureInfo.InvariantCulture, filterPattern, CompareOperation.ToCodeName(), Comparator.ToEncodedString());
+            const string filterPattern = @"{{""type"":""RandomRowFilter"",""chance"":{0}}}";
+            return string.Format(CultureInfo.InvariantCulture, filterPattern, Chance);
         }
     }
 }
