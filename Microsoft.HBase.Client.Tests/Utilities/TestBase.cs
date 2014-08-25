@@ -15,11 +15,13 @@
 
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
+    using System;
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using org.apache.hadoop.hbase.rest.protobuf.generated;
 
     [TestClass]
     public abstract class TestBase
@@ -62,6 +64,19 @@ namespace Microsoft.HBase.Client.Tests.Utilities
                 rv = rv.Add(asm);
             }
             return rv;
+        }
+
+        internal IRetryUtility CreateDefaultWebRequestRetry()
+        {
+            var factory = new RetryUtilityFactory();
+            IRetryUtility rv = factory.Create(3, TimeSpan.FromSeconds(3));
+            return rv;
+        }
+
+        internal CellSet DurableScannerGetNextCellSet(HBaseClient client, ScannerInformation scanInfo)
+        {
+            IRetryUtility retry = CreateDefaultWebRequestRetry();
+            return retry.Attempt(() => client.ScannerGetNext(scanInfo));
         }
     }
 }

@@ -79,9 +79,13 @@
     <Compile Include="ClusterCredentialsTests.cs" />
     <Compile Include="FilterTestRecord.cs" />
     <Compile Include="FilterTests.cs" />
+    <Compile Include="Utilities\IRetryUtility.cs" />
+    <Compile Include="Utilities\IRetryUtilityFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HBaseClientTests.cs" />
     <Compile Include="PublicInternalArchitectureTests.cs" />
+    <Compile Include="Utilities\RetryEventArgs.cs" />
+    <Compile Include="Utilities\RetryUtility.cs" />
     <Compile Include="ScannerInformationTests.cs" />
     <Compile Include="Utilities\AssertEqualityComparer.cs" />
     <Compile Include="Utilities\Catch.cs" />
@@ -91,6 +95,7 @@
     <Compile Include="Utilities\GeneralComparisonOperator.cs" />
     <Compile Include="Utilities\ObjectExtensions.cs" />
     <Compile Include="Utilities\Pair.cs" />
+    <Compile Include="Utilities\RetryUtilityFactory.cs" />
     <Compile Include="Utilities\SecureStringExtensions.cs" />
     <Compile Include="Utilities\ShouldExtensionMethods.cs" />
     <Compile Include="Utilities\StringExtensions.cs" />
