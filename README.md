@@ -30,69 +30,65 @@ Usage
 
 After compilation, you can easily use the library to get the version of the HBase/HDInsight cluster you're running on:
 ```csharp
-var credentials = ClusterCredentials.FromFile("credentials.txt");
-var marlin = new Marlin(credentials);
-var version = marlin.GetVersion();
+var creds = new ClusterCredentials(new Uri("https://myclustername.azurehdinsight.net"), "myusername", "mypassword");
+var client = new HBaseClient(creds);
+
+var version = client.GetVersion();
 Console.WriteLine(version);
 
-// yields:
-RestVersion: 0.0.2, JvmVersion: Azul Systems, Inc. 1.7.0_55-24.55-b03, OsVersion: Windows Server 2012 R2 6.3 amd64, ServerVersion: jetty/6.1.26, JerseyVersion: 1.8, ExtensionObject: 
-```
-
-The credentials text file contains exactly three lines:
-- Azure HDInsight URL
-- Azure HDInsight Username
-- Azure HDInsight Password
- 
-An example looks like this:
-```
-https://azurehbase.azurehdinsight.net
-admin
-_mySup3rS4f3P4ssW0rd.
+// yields: RestVersion: 0.0.2, JvmVersion: Azul Systems, Inc. 1.7.0_55-24.55-b03, OsVersion: Windows Server 2012 R2 6.3 amd64, ServerVersion: jetty/6.1.26, JerseyVersion: 1.8, ExtensionObject:
 ```
 
 Table creation works like this:
-
 ```csharp
-var marlin = new Marlin(ClusterCredentials.FromFile("credentials.txt"));
-var tableName = "table";
+var creds = new ClusterCredentials(new Uri("https://myclustername.azurehdinsight.net"), "myusername", "mypassword");
+var client = new HBaseClient(creds);
+
 var testTableSchema = new TableSchema();
-testTableSchema.name = tableName;
+testTableSchema.name = "mytablename";
 testTableSchema.columns.Add(new ColumnSchema() { name = "d" });
 testTableSchema.columns.Add(new ColumnSchema() { name = "f" });
-marlin.CreateTable(testTableSchema);
+client.CreateTable(testTableSchema);
 ```
 
-Inserting stuff can be done like this:
-
+Inserting data can be done like this:
 ```csharp
+var creds = new ClusterCredentials(new Uri("https://myclustername.azurehdinsight.net"), "myusername", "mypassword");
+var client = new HBaseClient(creds);
+
+var tableName = "mytablename";
 var testKey = "content";
 var testValue = "the force is strong in this column";
-
-var marlin = new Marlin(ClusterCredentials.FromFile("credentials.txt"));
-CellSet set = new CellSet();
-CellSet.Row row = new CellSet.Row() { key = Encoding.UTF8.GetBytes(testKey) };
+var set = new CellSet();
+var row = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey) };
 set.rows.Add(row);
 
-var value = new Cell() { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
+var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
 row.values.Add(value);
-marlin.StoreCells("table", set);
+client.StoreCells(tableName, set);
 ```
 
-Retrieving all cells for a key looks like that:
-
+Retrieving all cells for a key looks like this:
 ```csharp
-var cells = marlin.GetCells("table", testKey);
+var creds = new ClusterCredentials(new Uri("https://myclustername.azurehdinsight.net"), "myusername", "mypassword");
+var client = new HBaseClient(creds);
+
+var testKey = "content";
+var tableName = "mytablename";
+
+var cells = client.GetCells(tableName, testKey);
 // get the first value from the row.
 Console.WriteLine(Encoding.UTF8.GetString(cells.rows[0].values[0].data));
 // with the previous insert, it should yield: "the force is strong in this column"
 ```
 
 Scanning over rows looks like this:
-
 ```csharp
+var creds = new ClusterCredentials(new Uri("https://myclustername.azurehdinsight.net"), "myusername", "mypassword");
+var client = new HBaseClient(creds);
 
-var marlin = new Marlin(_credentials);
+var tableName = "mytablename";
+
 // assume the table has integer keys and we want data between keys 25 and 35
 var scanSettings = new Scanner()
 {
@@ -100,12 +96,14 @@ var scanSettings = new Scanner()
 	startRow = BitConverter.GetBytes(25),
 	endRow = BitConverter.GetBytes(35)
 };
-var scannerInfo = marlin.CreateScanner(_testTableName, scanSettings);
+
+var scannerInfo = client.CreateScanner(tableName, scanSettings);
 CellSet next = null;
-while ((next = marlin.ScannerGetNext(scannerInfo)) != null)
+while ((next = client.ScannerGetNext(scannerInfo)) != null)
 {
 	foreach (var row in next.rows)
-		// read the rows
-}            
-
+    {
+    	// ... read the rows
+    }
+}
 ```
