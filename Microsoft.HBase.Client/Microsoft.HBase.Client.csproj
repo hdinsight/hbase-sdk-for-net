@@ -56,6 +56,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Class1.cs" />
+    <None Include="Class2.cs" />
+    <Compile Include="Internal\DefaultRetryPolicyFactory.cs" />
     <Compile Include="Exceptions\ArgumentContainsNullException.cs" />
     <Compile Include="Filters\BinaryComparator.cs" />
     <Compile Include="Filters\BinaryPrefixComparator.cs" />
@@ -92,6 +95,7 @@
     <Compile Include="Filters\WhileMatchFilter.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Internal\ByteArrayEqualityComparer.cs" />
+    <Compile Include="Internal\DefaultRetryPolicy.cs" />
     <Compile Include="Internal\Extensions\ObjectExtensions.cs" />
     <Compile Include="Internal\ValidatedNotNullAttribute.cs" />
     <Compile Include="ClusterCredentials.cs" />
@@ -100,6 +104,8 @@
     <Compile Include="Internal\Extensions\StringExtensions.cs" />
     <Compile Include="Internal\Helpers\DisposableHelp.cs" />
     <Compile Include="HBaseClient.cs" />
+    <Compile Include="IRetryPolicy.cs" />
+    <Compile Include="IRetryPolicyFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScannerInformation.cs" />
     <Compile Include="WebRequester.cs" />

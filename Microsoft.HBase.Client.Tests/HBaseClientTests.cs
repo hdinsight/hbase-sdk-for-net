@@ -42,8 +42,8 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
 
             // ensure tables from previous tests are cleaned up
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            TableList tables = retry.Attempt(() => client.ListTables());
+            
+            TableList tables = client.ListTables();
             foreach (string name in tables.name)
             {
                 if (name.StartsWith(TestTablePrefix, StringComparison.Ordinal))
@@ -57,10 +57,8 @@ namespace Microsoft.HBase.Client.Tests
             _testTableSchema = new TableSchema();
             _testTableSchema.name = _testTableName;
             _testTableSchema.columns.Add(new ColumnSchema { name = "d" });
-
-            // avoid reusing a retry by instantiating a new instance.
-            retry = CreateDefaultWebRequestRetry();
-            retry.Attempt(() => client.CreateTable(_testTableSchema));
+           
+            client.CreateTable(_testTableSchema);
         }
 
         [TestCleanup]
@@ -79,12 +77,11 @@ namespace Microsoft.HBase.Client.Tests
 
             // full range scan
             var scanSettings = new Scanner { batch = 10 };
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scannerInfo = retry.Attempt(() => client.CreateScanner(_testTableName, scanSettings));
+            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, scanSettings);
 
             CellSet next;
             var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
-            while ((next = DurableScannerGetNextCellSet(client, scannerInfo)) != null)
+            while ((next = client.ScannerGetNext(scannerInfo)) != null)
             {
                 Assert.AreEqual(10, next.rows.Count);
                 foreach (CellSet.Row row in next.rows)
@@ -101,8 +98,7 @@ namespace Microsoft.HBase.Client.Tests
         public void TestGetStorageClusterStatus()
         {
             var client = new HBaseClient(_credentials);
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            StorageClusterStatus status = retry.Attempt(() => client.GetStorageClusterStatus());
+            StorageClusterStatus status = client.GetStorageClusterStatus();
             // TODO not really a good test
             Assert.IsTrue(status.requests >= 0, "number of requests is negative");
             Assert.IsTrue(status.liveNodes.Count >= 1, "number of live nodes is zero or negative");
@@ -114,8 +110,7 @@ namespace Microsoft.HBase.Client.Tests
         public void TestGetVersion()
         {
             var client = new HBaseClient(_credentials);
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            org.apache.hadoop.hbase.rest.protobuf.generated.Version version = retry.Attempt(() => client.GetVersion());
+            org.apache.hadoop.hbase.rest.protobuf.generated.Version version = client.GetVersion();
 
             Console.WriteLine(version);
 
@@ -131,8 +126,7 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = new HBaseClient(_credentials);
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            TableList tables = retry.Attempt(() => client.ListTables());
+            TableList tables = client.ListTables();
             List<string> testtables = tables.name.Where(item => item.StartsWith("marlintest", StringComparison.Ordinal)).ToList();
             Assert.AreEqual(1, testtables.Count);
             Assert.AreEqual(_testTableName, testtables[0]);
@@ -145,8 +139,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
             var batchSetting = new Scanner { batch = 2 };
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scannerInfo = retry.Attempt(() => client.CreateScanner(_testTableName, batchSetting));
+            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, batchSetting);
             Assert.AreEqual(_testTableName, scannerInfo.TableName);
             Assert.IsTrue(
                 scannerInfo.Location.Authority.StartsWith("headnode", StringComparison.Ordinal),
@@ -168,8 +161,7 @@ namespace Microsoft.HBase.Client.Tests
             var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            retry.Attempt(() => client.StoreCells(_testTableName, set));
+            client.StoreCells(_testTableName, set);
 
             CellSet cells = client.GetCells(_testTableName, testKey);
             Assert.AreEqual(1, cells.rows.Count);
@@ -227,8 +219,7 @@ namespace Microsoft.HBase.Client.Tests
                 set.rows.Add(row);
             }
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            retry.Attempt(() => hBaseClient.StoreCells(_testTableName, set));
+            hBaseClient.StoreCells(_testTableName, set);
         }
     }
 }

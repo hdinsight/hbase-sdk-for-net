@@ -65,18 +65,5 @@ namespace Microsoft.HBase.Client.Tests.Utilities
             }
             return rv;
         }
-
-        internal IRetryUtility CreateDefaultWebRequestRetry()
-        {
-            var factory = new RetryUtilityFactory();
-            IRetryUtility rv = factory.Create(3, TimeSpan.FromSeconds(3));
-            return rv;
-        }
-
-        internal CellSet DurableScannerGetNextCellSet(HBaseClient client, ScannerInformation scanInfo)
-        {
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            return retry.Attempt(() => client.ScannerGetNext(scanInfo));
-        }
     }
 }

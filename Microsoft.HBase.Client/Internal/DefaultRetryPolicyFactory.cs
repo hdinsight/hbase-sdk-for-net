@@ -12,16 +12,15 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-namespace Microsoft.HBase.Client.Tests.Utilities
-{
-    using System;
 
-    internal class RetryUtilityFactory : IRetryUtilityFactory
-    {
-        /// <inheritdoc/>
-        public IRetryUtility Create(int retryCount, TimeSpan retryWait)
-        {
-            return new RetryUtility(retryCount, retryWait);
-        }
-    }
+namespace Microsoft.HBase.Client.Internal
+{
+   internal class DefaultRetryPolicyFactory : IRetryPolicyFactory
+   {
+      /// <inheritdoc/>
+      public IRetryPolicy Create()
+      {
+         return new DefaultRetryPolicy();
+      }
+   }
 }

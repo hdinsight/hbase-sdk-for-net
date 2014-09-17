@@ -30,7 +30,7 @@ namespace Microsoft.HBase.Client.Tests
     [TestClass]
     public class FilterTests : DisposableContextSpecification
     {
-        private const string TableNamePrefix = "marlintest";
+        private const string TableNamePrefix = "filtertest";
 
         private const string ColumnFamilyName1 = "first";
         private const string ColumnFamilyName2 = "second";
@@ -57,15 +57,13 @@ namespace Microsoft.HBase.Client.Tests
                 var client = new HBaseClient(_credentials);
 
                 // ensure tables from previous tests are cleaned up
-                IRetryUtility retry = CreateDefaultWebRequestRetry();
-                TableList tables = retry.Attempt(() => client.ListTables());
+                TableList tables = client.ListTables();
                 foreach (string name in tables.name)
                 {
                     string pinnedName = name;
                     if (name.StartsWith(TableNamePrefix, StringComparison.Ordinal))
                     {
-                        retry = CreateDefaultWebRequestRetry();
-                        retry.Attempt(() => client.DeleteTable(pinnedName));
+                        client.DeleteTable(pinnedName);
                     }
                 }
 
@@ -83,8 +81,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
             var scan = new Scanner();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scan));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scan);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(_allExpectedRecords);
@@ -102,8 +99,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new ColumnCountGetFilter(2);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -121,8 +117,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new ColumnPaginationFilter(1, 1);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -139,8 +134,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new ColumnPrefixFilter(Encoding.UTF8.GetBytes(LineNumberColumnName));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -157,8 +151,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new ColumnRangeFilter(Encoding.UTF8.GetBytes(ColumnNameA), true, Encoding.UTF8.GetBytes(ColumnNameB), false);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -180,8 +173,7 @@ namespace Microsoft.HBase.Client.Tests
                 new BinaryComparator(BitConverter.GetBytes(1)));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -199,8 +191,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new FamilyFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(Encoding.UTF8.GetBytes(ColumnFamilyName1)));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -230,8 +221,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new FilterList(FilterList.Operator.MustPassAll, f0, f1);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -261,8 +251,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new FilterList(FilterList.Operator.MustPassOne, f0, f1);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -281,8 +270,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new KeyOnlyFilter();
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -303,8 +291,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new InclusiveStopFilter(rawRowKey);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -324,8 +311,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new KeyOnlyFilter();
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -345,8 +331,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new MultipleColumnPrefixFilter(prefixes);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -361,8 +346,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new PageFilter(2);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.Count.ShouldBeGreaterThanOrEqualTo(2);
@@ -389,8 +373,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new PrefixFilter(prefix);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -407,8 +390,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new QualifierFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(Encoding.UTF8.GetBytes(LineNumberColumnName)));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -425,8 +407,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new RandomRowFilter(2000.0F);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(_allExpectedRecords);
@@ -445,8 +426,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new RowFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(Encoding.UTF8.GetBytes(example.RowKey)));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -471,8 +451,7 @@ namespace Microsoft.HBase.Client.Tests
                 Encoding.UTF8.GetBytes(bValue));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -496,8 +475,7 @@ namespace Microsoft.HBase.Client.Tests
 
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -519,8 +497,7 @@ namespace Microsoft.HBase.Client.Tests
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -543,8 +520,7 @@ namespace Microsoft.HBase.Client.Tests
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -566,8 +542,7 @@ namespace Microsoft.HBase.Client.Tests
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -590,8 +565,7 @@ namespace Microsoft.HBase.Client.Tests
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -613,8 +587,7 @@ namespace Microsoft.HBase.Client.Tests
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -636,8 +609,7 @@ namespace Microsoft.HBase.Client.Tests
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -661,9 +633,8 @@ namespace Microsoft.HBase.Client.Tests
                 comparer,
                 filterIfMissing: false);
             scanner.filter = filter.ToEncodedString();
-
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+           
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -688,8 +659,7 @@ namespace Microsoft.HBase.Client.Tests
                 comparer);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -713,8 +683,7 @@ namespace Microsoft.HBase.Client.Tests
                 comparer);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -742,8 +711,7 @@ namespace Microsoft.HBase.Client.Tests
                 comparer);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -760,8 +728,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new SkipFilter(new ValueFilter(CompareFilter.CompareOp.NotEqual, new BinaryComparator(BitConverter.GetBytes(0))));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -784,8 +751,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new TimestampsFilter(timestamps);
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -803,8 +769,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new ValueFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(BitConverter.GetBytes(3)));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -820,8 +785,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new ValueFilter(CompareFilter.CompareOp.Equal, new RegexStringComparator(".*"));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -838,8 +802,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new WhileMatchFilter(new ValueFilter(CompareFilter.CompareOp.NotEqual, new BinaryComparator(BitConverter.GetBytes(0))));
             scanner.filter = filter.ToEncodedString();
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            ScannerInformation scanInfo = retry.Attempt(() => client.CreateScanner(_tableName, scanner));
+            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
             List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
 
             actualRecords.ShouldContainOnly(expectedRecords);
@@ -874,7 +837,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
             CellSet next;
 
-            while ((next = DurableScannerGetNextCellSet(client, scanInfo)) != null)
+            while ((next = client.ScannerGetNext(scanInfo)) != null)
             {
                 foreach (CellSet.Row row in next.rows)
                 {
@@ -948,8 +911,7 @@ namespace Microsoft.HBase.Client.Tests
                 cellSet.rows.Add(row);
             }
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            retry.Attempt(() => client.StoreCells(_tableName, cellSet));
+            client.StoreCells(_tableName, cellSet);
         }
 
         private Byte[] BuildCellColumn(string columnFamilyName, string columnName)
@@ -973,8 +935,7 @@ namespace Microsoft.HBase.Client.Tests
             _tableSchema.columns.Add(new ColumnSchema { name = ColumnFamilyName1 });
             _tableSchema.columns.Add(new ColumnSchema { name = ColumnFamilyName2 });
 
-            IRetryUtility retry = CreateDefaultWebRequestRetry();
-            retry.Attempt(() => client.CreateTable(_tableSchema));
+            client.CreateTable(_tableSchema);
         }
     }
 }
