@@ -76,6 +76,7 @@
     <Compile Include="Filters\Filter.cs" />
     <Compile Include="Filters\SubstringComparator.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="IHBaseClient.cs" />
     <Compile Include="Internal\Extensions\ObjectExtensions.cs" />
     <Compile Include="Internal\ValidatedNotNullAttribute.cs" />
     <Compile Include="ClusterCredentials.cs" />

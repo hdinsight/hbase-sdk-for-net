@@ -27,7 +27,7 @@ namespace Microsoft.HBase.Client
     /// A C# connector to HBase. 
     /// </summary>
     /// <remarks>
-    /// It currently targets HBase 0.96.2 and HDInsight 3.0 on Microsoft Azure.
+    /// It currently targets HBase 0.98 and HDInsight 3.1 on Microsoft Azure.
     /// The communication works through HBase REST (StarGate) which uses ProtoBuf as a serialization format.
     /// 
     /// The usage is quite simple:
@@ -40,7 +40,7 @@ namespace Microsoft.HBase.Client
     /// Console.WriteLine(version);
     /// </code>
     /// </remarks>
-    public sealed class HBaseClient
+    public sealed class HBaseClient : IHBaseClient
     {
         private readonly WebRequester _requester;
 
