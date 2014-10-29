@@ -27,7 +27,7 @@ namespace Microsoft.HBase.Client.Tests
     public class HBaseClientTests : DisposableContextSpecification
     {
         // TODO: add test for ModifyTableSchema
-        // 
+
         private const string TestTablePrefix = "marlintest";
 
         private ClusterCredentials _credentials;
@@ -42,6 +42,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
 
             // ensure tables from previous tests are cleaned up
+            
             TableList tables = client.ListTables();
             foreach (string name in tables.name)
             {
@@ -56,7 +57,7 @@ namespace Microsoft.HBase.Client.Tests
             _testTableSchema = new TableSchema();
             _testTableSchema.name = _testTableName;
             _testTableSchema.columns.Add(new ColumnSchema { name = "d" });
-
+           
             client.CreateTable(_testTableSchema);
         }
 
@@ -110,6 +111,9 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = new HBaseClient(_credentials);
             org.apache.hadoop.hbase.rest.protobuf.generated.Version version = client.GetVersion();
+
+            Console.WriteLine(version);
+
             version.jvmVersion.ShouldNotBeNullOrEmpty();
             version.jerseyVersion.ShouldNotBeNullOrEmpty();
             version.osVersion.ShouldNotBeNullOrEmpty();
@@ -121,6 +125,7 @@ namespace Microsoft.HBase.Client.Tests
         public void TestListTables()
         {
             var client = new HBaseClient(_credentials);
+
             TableList tables = client.ListTables();
             List<string> testtables = tables.name.Where(item => item.StartsWith("marlintest", StringComparison.Ordinal)).ToList();
             Assert.AreEqual(1, testtables.Count);
@@ -133,6 +138,7 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = new HBaseClient(_credentials);
             var batchSetting = new Scanner { batch = 2 };
+
             ScannerInformation scannerInfo = client.CreateScanner(_testTableName, batchSetting);
             Assert.AreEqual(_testTableName, scannerInfo.TableName);
             Assert.IsTrue(
@@ -154,6 +160,7 @@ namespace Microsoft.HBase.Client.Tests
 
             var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
+
             client.StoreCells(_testTableName, set);
 
             CellSet cells = client.GetCells(_testTableName, testKey);

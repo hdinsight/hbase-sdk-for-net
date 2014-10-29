@@ -15,30 +15,46 @@
 
 namespace Microsoft.HBase.Client.Filters
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using Microsoft.HBase.Client.Internal;
 
     /// <summary>
-    /// This filter is used to filter based on the column family.
+    ///  Pass results that have same row prefix. 
     /// </summary>
-    public class FamilyFilter : CompareFilter
+    public class PrefixFilter : Filter
     {
+        private readonly byte[] _prefix;
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="FamilyFilter"/> class.
+        /// Initializes a new instance of the <see cref="PrefixFilter"/> class.
         /// </summary>
-        /// <param name="familyCompareOp">The family compare op.</param>
-        /// <param name="familyComparator">The family comparator.</param>
-        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">familyCompareOp</exception>
-        public FamilyFilter(CompareOp familyCompareOp, ByteArrayComparable familyComparator) : base(familyCompareOp, familyComparator)
+        /// <param name="prefix">The prefix.</param>
+        public PrefixFilter(byte[] prefix)
         {
+            prefix.ArgumentNotNull("prefix");
+
+            _prefix = (byte[])prefix.Clone();
+        }
+
+        /// <summary>
+        /// Gets the prefix.
+        /// </summary>
+        /// <value>
+        /// The prefix.
+        /// </value>
+        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+        public byte[] Prefix
+        {
+            get { return _prefix; }
         }
 
         /// <inheritdoc/>
         public override string ToEncodedString()
         {
-            const string filterPattern = @"{{""type"":""FamilyFilter"",""op"":""{0}"",""comparator"":{{{1}}}}}";
-
-            return string.Format(CultureInfo.InvariantCulture, filterPattern, CompareOperation.ToCodeName(), Comparator.ToEncodedString());
+            const string filterPattern = @"{{""type"":""PrefixFilter"",""value"":""{0}""}}";
+            return string.Format(CultureInfo.InvariantCulture, filterPattern, Convert.ToBase64String(Prefix));
         }
     }
 }

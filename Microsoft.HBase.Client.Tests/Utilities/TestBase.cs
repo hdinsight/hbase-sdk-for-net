@@ -15,11 +15,13 @@
 
 namespace Microsoft.HBase.Client.Tests.Utilities
 {
+    using System;
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using org.apache.hadoop.hbase.rest.protobuf.generated;
 
     [TestClass]
     public abstract class TestBase

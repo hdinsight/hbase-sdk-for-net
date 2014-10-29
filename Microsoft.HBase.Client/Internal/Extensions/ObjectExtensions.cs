@@ -111,5 +111,20 @@ namespace Microsoft.HBase.Client.Internal
                     throw new InvalidEnumArgumentException("value", (int)value, typeof(CompareFilter.CompareOp));
             }
         }
+
+        internal static string ToCodeName(this FilterList.Operator value)
+        {
+            switch (value)
+            {
+                case FilterList.Operator.MustPassAll:
+                    return "MUST_PASS_ALL";
+
+                case FilterList.Operator.MustPassOne:
+                    return "MUST_PASS_ONE";
+
+                default:
+                    throw new InvalidEnumArgumentException("value", (int)value, typeof(FilterList.Operator));
+            }
+        }
     }
 }

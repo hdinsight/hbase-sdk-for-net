@@ -12,33 +12,40 @@
 // 
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
 namespace Microsoft.HBase.Client.Filters
 {
     using System.Globalization;
     using Microsoft.HBase.Client.Internal;
 
     /// <summary>
-    /// This filter is used to filter based on the column family.
+    /// 
     /// </summary>
-    public class FamilyFilter : CompareFilter
+    public class WhileMatchFilter : Filter
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="FamilyFilter"/> class.
+        /// Initializes a new instance of the <see cref="WhileMatchFilter"/> class.
         /// </summary>
-        /// <param name="familyCompareOp">The family compare op.</param>
-        /// <param name="familyComparator">The family comparator.</param>
-        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">familyCompareOp</exception>
-        public FamilyFilter(CompareOp familyCompareOp, ByteArrayComparable familyComparator) : base(familyCompareOp, familyComparator)
+        /// <param name="filter">The filter.</param>
+        public WhileMatchFilter(Filter filter)
         {
+            filter.ArgumentNotNull("filter");
+
+            Filter = filter;
         }
+
+        /// <summary>
+        /// Gets the filter.
+        /// </summary>
+        /// <value>
+        /// The filter.
+        /// </value>
+        public Filter Filter { get; private set; }
 
         /// <inheritdoc/>
         public override string ToEncodedString()
         {
-            const string filterPattern = @"{{""type"":""FamilyFilter"",""op"":""{0}"",""comparator"":{{{1}}}}}";
-
-            return string.Format(CultureInfo.InvariantCulture, filterPattern, CompareOperation.ToCodeName(), Comparator.ToEncodedString());
+            const string filterPattern = @"{{""type"":""WhileMatchFilter"",""filters"":[{0}]}}";
+            return string.Format(CultureInfo.InvariantCulture, filterPattern, Filter.ToEncodedString());
         }
     }
 }

@@ -1,18 +1,23 @@
-<?xml version="1.0"?>
-<package >
-  <metadata>
-    <id>Microsoft.HBase.Client</id>
-    <version>$version$</version>
-    <title>Microsoft HBase REST Client Library for .NET</title>
-    <authors>Microsoft</authors>
-    <owners>maxluk, ashitgosalia, thomasjungblut</owners>
-    <licenseUrl>https://github.com/hdinsight/hbase-sdk-for-net/blob/master/LICENSE</licenseUrl>
-    <projectUrl>https://github.com/hdinsight/hbase-sdk-for-net</projectUrl>
-    <!--<iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>$description$</description>
-    <releaseNotes>(pre-release)</releaseNotes>
-    <copyright>Copyright © Microsoft Corporation</copyright>
-    <tags>Microsoft HBase</tags>
-  </metadata>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>Microsoft.HBase.Client</id>
+        <version>0.2</version>
+        <title>Microsoft HBase REST Client Library for .NET</title>
+        <authors>Microsoft</authors>
+        <owners>maxluk,ashitgosalia,thomasjungblut</owners>
+        <licenseUrl>https://github.com/hdinsight/hbase-sdk-for-net/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/hdinsight/hbase-sdk-for-net</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>.NET Client Library for Azure HDInsight HBase clusters.</description>
+        <releaseNotes>(pre-release)</releaseNotes>
+        <copyright>Copyright © Microsoft Corporation</copyright>
+        <tags>Microsoft HDInsight HBase</tags>
+        <dependencies>
+            <dependency id="protobuf-net" version="2.0.0.668" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src=".\bin\release\Microsoft.HBase.Client\signed\Microsoft.HBase.Client.dll" target="Microsoft.HBase.Client.dll" />
+    </files>
 </package>
