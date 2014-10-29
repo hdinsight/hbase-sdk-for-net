@@ -42,6 +42,9 @@ namespace Microsoft.HBase.Client.Internal
             Init();
          }
 
+         // Temporary fix that disables retry policy as it doesn't work correctly in common error cases
+         return false;
+         
          _attemptCount++;
 
          DateTimeOffset now = DateTimeOffset.UtcNow;
