@@ -9,7 +9,7 @@
         <licenseUrl>https://github.com/hdinsight/hbase-sdk-for-net/blob/master/LICENSE</licenseUrl>
         <projectUrl>https://github.com/hdinsight/hbase-sdk-for-net</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>A C# client for HBase on Azure HDInsight.</description>
+        <description>.NET Client Library for Azure HDInsight HBase clusters.</description>
         <releaseNotes>(pre-release)</releaseNotes>
         <copyright>Copyright © Microsoft Corporation</copyright>
         <tags>Microsoft HDInsight HBase</tags>
