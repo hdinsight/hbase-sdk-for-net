@@ -23,7 +23,7 @@ namespace Microsoft.HBase.Client.Internal
 
    internal class DefaultRetryPolicy : IRetryPolicy
    {
-      private const int MinimumAttempts = 15;
+      private const int MinimumAttempts = 3;
       private const Double MinimumPercentageBase1 = 0.25;
       private readonly TimeSpan _delayDuration = TimeSpan.FromSeconds(5);
       private readonly TimeSpan _maximumDuration = TimeSpan.FromMinutes(10);
@@ -42,9 +42,6 @@ namespace Microsoft.HBase.Client.Internal
             Init();
          }
 
-         // Temporary fix that disables retry policy as it doesn't work correctly in common error cases
-         return false;
-         
          _attemptCount++;
 
          DateTimeOffset now = DateTimeOffset.UtcNow;

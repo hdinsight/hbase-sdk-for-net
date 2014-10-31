@@ -90,10 +90,9 @@ namespace Microsoft.HBase.Client
       {
          tableName.ArgumentNotNullNorEmpty("tableName");
          scannerSettings.ArgumentNotNull("scannerSettings");
-
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                using (HttpWebResponse response = await PostRequestAsync(tableName + "/scanner", scannerSettings, WebRequester.RestEndpointBaseZero))
@@ -153,9 +152,9 @@ namespace Microsoft.HBase.Client
             throw new ArgumentException("schema.name was either null or empty!", "schema");
          }
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
-         {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
+         {     
             try
             {
                using (HttpWebResponse webResponse = await PutRequestAsync(schema.name + "/schema", schema))
@@ -213,9 +212,9 @@ namespace Microsoft.HBase.Client
       {
          table.ArgumentNotNullNorEmpty("table");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                using (HttpWebResponse webResponse = await DeleteRequestAsync<TableSchema>(table + "/schema", null))
@@ -272,9 +271,9 @@ namespace Microsoft.HBase.Client
          tableName.ArgumentNotNullNorEmpty("tableName");
          rowKey.ArgumentNotNull("rowKey");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + rowKey);
@@ -306,9 +305,9 @@ namespace Microsoft.HBase.Client
       /// </returns>
       public async Task<StorageClusterStatus> GetStorageClusterStatusAsync()
       {
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                return await GetRequestAndDeserializeAsync<StorageClusterStatus>("/status/cluster");
@@ -343,9 +342,9 @@ namespace Microsoft.HBase.Client
       {
          table.ArgumentNotNullNorEmpty("table");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                return await GetRequestAndDeserializeAsync<TableInfo>(table + "/regions");
@@ -381,9 +380,9 @@ namespace Microsoft.HBase.Client
       {
          table.ArgumentNotNullNorEmpty("table");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                return await GetRequestAndDeserializeAsync<TableSchema>(table + "/schema");
@@ -415,9 +414,9 @@ namespace Microsoft.HBase.Client
       /// </returns>
       public async Task<org.apache.hadoop.hbase.rest.protobuf.generated.Version> GetVersionAsync()
       {
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                return await GetRequestAndDeserializeAsync<org.apache.hadoop.hbase.rest.protobuf.generated.Version>("version");
@@ -448,9 +447,9 @@ namespace Microsoft.HBase.Client
       /// </returns>
       public async Task<TableList> ListTablesAsync()
       {
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                return await GetRequestAndDeserializeAsync<TableList>("");
@@ -490,9 +489,9 @@ namespace Microsoft.HBase.Client
          table.ArgumentNotNullNorEmpty("table");
          schema.ArgumentNotNull("schema");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                using (HttpWebResponse webResponse = await PostRequestAsync(table + "/schema", schema))
@@ -545,9 +544,9 @@ namespace Microsoft.HBase.Client
       {
          scannerInfo.ArgumentNotNull("scannerInfo");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                using (
@@ -593,9 +592,9 @@ namespace Microsoft.HBase.Client
          table.ArgumentNotNullNorEmpty("table");
          cells.ArgumentNotNull("cells");
 
+         IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
          while (true)
          {
-            IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
             try
             {
                // note the fake row key to insert a set of cells

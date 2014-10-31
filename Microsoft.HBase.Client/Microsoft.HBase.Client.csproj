@@ -56,8 +56,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Class1.cs" />
-    <None Include="Class2.cs" />
     <Compile Include="Internal\DefaultRetryPolicyFactory.cs" />
     <Compile Include="Exceptions\ArgumentContainsNullException.cs" />
     <Compile Include="Filters\BinaryComparator.cs" />

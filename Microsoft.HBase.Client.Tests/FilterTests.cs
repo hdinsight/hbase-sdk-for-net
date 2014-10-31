@@ -679,7 +679,7 @@ namespace Microsoft.HBase.Client.Tests
             var filter = new SingleColumnValueFilter(
                 Encoding.UTF8.GetBytes(ColumnFamilyName1),
                 Encoding.UTF8.GetBytes(LineNumberColumnName),
-                CompareFilter.CompareOp.NotEqual,
+                CompareFilter.CompareOp.Equal,
                 comparer);
             scanner.filter = filter.ToEncodedString();
 
