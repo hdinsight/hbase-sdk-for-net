@@ -1,9 +1,15 @@
-Marlin - Microsoft HBase REST Client Library for .NET
+Microsoft HBase REST Client Library for .NET
 ======
 
-Marlin is a C# client for HBase on Azure HDInsight.
-It currently targets HBase 0.96.2 and HDInsight 3.0 on Microsoft Azure.
+This is C# client library for HBase on Azure HDInsight.
+It currently targets HBase 0.98 and HDInsight 3.1 on Microsoft Azure. It is also compatible with 0.96.2 (HDI 3.0).
 The communication works through HBase REST (StarGate) which uses ProtoBuf as a serialization format.
+
+Getting Started
+===============
+
+* [Getting Started with HBase](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-hbase-get-started/) - steps to create HBase cluster on Azure and then use this library to create a simple app.
+* [Analyze real-time Twitter sentiment](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-hbase-analyze-twitter-sentiment/) - more advanced tutorial of creating real-time Twitter sentiment analysis app using this library.
 
 Missing features
 ================
@@ -13,7 +19,7 @@ There are some core features missing that are documented in the [Stargate wiki](
 
 _Besides that..._
 
-Marlin currently only provides the C# <-> ProtoBuf <-> Stargate communication layer.
+The SDK currently only provides the C# <-> ProtoBuf <-> Stargate communication layer.
 As you can imagine, this API is neither very C#'y nor is it very convenient to use.
 
 *If you want to layer a much nicer/fluent client API on top of that, please feel free to fork and open a pull request.*
