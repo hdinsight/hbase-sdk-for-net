@@ -8,7 +8,7 @@ The communication works through HBase REST (StarGate) which uses ProtoBuf as a s
 Getting Started
 ===============
 
-* [Getting Started with HBase](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-hbase-get-started/) - steps to create HBase cluster on Azure and then use this library to create a simple app.
+* [Getting Started with HBase](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-hbase-get-started/) - docuemntation article that walks you through the steps to create HBase cluster on Azure and then use this library to create a simple app.
 * [Analyze real-time Twitter sentiment](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-hbase-analyze-twitter-sentiment/) - more advanced tutorial of creating real-time Twitter sentiment analysis app using this library.
 
 Missing features
