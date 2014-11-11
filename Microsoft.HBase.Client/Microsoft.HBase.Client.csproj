@@ -56,8 +56,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Class1.cs" />
-    <None Include="Class2.cs" />
     <Compile Include="Internal\DefaultRetryPolicyFactory.cs" />
     <Compile Include="Exceptions\ArgumentContainsNullException.cs" />
     <Compile Include="Filters\BinaryComparator.cs" />
@@ -96,6 +94,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Internal\ByteArrayEqualityComparer.cs" />
     <Compile Include="Internal\DefaultRetryPolicy.cs" />
+    <Compile Include="IHBaseClient.cs" />
     <Compile Include="Internal\Extensions\ObjectExtensions.cs" />
     <Compile Include="Internal\ValidatedNotNullAttribute.cs" />
     <Compile Include="ClusterCredentials.cs" />
