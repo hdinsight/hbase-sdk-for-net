@@ -17,7 +17,4 @@
             <dependency id="protobuf-net" version="2.0.0.668" />
         </dependencies>
     </metadata>
-    <files>
-        <file src=".\bin\release\Microsoft.HBase.Client\signed\Microsoft.HBase.Client.dll" target="Microsoft.HBase.Client.dll" />
-    </files>
 </package>
