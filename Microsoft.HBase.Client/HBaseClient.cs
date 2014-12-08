@@ -46,6 +46,11 @@ namespace Microsoft.HBase.Client
         private readonly IRetryPolicyFactory _retryPolicyFactory;
 
         /// <summary>
+        /// Base uri for hbase rest api
+        /// </summary>
+        public string RestEndpointBase { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
         /// <param name="credentials">The credentials.</param>
@@ -97,7 +102,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse response = await PostRequestAsync(tableName + "/scanner", scannerSettings, WebRequester.RestEndpointBaseZero))
+                    using (HttpWebResponse response = await PostRequestAsync(tableName + "/scanner", scannerSettings, RestEndpointBase ?? WebRequester.RestEndpointBaseZero))
                     {
                         if (response.StatusCode != HttpStatusCode.Created)
                         {
@@ -159,7 +164,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse webResponse = await PutRequestAsync(schema.name + "/schema", schema))
+                    using (HttpWebResponse webResponse = await PutRequestAsync(schema.name + "/schema", schema, RestEndpointBase))
                     {
                         if (webResponse.StatusCode == HttpStatusCode.Created)
                         {
@@ -219,7 +224,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse webResponse = await DeleteRequestAsync<TableSchema>(table + "/schema", null))
+                    using (HttpWebResponse webResponse = await DeleteRequestAsync<TableSchema>(table + "/schema", null, RestEndpointBase))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK)
                         {
@@ -278,7 +283,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + rowKey);
+                    return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + rowKey, RestEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -312,7 +317,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<StorageClusterStatus>("/status/cluster");
+                    return await GetRequestAndDeserializeAsync<StorageClusterStatus>("/status/cluster", RestEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -349,7 +354,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<TableInfo>(table + "/regions");
+                    return await GetRequestAndDeserializeAsync<TableInfo>(table + "/regions", RestEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -387,7 +392,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<TableSchema>(table + "/schema");
+                    return await GetRequestAndDeserializeAsync<TableSchema>(table + "/schema", RestEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -421,7 +426,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<org.apache.hadoop.hbase.rest.protobuf.generated.Version>("version");
+                    return await GetRequestAndDeserializeAsync<org.apache.hadoop.hbase.rest.protobuf.generated.Version>("version", RestEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -454,9 +459,8 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<TableList>("");
+                    return await GetRequestAndDeserializeAsync<TableList>("", RestEndpointBase);
                 }
-
                 catch (Exception e)
                 {
                     if (!retryPolicy.ShouldRetryAttempt(e))
@@ -496,7 +500,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse webResponse = await PostRequestAsync(table + "/schema", schema))
+                    using (HttpWebResponse webResponse = await PostRequestAsync(table + "/schema", schema, RestEndpointBase))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
                         {
@@ -553,7 +557,7 @@ namespace Microsoft.HBase.Client
                 {
                     using (
                        HttpWebResponse webResponse =
-                          await GetRequestAsync(scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId, WebRequester.RestEndpointBaseZero))
+                          await GetRequestAsync(scannerInfo.TableName + "/scanner" + scannerInfo.ScannerId, RestEndpointBase ?? WebRequester.RestEndpointBaseZero))
                     {
                         if (webResponse.StatusCode == HttpStatusCode.OK)
                         {
@@ -600,7 +604,7 @@ namespace Microsoft.HBase.Client
                 try
                 {
                     // note the fake row key to insert a set of cells
-                    using (HttpWebResponse webResponse = await PutRequestAsync(table + "/somefalsekey", cells))
+                    using (HttpWebResponse webResponse = await PutRequestAsync(table + "/somefalsekey", cells, RestEndpointBase))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK)
                         {
