@@ -98,6 +98,7 @@
     <Compile Include="Utilities\TestBase.cs" />
     <Compile Include="Utilities\TestHelp.cs" />
     <Compile Include="Utilities\TestRunMode.cs" />
+    <Compile Include="VirtualNetworkLoadBalancerTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
