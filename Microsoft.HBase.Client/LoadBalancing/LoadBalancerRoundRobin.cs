@@ -1,13 +1,53 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation
+// All rights reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License.  You may obtain a copy
+// of the License at http://www.apache.org/licenses/LICENSE-2.0
+// 
+// THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+// WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+// 
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.HBase.Client.LoadBalancing
 {
+    using System.Configuration;
+    using System.Diagnostics;
+
+    /// <summary>
+    /// Round Robin implementation of the load balancer abstraction (in a virtual network environment).
+    /// 
+    /// Initialization requires the user to specify the list of server endpoints to be used by the load balancer
+    /// for routing the requests.
+    /// 
+    /// The list of endpoints is populated internally and maintained in 3 partitioned sets
+    /// 1. active endpoint to serve the current request
+    /// 2. list of other available (not failed) endpoints other than active
+    /// 3. list of endpoints that failed for recent request attempts
+    /// 
+    /// Each failed endpoint entry has the timestamp when it was moved to the failed set
+    /// 
+    /// On a given request, the failed set is inspected and entries having exceeded the expiry interval 
+    /// are recycled back to the available set.
+    /// 
+    /// Refreshing the active endpoint involves shuffling the available endpoints and picking one for use 
+    /// 
+    /// </summary>
     public class LoadBalancerRoundRobin : ILoadBalancer
     {
-        internal const string _workerHostNamePrefix = "workernode";
-        internal const int _workerRestEndpointPort = 8090;
+        internal static string _workerHostNamePrefix;
+        internal static int _workerRestEndpointPort;
+        internal static TimeSpan _refreshInterval;
+        
 
         internal class FailedEndpointEntry
         {
@@ -23,11 +63,14 @@ namespace Microsoft.HBase.Client.LoadBalancing
         internal List<string> _availableEndpoints;
         internal List<FailedEndpointEntry> _failedEndpoints;
 
-        internal const int DefaultRefreshIntervalInMilliseconds = 15*60*1000;
-        
-        internal TimeSpan _refreshInterval;
 
-        public LoadBalancerRoundRobin(int numRegionServers = 1, int refreshIntervalInMilliseconds = DefaultRefreshIntervalInMilliseconds)
+
+        static LoadBalancerRoundRobin()
+        {
+            Configure();
+        }
+
+        public LoadBalancerRoundRobin(int numRegionServers = 1)
         {
             _numRegionServers = numRegionServers;
 
@@ -37,20 +80,49 @@ namespace Microsoft.HBase.Client.LoadBalancing
                 servers.Add(string.Format("{0}{1}", _workerHostNamePrefix, i));
             }
 
-            PopulateCandidates(servers, TimeSpan.FromMilliseconds(refreshIntervalInMilliseconds));
+            PopulateCandidates(servers);
         }
 
-        public LoadBalancerRoundRobin(List<string> regionServerHostNames, int refreshIntervalInMilliseconds = DefaultRefreshIntervalInMilliseconds)
+        public LoadBalancerRoundRobin(List<string> regionServerHostNames)
         {
             _numRegionServers = regionServerHostNames.Count;
 
-            PopulateCandidates(regionServerHostNames, TimeSpan.FromMilliseconds(refreshIntervalInMilliseconds));
+            PopulateCandidates(regionServerHostNames);
         }
 
-        private void PopulateCandidates(List<string> regionServerHostNames, TimeSpan refreshInterval)
+        internal static void Configure()
         {
-            _refreshInterval = refreshInterval;
+            _workerHostNamePrefix = ReadFromConfig<string>(Constants.WorkerHostNamePrefixConfigKey, String.Copy, Constants.WorkerHostNamePrefixDefault);
+            _workerRestEndpointPort = ReadFromConfig<int>(Constants.WorkerRestEndpointPortConfigKey, Int32.Parse, Constants.WorkerRestEndpointPortDefault);
 
+            var refreshIntervalFromConfig = ReadFromConfig<int>(Constants.RefreshIntervalInMillisecondsConfigKey, Int32.Parse, Constants.RefreshIntervalInMillisecondsDefault);
+            _refreshInterval = TimeSpan.FromMilliseconds(refreshIntervalFromConfig);
+        }
+
+        internal static T ReadFromConfig<T>(string configKey, Func<string, T> parseConfigValue, T defaultValue)
+        {
+            T result;
+
+            result = defaultValue;
+
+            try
+            {
+                var configuredValueStr = ConfigurationManager.AppSettings[configKey];
+                if (configuredValueStr != null)
+                {
+                    result = parseConfigValue(configuredValueStr);
+                }
+            }
+            catch (Exception e)
+            {
+                Trace.TraceWarning("Failed to configure parameter with key {0}, failling back on default value {1}", configKey, defaultValue);
+            }
+
+            return result;
+        }
+
+        private void PopulateCandidates(List<string> regionServerHostNames)
+        {
             _allEndpoints = new List<string>();
 
             _activeEndpoint = null;
@@ -159,23 +231,23 @@ namespace Microsoft.HBase.Client.LoadBalancing
             return endpoints;
         }
 
-        private void PrintStatus()
+        internal void PrintStatusForDebugging()
         {
-            Console.Write("| Active endpoint : ");
-            Console.Write(_activeEndpoint ?? String.Empty);
+            Debug.Write("| Active endpoint : ");
+            Debug.Write(_activeEndpoint ?? String.Empty);
 
-            Console.Write("| Available endpoints : ");
+            Debug.Write("| Available endpoints : ");
             foreach (var e in _availableEndpoints)
             {
-                Console.Write(e + " ");
+                Debug.Write(e + " ");
             }
-            
-            Console.Write("| Failed endpoints : ");
+
+            Debug.Write("| Failed endpoints : ");
             foreach (var e in _failedEndpoints)
             {
-                Console.Write(e + " ");
+                Debug.Write(e + " ");
             }
-            Console.WriteLine(Environment.NewLine);
+            Debug.WriteLine(Environment.NewLine);
         }
     }
 }

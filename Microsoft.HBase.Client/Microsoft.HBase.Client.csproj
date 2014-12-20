@@ -45,6 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -105,6 +106,7 @@
     <Compile Include="HBaseClient.cs" />
     <Compile Include="IRetryPolicy.cs" />
     <Compile Include="IRetryPolicyFactory.cs" />
+    <Compile Include="LoadBalancing\Constants.cs" />
     <Compile Include="LoadBalancing\FixedIntervalBackOffScheme.cs" />
     <Compile Include="LoadBalancing\IBackOffScheme.cs" />
     <Compile Include="LoadBalancing\ILoadBalancer.cs" />

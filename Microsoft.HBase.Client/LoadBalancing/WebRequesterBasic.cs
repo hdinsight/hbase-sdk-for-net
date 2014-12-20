@@ -53,9 +53,7 @@ namespace Microsoft.HBase.Client
         public HttpWebResponse IssueWebRequest(string endpoint, string method = "GET", Stream input = null)
         {
             var response =  IssueWebRequestAsync(endpoint, method, input).Result;
-
-            Console.WriteLine("Web Request successful");
-
+            
             return response;
         }
         
@@ -67,26 +65,10 @@ namespace Microsoft.HBase.Client
         /// <param name="input">The input.</param>
         /// <param name="alternativeEndpointBase">The alternative endpoint base.</param>
         /// <returns></returns>
-        
-        /*
-        public async Task<HttpWebResponse> IssueWebRequestAsync(
-            string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)
-        {
-            Task<HttpWebResponse> result = new Task<HttpWebResponse>(() => { return null; });
-            
-            LoadBalancingHelper.Execute(() =>
-            {
-                result = WebRequestAttempt(endpoint, alternativeEndpointBase, method, input); 
-            },
-            new RetryOnAllExceptionsPolicy(),
-            new NoOpBackOffScheme());
-            
-            return await result as HttpWebResponse;
-        }
-        */
-
         public async Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)
         {
+            Trace.CorrelationManager.ActivityId = Guid.NewGuid();
+
             Task<HttpWebResponse> result = new Task<HttpWebResponse>(() => { return null; });
 
             if (alternativeEndpointBase == null)
@@ -96,10 +78,9 @@ namespace Microsoft.HBase.Client
                 return await result as HttpWebResponse;
             }
             
-
             var target = new Uri(new Uri(alternativeEndpointBase), endpoint);
 
-            // Console.WriteLine("Issuing request to endpoint " + target);
+            Trace.TraceInformation("Issuing request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
 
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(target);
             httpWebRequest.Credentials = _credentialCache;
@@ -117,8 +98,13 @@ namespace Microsoft.HBase.Client
                     await input.CopyToAsync(req);
                 }
             }
-            
+
+            Trace.TraceInformation("Waiting for response for request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
+
             var response = (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
+
+            Trace.TraceInformation("Web request {0} to endpoint {1} successful!", Trace.CorrelationManager.ActivityId, target);
+
             return response;
         }
     }

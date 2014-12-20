@@ -16,6 +16,7 @@
 namespace Microsoft.HBase.Client
 {
     using System;
+    using System.Diagnostics;
     using System.Diagnostics.Contracts;
     using System.IO;
     using System.Net;
@@ -122,7 +123,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse response = await PostRequestAsync(tableName + "/scanner", scannerSettings, alternativeEndpointBase ?? WebRequesterSecure.RestEndpointBaseZero))
+                    using (HttpWebResponse response = await PostRequestAsync(tableName + "/scanner", scannerSettings, alternativeEndpointBase ?? Constants.RestEndpointBaseZero))
                     {
                         if (response.StatusCode != HttpStatusCode.Created)
                         {
@@ -629,7 +630,7 @@ namespace Microsoft.HBase.Client
                 {
                     using (
                        HttpWebResponse webResponse =
-                          await GetRequestAsync(scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId, alternativeEndpointBase ?? WebRequesterSecure.RestEndpointBaseZero))
+                          await GetRequestAsync(scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId, alternativeEndpointBase ?? Constants.RestEndpointBaseZero))
                     {
                         if (webResponse.StatusCode == HttpStatusCode.OK)
                         {
@@ -765,7 +766,7 @@ namespace Microsoft.HBase.Client
 
 
         // Executes the asynchronous method with load balancing in case of virtual network
-        private T ExecuteAndGetWithVirtualNetworkLoadBalancing<T>(Func<string, Task<T>> method)
+        internal TResult ExecuteAndGetWithVirtualNetworkLoadBalancing<TResult>(Func<string, Task<TResult>> method)
         {
             if (_loadBalancer == null)
             {
@@ -773,7 +774,7 @@ namespace Microsoft.HBase.Client
             }
             else
             {
-                T result = default(T);
+                TResult result = default(TResult);
 
                 int numRetries = _loadBalancer.GetWorkersCount();
                 LoadBalancingHelper.Execute(() =>
@@ -781,7 +782,7 @@ namespace Microsoft.HBase.Client
                     var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
-                    Console.WriteLine("\tIssuing request to endpoint " + endpoint);
+                    Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
                     result = method.Invoke(endpoint).Result;
                 },
@@ -792,7 +793,7 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        private T ExecuteAndGetWithVirtualNetworkLoadBalancing<A, T>(Func<A, string, Task<T>> method, A arg1)
+        internal TResult ExecuteAndGetWithVirtualNetworkLoadBalancing<TArg, TResult>(Func<TArg, string, Task<TResult>> method, TArg arg1)
         {
             if (_loadBalancer == null)
             {
@@ -800,7 +801,7 @@ namespace Microsoft.HBase.Client
             }
             else
             {
-                T result = default(T);
+                TResult result = default(TResult);
 
                 int numRetries = _loadBalancer.GetWorkersCount();
                 LoadBalancingHelper.Execute(() =>
@@ -808,7 +809,7 @@ namespace Microsoft.HBase.Client
                     var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
-                    Console.WriteLine("\tIssuing request to endpoint " + endpoint);
+                    Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
                     result = method.Invoke(arg1, endpoint).Result;
                 },
@@ -819,7 +820,7 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        private T ExecuteAndGetWithVirtualNetworkLoadBalancing<A, B, T>(Func<A, B, string, Task<T>> method, A arg1, B arg2)
+        internal TResult ExecuteAndGetWithVirtualNetworkLoadBalancing<TArgA, TArgB, TResult>(Func<TArgA, TArgB, string, Task<TResult>> method, TArgA arg1, TArgB arg2)
         {
             if (_loadBalancer == null)
             {
@@ -827,7 +828,7 @@ namespace Microsoft.HBase.Client
             }
             else
             {
-                T result = default(T);
+                TResult result = default(TResult);
 
                 int numRetries = _loadBalancer.GetWorkersCount();
                 LoadBalancingHelper.Execute(() =>
@@ -835,7 +836,7 @@ namespace Microsoft.HBase.Client
                     var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
-                    Console.WriteLine("\tIssuing request to endpoint " + endpoint);
+                    Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
                     result = method.Invoke(arg1, arg2, endpoint).Result;
                 },
@@ -848,7 +849,7 @@ namespace Microsoft.HBase.Client
 
 
         // Executes the asynchronous method with load balancing in case of virtual network
-        private void ExecuteWithVirtualNetworkLoadBalancing(Func<string, Task> method)
+        internal void ExecuteWithVirtualNetworkLoadBalancing(Func<string, Task> method)
         {
             if (_loadBalancer == null)
             {
@@ -862,7 +863,7 @@ namespace Microsoft.HBase.Client
                     var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
-                    Console.WriteLine("\tIssuing request to endpoint " + endpoint);
+                    Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
                     method.Invoke(endpoint).Wait();
                 },
@@ -871,7 +872,7 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        private void ExecuteWithVirtualNetworkLoadBalancing<A>(Func<A,string, Task> method, A arg)
+        internal void ExecuteWithVirtualNetworkLoadBalancing<TArg>(Func<TArg, string, Task> method, TArg arg)
         {
             if (_loadBalancer == null)
             {
@@ -885,7 +886,7 @@ namespace Microsoft.HBase.Client
                     var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
-                    Console.WriteLine("\tIssuing request to endpoint " + endpoint);
+                    Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
                     method.Invoke(arg, endpoint).Wait();
                 },
@@ -894,7 +895,7 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        private void ExecuteWithVirtualNetworkLoadBalancing<A, B>(Func<A, B, string, Task> method, A arg1, B arg2)
+        internal void ExecuteWithVirtualNetworkLoadBalancing<TArgA, TArgB>(Func<TArgA, TArgB, string, Task> method, TArgA arg1, TArgB arg2)
         {
             if (_loadBalancer == null)
             {
@@ -908,7 +909,7 @@ namespace Microsoft.HBase.Client
                     var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
-                    Console.WriteLine("\tIssuing request to endpoint " + endpoint);
+                    Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
                     method.Invoke(arg1, arg2, endpoint).Wait();
                 },

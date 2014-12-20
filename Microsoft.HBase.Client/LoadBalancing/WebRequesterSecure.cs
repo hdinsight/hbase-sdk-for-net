@@ -20,15 +20,13 @@ namespace Microsoft.HBase.Client
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.HBase.Client.Internal;
+    using Microsoft.HBase.Client.LoadBalancing;
 
     /// <summary>
     /// 
     /// </summary>
     public sealed class WebRequesterSecure : IWebRequester
     {
-        public const string RestEndpointBase = "hbaserest/";
-        public const string RestEndpointBaseZero = "hbaserest0/";
-
         private readonly string _contentType;
         private readonly CredentialCache _credentialCache;
         private readonly ClusterCredentials _credentials;
@@ -71,7 +69,7 @@ namespace Microsoft.HBase.Client
         public async Task<HttpWebResponse> IssueWebRequestAsync(
             string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)
         {
-            string baseEndPoint = alternativeEndpointBase ?? RestEndpointBase;
+            string baseEndPoint = alternativeEndpointBase ?? Constants.RestEndpointBase;
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(new Uri(_credentials.ClusterUri, baseEndPoint + endpoint));
             httpWebRequest.Credentials = _credentialCache;
             httpWebRequest.PreAuthenticate = true;
