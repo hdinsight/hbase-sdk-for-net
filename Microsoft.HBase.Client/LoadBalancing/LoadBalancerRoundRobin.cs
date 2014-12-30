@@ -28,19 +28,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
     /// 
     /// Initialization requires the user to specify the list of server endpoints to be used by the load balancer
     /// for routing the requests.
-    /// 
-    /// The list of endpoints is populated internally and maintained in 3 partitioned sets
-    /// 1. active endpoint to serve the current request
-    /// 2. list of other available (not failed) endpoints other than active
-    /// 3. list of endpoints that failed for recent request attempts
-    /// 
-    /// Each failed endpoint entry has the timestamp when it was moved to the failed set
-    /// 
-    /// On a given request, the failed set is inspected and entries having exceeded the expiry interval 
-    /// are recycled back to the available set.
-    /// 
-    /// Refreshing the active endpoint involves shuffling the available endpoints and picking one for use 
-    /// 
+    ///  
     /// </summary>
     public class LoadBalancerRoundRobin : ILoadBalancer
     {
@@ -48,46 +36,91 @@ namespace Microsoft.HBase.Client.LoadBalancing
         internal static int _workerRestEndpointPort;
         internal static TimeSpan _refreshInterval;
         
-
-        internal class FailedEndpointEntry
-        {
-            public string Endpoint;
-            public DateTime FailureDetectedTimestamp;
-        }
-
-        internal int _numRegionServers;
-
-        internal List<string> _allEndpoints;
-
-        internal string _activeEndpoint;
-        internal List<string> _availableEndpoints;
-        internal List<FailedEndpointEntry> _failedEndpoints;
-
-
-
-        static LoadBalancerRoundRobin()
-        {
-            Configure();
-        }
-
+        internal Uri[] _allEndpoints;
+        internal IEndpointIgnorePolicy _endpointIgnorePolicy;
+        internal int _endpointIndex;
+        
         public LoadBalancerRoundRobin(int numRegionServers = 1)
         {
-            _numRegionServers = numRegionServers;
-
             var servers = new List<string>();
-            for (uint i = 0; i < _numRegionServers; i++)
+            for (uint i = 0; i < numRegionServers; i++)
             {
                 servers.Add(string.Format("{0}{1}", _workerHostNamePrefix, i));
             }
-
-            PopulateCandidates(servers);
+            
+            InitializeEndpoints(servers);
         }
 
         public LoadBalancerRoundRobin(List<string> regionServerHostNames)
         {
-            _numRegionServers = regionServerHostNames.Count;
+            InitializeEndpoints(regionServerHostNames);
+        }
 
-            PopulateCandidates(regionServerHostNames);
+        public Uri GetEndpoint()
+        {
+            var chosenEndpoint = ChooseEndpointRoundRobin(_endpointIgnorePolicy);
+            
+            _endpointIgnorePolicy.OnEndpointAccessStart(chosenEndpoint);
+
+            return chosenEndpoint;  
+        }
+
+        public void RecordSuccess(Uri endpoint)
+        {
+            _endpointIgnorePolicy.OnEndpointAccessCompletion(endpoint, true);
+        }
+
+        public void RecordFailure(Uri endpoint)
+        {
+            _endpointIgnorePolicy.OnEndpointAccessCompletion(endpoint, false);
+        }
+
+        public int GetNumAvailableEndpoints()
+        {
+            return _allEndpoints.Length;
+        }
+
+        internal Uri ChooseEndpointRoundRobin(IEndpointIgnorePolicy policy)
+        {
+            Uri chosenEndpoint;
+            int attemptCounter = 0;
+            do
+            {
+                chosenEndpoint = _allEndpoints[_endpointIndex++ % _allEndpoints.Length];
+                attemptCounter++;
+                if(attemptCounter >= _allEndpoints.Length)
+                {
+                    Trace.TraceWarning("All endpoints were ignored by the policy. Avoiding further skipping.....");
+                    break;
+                }
+            } while (policy.ShouldIgnoreEndpoint(chosenEndpoint));
+
+            Debug.WriteLine("Endpoint {0} chosen for the request", chosenEndpoint);
+            
+            return chosenEndpoint;
+        }
+        
+        private void InitializeEndpoints(List<string> regionServerHostNames)
+        {
+            Random rnd = new Random();
+
+            var endpointsList = new List<Uri>();
+            _endpointIndex = rnd.Next();
+
+            foreach (var server in regionServerHostNames)
+            {
+                var candidate = string.Format("http://{0}:{1}", server, _workerRestEndpointPort);
+                endpointsList.Add(new Uri(candidate));
+            }
+            
+            _allEndpoints = endpointsList.OrderBy(x => rnd.Next()).ToArray();
+
+            _endpointIgnorePolicy = new IgnoreFailedEndpointsPolicy(endpointsList, _refreshInterval);
+        }
+
+        static LoadBalancerRoundRobin()
+        {
+            Configure();
         }
 
         internal static void Configure()
@@ -121,133 +154,5 @@ namespace Microsoft.HBase.Client.LoadBalancing
             return result;
         }
 
-        private void PopulateCandidates(List<string> regionServerHostNames)
-        {
-            _allEndpoints = new List<string>();
-
-            _activeEndpoint = null;
-            _availableEndpoints = new List<string>();
-            _failedEndpoints = new List<FailedEndpointEntry>();
-
-            foreach (var server in regionServerHostNames)
-            {
-                var candidate = string.Format("http://{0}:{1}", server, _workerRestEndpointPort);
-                _allEndpoints.Add(candidate);
-            }
-
-            _availableEndpoints.AddRange(_allEndpoints);
-
-            Shuffle(_availableEndpoints);
-        }
-
-        public Uri GetWorkerNodeEndPointBaseNext()
-        {
-            RefreshFailedEndpoints();
-
-            if (_activeEndpoint != null)
-            {
-                _failedEndpoints.Add(GetFailedEndpointEntry(_activeEndpoint));
-                _activeEndpoint = null;
-            }
-
-            if (_availableEndpoints.Count == 0)
-            {
-                _availableEndpoints.AddRange(GetEndpoints(_failedEndpoints));
-                _failedEndpoints.Clear();
-            }
-
-            _activeEndpoint = _availableEndpoints.FirstOrDefault();
-            if (_activeEndpoint == null)
-            {
-                return null;
-            }
-            _availableEndpoints.Remove(_activeEndpoint);
-            
-            Shuffle(_availableEndpoints);
-
-            // Console.WriteLine("Endpoint {0} chosen for the request" + _activeEndpoint);
-
-            return new Uri(_activeEndpoint);  
-        }
-
-        public void Reset()
-        {
-            _activeEndpoint = null;
-            _failedEndpoints.Clear();
-            _availableEndpoints.Clear();
-
-            _availableEndpoints.AddRange(_allEndpoints);
-        }
-
-        public int GetWorkersCount()
-        {
-            return _numRegionServers;
-        }
-
-        private void Shuffle<T>(IList<T> list)
-        {
-            int n = list.Count;
-            Random rnd = new Random();
-            while (n > 1)
-            {
-                int k = (rnd.Next(0, n) % n);
-                n--;
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
-        }
-
-        internal void RefreshFailedEndpoints()
-        {
-            var now = DateTime.UtcNow;
-
-            Predicate<FailedEndpointEntry> expiryCondition = e => now.Subtract(e.FailureDetectedTimestamp) > _refreshInterval;
-
-            var refreshCandidatesList = _failedEndpoints.FindAll(expiryCondition);
-            _failedEndpoints.RemoveAll(expiryCondition);
-
-            _availableEndpoints.AddRange(GetEndpoints(refreshCandidatesList));
-        }
-
-        internal FailedEndpointEntry GetFailedEndpointEntry(string endpoint)
-        {
-            return new FailedEndpointEntry
-            {
-                Endpoint = endpoint,
-                FailureDetectedTimestamp = DateTime.UtcNow
-            };
-        }
-
-        internal List<string> GetEndpoints(List<FailedEndpointEntry> failedEndpointsList)
-        {
-            var endpoints = new List<string>();
-
-            foreach (var entry in failedEndpointsList.Where(e => (e.Endpoint !=null)))
-            {
-                endpoints.Add(entry.Endpoint);
-            }
-
-            return endpoints;
-        }
-
-        internal void PrintStatusForDebugging()
-        {
-            Debug.Write("| Active endpoint : ");
-            Debug.Write(_activeEndpoint ?? String.Empty);
-
-            Debug.Write("| Available endpoints : ");
-            foreach (var e in _availableEndpoints)
-            {
-                Debug.Write(e + " ");
-            }
-
-            Debug.Write("| Failed endpoints : ");
-            foreach (var e in _failedEndpoints)
-            {
-                Debug.Write(e + " ");
-            }
-            Debug.WriteLine(Environment.NewLine);
-        }
     }
 }

@@ -109,6 +109,8 @@
     <Compile Include="LoadBalancing\Constants.cs" />
     <Compile Include="LoadBalancing\FixedIntervalBackOffScheme.cs" />
     <Compile Include="LoadBalancing\IBackOffScheme.cs" />
+    <Compile Include="LoadBalancing\IEndpointIgnorePolicy.cs" />
+    <Compile Include="LoadBalancing\IgnoreFailedEndpointsPolicy.cs" />
     <Compile Include="LoadBalancing\ILoadBalancer.cs" />
     <Compile Include="LoadBalancing\IWebRequester.cs" />
     <Compile Include="LoadBalancing\LoadBalancerRoundRobin.cs" />

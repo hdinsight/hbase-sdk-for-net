@@ -776,15 +776,23 @@ namespace Microsoft.HBase.Client
             {
                 TResult result = default(TResult);
 
-                int numRetries = _loadBalancer.GetWorkersCount();
+                int numRetries = _loadBalancer.GetNumAvailableEndpoints();
                 LoadBalancingHelper.Execute(() =>
                 {
-                    var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
+                    var endpoint = _loadBalancer.GetEndpoint();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
                     Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
-
-                    result = method.Invoke(endpoint).Result;
+                    try
+                    {
+                        result = method.Invoke(endpoint.ToString()).Result;
+                        _loadBalancer.RecordSuccess(endpoint);
+                    }
+                    catch (Exception)
+                    {
+                        _loadBalancer.RecordFailure(endpoint);
+                        throw;
+                    }
                 },
                 new RetryOnAllExceptionsPolicy(),
                 new NoOpBackOffScheme(), numRetries: numRetries);
@@ -803,15 +811,24 @@ namespace Microsoft.HBase.Client
             {
                 TResult result = default(TResult);
 
-                int numRetries = _loadBalancer.GetWorkersCount();
+                int numRetries = _loadBalancer.GetNumAvailableEndpoints();
                 LoadBalancingHelper.Execute(() =>
                 {
-                    var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
+                    var endpoint = _loadBalancer.GetEndpoint();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
                     Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
-                    result = method.Invoke(arg1, endpoint).Result;
+                    try
+                    {
+                        result = method.Invoke(arg1, endpoint.ToString()).Result;
+                        _loadBalancer.RecordSuccess(endpoint);
+                    }
+                    catch (Exception)
+                    {
+                        _loadBalancer.RecordFailure(endpoint);
+                        throw;
+                    }
                 },
                 new RetryOnAllExceptionsPolicy(),
                 new NoOpBackOffScheme(), numRetries: numRetries);
@@ -830,15 +847,23 @@ namespace Microsoft.HBase.Client
             {
                 TResult result = default(TResult);
 
-                int numRetries = _loadBalancer.GetWorkersCount();
+                int numRetries = _loadBalancer.GetNumAvailableEndpoints();
                 LoadBalancingHelper.Execute(() =>
                 {
-                    var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
+                    var endpoint = _loadBalancer.GetEndpoint();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
                     Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
-
-                    result = method.Invoke(arg1, arg2, endpoint).Result;
+                    try
+                    {
+                        result = method.Invoke(arg1, arg2, endpoint.ToString()).Result;
+                        _loadBalancer.RecordSuccess(endpoint);
+                    }
+                    catch (Exception)
+                    {
+                        _loadBalancer.RecordFailure(endpoint);
+                        throw;
+                    }
                 },
                 new RetryOnAllExceptionsPolicy(),
                 new NoOpBackOffScheme(), numRetries: numRetries);
@@ -857,15 +882,23 @@ namespace Microsoft.HBase.Client
             }
             else
             {
-                int numRetries = _loadBalancer.GetWorkersCount();
+                int numRetries = _loadBalancer.GetNumAvailableEndpoints();
                 LoadBalancingHelper.Execute(() =>
                 {
-                    var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
+                    var endpoint = _loadBalancer.GetEndpoint();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
                     Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
-
-                    method.Invoke(endpoint).Wait();
+                    try
+                    {
+                        method.Invoke(endpoint.ToString()).Wait();
+                        _loadBalancer.RecordSuccess(endpoint);
+                    }
+                    catch (Exception)
+                    {
+                        _loadBalancer.RecordFailure(endpoint);
+                        throw;
+                    }
                 },
                 new RetryOnAllExceptionsPolicy(),
                 new NoOpBackOffScheme(), numRetries: numRetries);
@@ -880,15 +913,24 @@ namespace Microsoft.HBase.Client
             }
             else
             {
-                int numRetries = _loadBalancer.GetWorkersCount();
+                int numRetries = _loadBalancer.GetNumAvailableEndpoints();
                 LoadBalancingHelper.Execute(() =>
                 {
-                    var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
+                    var endpoint = _loadBalancer.GetEndpoint();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
                     Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
-                    method.Invoke(arg, endpoint).Wait();
+                    try
+                    {
+                        method.Invoke(arg, endpoint.ToString()).Wait();
+                        _loadBalancer.RecordSuccess(endpoint);
+                    }
+                    catch (Exception)
+                    {
+                        _loadBalancer.RecordFailure(endpoint);
+                        throw;
+                    }
                 },
                 new RetryOnAllExceptionsPolicy(),
                 new NoOpBackOffScheme(), numRetries: numRetries);
@@ -903,15 +945,24 @@ namespace Microsoft.HBase.Client
             }
             else
             {
-                int numRetries = _loadBalancer.GetWorkersCount();
+                int numRetries = _loadBalancer.GetNumAvailableEndpoints();
                 LoadBalancingHelper.Execute(() =>
                 {
-                    var endpoint = _loadBalancer.GetWorkerNodeEndPointBaseNext().ToString();
+                    var endpoint = _loadBalancer.GetEndpoint();
                     Contract.Assert(endpoint != null, "Load balancer failed to return a worker node endpoint!");
 
                     Trace.TraceInformation("\tIssuing request to endpoint " + endpoint);
 
-                    method.Invoke(arg1, arg2, endpoint).Wait();
+                    try
+                    {
+                        method.Invoke(arg1, arg2, endpoint.ToString()).Wait();
+                        _loadBalancer.RecordSuccess(endpoint);
+                    }
+                    catch (Exception)
+                    {
+                        _loadBalancer.RecordFailure(endpoint);
+                        throw;
+                    }
                 },
                 new RetryOnAllExceptionsPolicy(),
                 new NoOpBackOffScheme(), numRetries: numRetries);

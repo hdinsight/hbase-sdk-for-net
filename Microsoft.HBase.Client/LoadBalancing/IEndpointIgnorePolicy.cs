@@ -17,11 +17,16 @@ using System;
 
 namespace Microsoft.HBase.Client.LoadBalancing
 {
-    public interface ILoadBalancer
+    public interface IEndpointIgnorePolicy
     {
-        Uri GetEndpoint();
-        void RecordSuccess(Uri endpoint);
-        void RecordFailure(Uri endpoint);
-        int GetNumAvailableEndpoints();
+        IEndpointIgnorePolicy InnerPolicy { get; }
+
+        void OnEndpointAccessStart(Uri endpointUri);
+
+        void OnEndpointAccessCompletion(Uri endpointUri, bool accessResult);
+
+        bool ShouldIgnoreEndpoint(Uri endpoint);
+
+        void RefreshIgnoredList();
     }
 }

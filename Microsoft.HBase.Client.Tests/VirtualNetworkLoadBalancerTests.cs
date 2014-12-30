@@ -43,39 +43,10 @@ namespace Microsoft.HBase.Client.Tests
             int numServers = 4;
 
             var balancer = new LoadBalancerRoundRobin(numRegionServers: numServers);
-
-            var expectedServersList = BuildServersList(numServers);
-
-            Assert.AreEqual(balancer.GetWorkersCount(), numServers);
+            Assert.AreEqual(balancer.GetNumAvailableEndpoints(), numServers);
             
-            Assert.IsTrue(CompareLists(balancer._allEndpoints, expectedServersList));
-            Assert.IsTrue(CompareLists(balancer._availableEndpoints, expectedServersList));
-            Assert.IsNull(balancer._activeEndpoint);
-            Assert.IsTrue(CompareLists(balancer.GetEndpoints(balancer._failedEndpoints), new List<string>()));
-
-            int expectedNumFailedEndpoints = 0;
-            int expectedNumAvailableEndpoints = numServers;
-            for (int i = 0; i < 2 * numServers; i++)
-            {
-                var endpoint = balancer.GetWorkerNodeEndPointBaseNext();
-                Assert.IsNotNull(endpoint);
-                var endpointFoundInExpectedList = expectedServersList.FirstOrDefault(e => e.Equals(endpoint.OriginalString, StringComparison.OrdinalIgnoreCase));
-                Assert.IsTrue(endpointFoundInExpectedList != default(string));
-                
-                if ((expectedNumAvailableEndpoints > 0) && (i > 0)) 
-                {
-                    expectedNumFailedEndpoints++;
-                }
-                else
-                {
-                    expectedNumFailedEndpoints = 0;
-                }
-                
-                expectedNumAvailableEndpoints = (expectedNumAvailableEndpoints == 0) ? (numServers - 1) : expectedNumAvailableEndpoints - 1;
-
-                Assert.AreEqual(balancer._failedEndpoints.Count, expectedNumFailedEndpoints);
-                Assert.AreEqual(balancer._availableEndpoints.Count, expectedNumAvailableEndpoints);
-            }
+            // var expectedServersList = BuildServersList(numServers);
+            // Assert.IsTrue(CompareLists(balancer._allEndpoints.OfType<string>().ToList(), expectedServersList));
         }
 
         [TestMethod]
@@ -102,14 +73,15 @@ namespace Microsoft.HBase.Client.Tests
         public void TestExecuteAndGetWithVirtualNetworkLoadBalancing()
         {
             int numServers = 4;
+            int numFailures = 3;
             var client = new HBaseClient(numServers);
 
             int count = 0;
             Func<string, Task<int>> f = (endpoint) =>
             {
                 count++;
-                
-                if (count < 4)
+
+                if (count < numFailures)
                 {
                     throw new TimeoutException();
                 }
@@ -119,14 +91,15 @@ namespace Microsoft.HBase.Client.Tests
             
             var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<int>(f);
 
-            Assert.AreEqual(count, 4);
-            Assert.AreEqual(output, 4);
+            Assert.AreEqual(count, numFailures);
+            Assert.AreEqual(output, numFailures);
         }
 
         [TestMethod]
         public void TestExecuteAndGetWithVirtualNetworkLoadBalancingOneArg()
         {
             int numServers = 4;
+            int numFailures = 3;
             var client = new HBaseClient(numServers);
 
             var arg1Value = "arg1";
@@ -138,7 +111,7 @@ namespace Microsoft.HBase.Client.Tests
                 Assert.AreEqual(arg1Value, arg1);
                 count++;
 
-                if (count < 4)
+                if (count < numFailures)
                 {
                     throw new TimeoutException();
                 }
@@ -148,14 +121,15 @@ namespace Microsoft.HBase.Client.Tests
 
             var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<string, int>(f, arg1Value);
 
-            Assert.AreEqual(count, 4);
-            Assert.AreEqual(output, 4);
+            Assert.AreEqual(count, numFailures);
+            Assert.AreEqual(output, numFailures);
         }
 
         [TestMethod]
         public void TestExecuteAndGetWithVirtualNetworkLoadBalancingTwoArgs()
         {
             int numServers = 4;
+            int numFailures = 3;
             var client = new HBaseClient(numServers);
 
             var arg1Value = "arg1";
@@ -170,7 +144,7 @@ namespace Microsoft.HBase.Client.Tests
 
                 count++;
 
-                if (count < 4)
+                if (count < numFailures)
                 {
                     throw new TimeoutException();
                 }
@@ -180,14 +154,15 @@ namespace Microsoft.HBase.Client.Tests
 
             var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<string, string, int>(f, arg1Value, arg2Value);
 
-            Assert.AreEqual(count, 4);
-            Assert.AreEqual(output, 4);
+            Assert.AreEqual(count, numFailures);
+            Assert.AreEqual(output, numFailures);
         }
         
         [TestMethod]
         public void TestExecuteWithVirtualNetworkLoadBalancing()
         {
             int numServers = 4;
+            int numFailures = 3;
             var client = new HBaseClient(numServers);
 
             int count = 0;
@@ -195,7 +170,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 count++;
 
-                if (count < 4)
+                if (count < numFailures)
                 {
                     throw new TimeoutException();
                 }
@@ -205,13 +180,14 @@ namespace Microsoft.HBase.Client.Tests
 
             client.ExecuteWithVirtualNetworkLoadBalancing(f);
 
-            Assert.AreEqual(count, 4);
+            Assert.AreEqual(count, numFailures);
         }
 
         [TestMethod]
         public void TestExecuteWithVirtualNetworkLoadBalancingOneArg()
         {
             int numServers = 4;
+            int numFailures = 3;
             var client = new HBaseClient(numServers);
             
             var arg1Value = "arg1";
@@ -223,7 +199,7 @@ namespace Microsoft.HBase.Client.Tests
 
                 count++;
 
-                if (count < 4)
+                if (count < numFailures)
                 {
                     throw new TimeoutException();
                 }
@@ -233,13 +209,14 @@ namespace Microsoft.HBase.Client.Tests
 
             client.ExecuteWithVirtualNetworkLoadBalancing(f, arg1Value);
 
-            Assert.AreEqual(count, 4);
+            Assert.AreEqual(count, numFailures);
         }
 
         [TestMethod]
         public void TestExecuteWithVirtualNetworkLoadBalancingTwoArgs()
         {
             int numServers = 4;
+            int numFailures = 3;
             var client = new HBaseClient(numServers);
 
             var arg1Value = "arg1";
@@ -253,7 +230,7 @@ namespace Microsoft.HBase.Client.Tests
 
                 count++;
 
-                if (count < 4)
+                if (count < numFailures)
                 {
                     throw new TimeoutException();
                 }
@@ -263,46 +240,53 @@ namespace Microsoft.HBase.Client.Tests
 
             client.ExecuteWithVirtualNetworkLoadBalancing(f, arg1Value, arg2Value);
 
-            Assert.AreEqual(count, 4);
+            Assert.AreEqual(count, numFailures);
         }
 
         [TestMethod]
         public void TestFailedEndpointsExpiry()
         {
             int numServers = 5;
-            int numFailedEndpointsToRefresh = 3;
 
             Uri activeEndpoint;
-            int expectedNumFailedEndpoints;
-            int expectedNumAvailableEndpoints;
+            int expectedNumFailedEndpoints = 0;
+            int expectedNumAvailableEndpoints = numServers;
 
             var balancer = new LoadBalancerRoundRobin(numRegionServers: numServers);
 
             Assert.AreEqual(LoadBalancerRoundRobin._refreshInterval.TotalMilliseconds, 10.0);
 
-            for (int i = 0; i < numFailedEndpointsToRefresh; i++)
+            for (int i = 0; i < numServers; i++)
             {
-                activeEndpoint = balancer.GetWorkerNodeEndPointBaseNext();
+                activeEndpoint = balancer.GetEndpoint();
                 Assert.IsNotNull(activeEndpoint);
-                Assert.IsNotNull(balancer._activeEndpoint);
+                balancer.RecordFailure(activeEndpoint);
 
-                expectedNumFailedEndpoints = i;
-                expectedNumAvailableEndpoints = (numServers - 1) - expectedNumFailedEndpoints;
-
-                Assert.AreEqual(expectedNumFailedEndpoints, balancer._failedEndpoints.Count);
-                Assert.AreEqual(expectedNumAvailableEndpoints, balancer._availableEndpoints.Count);
+                expectedNumFailedEndpoints++;
+                expectedNumAvailableEndpoints--;
             }
 
-            Thread.Sleep(100);
-            
-            activeEndpoint = balancer.GetWorkerNodeEndPointBaseNext();
-            Assert.IsNotNull(activeEndpoint);
-            Assert.IsNotNull(balancer._activeEndpoint);
+            var endpointsInfoList = (balancer._endpointIgnorePolicy as IgnoreFailedEndpointsPolicy)._endpoints.Values.ToArray();
 
-            expectedNumFailedEndpoints = 1;
-            expectedNumAvailableEndpoints = (numServers - 1) - expectedNumFailedEndpoints;
-            Assert.AreEqual(expectedNumFailedEndpoints, balancer._failedEndpoints.Count);
-            Assert.AreEqual(expectedNumAvailableEndpoints, balancer._availableEndpoints.Count);
+            var failedBefore = Array.FindAll(endpointsInfoList, x => x.State == IgnoreFailedEndpointsPolicy.EndpointState.Failed);
+            var availableBefore = Array.FindAll(endpointsInfoList, x => x.State == IgnoreFailedEndpointsPolicy.EndpointState.Available);
+
+            Assert.AreEqual(failedBefore.Length, numServers);
+            Assert.AreEqual(availableBefore.Length, 0);
+
+            Thread.Sleep(100);
+
+            var endpoint = balancer.GetEndpoint();
+            Assert.IsNotNull(endpoint);
+            balancer.RecordSuccess(endpoint);
+
+            endpointsInfoList = (balancer._endpointIgnorePolicy as IgnoreFailedEndpointsPolicy)._endpoints.Values.ToArray();
+
+            var failedAfter = Array.FindAll(endpointsInfoList, x => x.State == IgnoreFailedEndpointsPolicy.EndpointState.Failed);
+            var availableAfter = Array.FindAll(endpointsInfoList, x => x.State == IgnoreFailedEndpointsPolicy.EndpointState.Available);
+
+            Assert.AreEqual(failedAfter.Length, numServers-1);
+            Assert.AreEqual(availableAfter.Length, 1);
         }
 
         private List<string> BuildServersList(int n)
@@ -342,5 +326,6 @@ namespace Microsoft.HBase.Client.Tests
 
             return true;
         }
+         
     }
 }
