@@ -17,13 +17,19 @@ using System;
 
 namespace Microsoft.HBase.Client.LoadBalancing
 {
+    public enum EndpointAccessResult
+    {
+        Failure = -1,
+        Success = 0
+    }
+
     public interface IEndpointIgnorePolicy
     {
         IEndpointIgnorePolicy InnerPolicy { get; }
 
         void OnEndpointAccessStart(Uri endpointUri);
 
-        void OnEndpointAccessCompletion(Uri endpointUri, bool accessResult);
+        void OnEndpointAccessCompletion(Uri endpointUri, EndpointAccessResult accessResult);
 
         bool ShouldIgnoreEndpoint(Uri endpoint);
 

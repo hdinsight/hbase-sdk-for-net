@@ -39,7 +39,8 @@ namespace Microsoft.HBase.Client.LoadBalancing
         internal Uri[] _allEndpoints;
         internal IEndpointIgnorePolicy _endpointIgnorePolicy;
         internal int _endpointIndex;
-        
+        internal object lockObj;
+
         public LoadBalancerRoundRobin(int numRegionServers = 1)
         {
             var servers = new List<string>();
@@ -58,7 +59,12 @@ namespace Microsoft.HBase.Client.LoadBalancing
 
         public Uri GetEndpoint()
         {
-            var chosenEndpoint = ChooseEndpointRoundRobin(_endpointIgnorePolicy);
+            Uri chosenEndpoint;
+
+            lock (lockObj)
+            {
+                chosenEndpoint = ChooseEndpointRoundRobin(_endpointIgnorePolicy);
+            }
             
             _endpointIgnorePolicy.OnEndpointAccessStart(chosenEndpoint);
 
@@ -67,12 +73,12 @@ namespace Microsoft.HBase.Client.LoadBalancing
 
         public void RecordSuccess(Uri endpoint)
         {
-            _endpointIgnorePolicy.OnEndpointAccessCompletion(endpoint, true);
+            _endpointIgnorePolicy.OnEndpointAccessCompletion(endpoint, EndpointAccessResult.Success);
         }
 
         public void RecordFailure(Uri endpoint)
         {
-            _endpointIgnorePolicy.OnEndpointAccessCompletion(endpoint, false);
+            _endpointIgnorePolicy.OnEndpointAccessCompletion(endpoint, EndpointAccessResult.Failure);
         }
 
         public int GetNumAvailableEndpoints()
@@ -103,6 +109,8 @@ namespace Microsoft.HBase.Client.LoadBalancing
         private void InitializeEndpoints(List<string> regionServerHostNames)
         {
             Random rnd = new Random();
+
+            lockObj = new object();
 
             var endpointsList = new List<Uri>();
             _endpointIndex = rnd.Next();

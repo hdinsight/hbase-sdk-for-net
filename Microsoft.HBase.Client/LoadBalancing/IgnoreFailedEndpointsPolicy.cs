@@ -64,7 +64,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
             UpdateEndpointEntryOnAccessStart(entry);
         }
 
-        public void OnEndpointAccessCompletion(Uri endpointUri, bool accessResult)
+        public void OnEndpointAccessCompletion(Uri endpointUri, EndpointAccessResult accessResult)
         {
             InvokeInnerPolicyForEndpointAccessCompletion(endpointUri, accessResult);
 
@@ -132,7 +132,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
             }
         }
 
-        internal void InvokeInnerPolicyForEndpointAccessCompletion(Uri endpointUri, bool accessResult)
+        internal void InvokeInnerPolicyForEndpointAccessCompletion(Uri endpointUri, EndpointAccessResult accessResult)
         {
             if (_innerPolicy != null)
             {
@@ -151,13 +151,13 @@ namespace Microsoft.HBase.Client.LoadBalancing
                 entry.LastUpdatedTimestamp = now;
             }
         }
-        
-        internal void UpdateEndpointEntryOnAccessCompletion(EndpointInformation entry, bool accessResult)
+
+        internal void UpdateEndpointEntryOnAccessCompletion(EndpointInformation entry, EndpointAccessResult accessResult)
         {
             var now = DateTime.UtcNow;
             lock (entry.lockObj)
             {
-                if (!accessResult)
+                if (accessResult == EndpointAccessResult.Failure)
                 {
                     entry.State = EndpointState.Failed;
                     entry.LastFailureTimestamp = now;

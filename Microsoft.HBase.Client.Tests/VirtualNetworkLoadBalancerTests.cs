@@ -16,10 +16,14 @@
 namespace Microsoft.HBase.Client.Tests
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.HBase.Client.Internal;
     using Microsoft.HBase.Client.LoadBalancing;
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,15 +42,23 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
-        public void TestRoundRobinLoadBalancer()
+        public void TestLoadBalancerEndpointsInitialization()
         {
             int numServers = 4;
 
             var balancer = new LoadBalancerRoundRobin(numRegionServers: numServers);
             Assert.AreEqual(balancer.GetNumAvailableEndpoints(), numServers);
             
-            // var expectedServersList = BuildServersList(numServers);
-            // Assert.IsTrue(CompareLists(balancer._allEndpoints.OfType<string>().ToList(), expectedServersList));
+            var expectedServersList = BuildServersList(numServers);
+
+            var actualServersList = new List<string>();
+
+            foreach(var endpoint in balancer._allEndpoints)
+            {
+                actualServersList.Add(endpoint.OriginalString);
+            }
+            
+            Assert.IsTrue(CompareLists(actualServersList, expectedServersList));
         }
 
         [TestMethod]
@@ -58,17 +70,226 @@ namespace Microsoft.HBase.Client.Tests
             Assert.AreEqual(LoadBalancerRoundRobin._workerRestEndpointPort, 8090);
             Assert.AreEqual(LoadBalancerRoundRobin._refreshInterval.TotalMilliseconds, 10.0);
         }
-
-
-        private async Task<int> EmitIntAsync(int count)
+        
+        [TestMethod]
+        public void TestLoadBalancerRetriesExhausted()
         {
-            return await Task.FromResult<int>(count);
+            int numServers = 4;
+            int numFailures = 5;
+            var client = new HBaseClient(numServers);
+
+            int count = 0;
+            Func<string, Task<int>> f = (endpoint) =>
+            {
+                count++;
+
+                if (count < numFailures)
+                {
+                    throw new TimeoutException(count.ToString());
+                }
+
+                return EmitIntAsync(count);
+            };
+
+            try
+            {
+                var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing(f);
+            }
+            catch (TimeoutException ex)
+            {
+                Assert.AreEqual(ex.Message, numServers.ToString());
+
+                return;
+            }
+
+            Assert.Fail();
         }
-        private async Task NoOpTask()
+
+        protected class IgnoreBlackListedEndpointsPolicy : IEndpointIgnorePolicy
         {
-            await Task.FromResult<int>(0);
+
+            private List<string> _blackListedEndpoints;
+
+            public IgnoreBlackListedEndpointsPolicy(List<string> blacklistedEndpoints)
+            {
+                _blackListedEndpoints = blacklistedEndpoints;
+            }
+
+            public IEndpointIgnorePolicy InnerPolicy { get; private set; }
+            public void OnEndpointAccessStart(Uri endpointUri)
+            {
+            }
+
+            public void OnEndpointAccessCompletion(Uri endpointUri, EndpointAccessResult accessResult)
+            {
+            }
+
+            public bool ShouldIgnoreEndpoint(Uri endpoint)
+            {
+                if (_blackListedEndpoints == null)
+                {
+                    return false;
+                }
+
+                var blackListedEndpointFound = _blackListedEndpoints.Find(x => x.Equals(endpoint.OriginalString));
+
+                return (blackListedEndpointFound != null);
+            }
+
+            public void RefreshIgnoredList()
+            {
+            }
+        }
+
+        [TestMethod]
+        public void TestLoadBalancerRoundRobin()
+        {
+            int numServers = 10;
+            
+            var balancer = new LoadBalancerRoundRobin(numServers);
+            int initRRIdx = balancer._endpointIndex;
+
+            for (int i = 0; i < 2 * numServers; i++)
+            {
+                Uri selectedEndpoint = null;
+
+                selectedEndpoint = balancer.GetEndpoint();
+
+                var expectedRRIdx = (initRRIdx + i) % numServers;
+                var expectedEndpoint = balancer._allEndpoints[expectedRRIdx];
+                Assert.IsTrue(selectedEndpoint.OriginalString.Equals(expectedEndpoint.OriginalString));
+
+                balancer.RecordSuccess(selectedEndpoint);
+            }
+        }
+
+        [TestMethod]
+        public void TestLoadBalancerConcurrency()
+        {
+            int numServers = 20;
+            var balancer = new LoadBalancerRoundRobin(numServers);
+          
+            var uniqueEndpointsFetched = new ConcurrentDictionary<string, bool>();
+
+            Parallel.For(0, numServers, (i) =>
+            {
+                var endpoint = balancer.GetEndpoint();
+                Assert.IsNotNull(endpoint);
+
+                balancer.RecordSuccess(endpoint);
+
+                Assert.IsFalse(uniqueEndpointsFetched.ContainsKey(endpoint.OriginalString));
+                Assert.IsTrue(uniqueEndpointsFetched.TryAdd(endpoint.OriginalString, true));
+            });
+        }
+
+        [TestMethod]
+        public void TestLoadBalancerConfigInitialization()
+        {
+            string stringConfigInitial = Guid.NewGuid().ToString();
+            string stringConfigDefault = Guid.NewGuid().ToString();
+            string stringConfigExpected = "LoadBalancerTestConfigValue";
+            string stringConfigValidKey = "LoadBalancerTestConfigString";
+            string stringConfigInvalidKey = "LoadBalancerTestConfigStringInvalid";
+
+            string stringReadInvalid = stringConfigInitial;
+            stringReadInvalid = LoadBalancerRoundRobin.ReadFromConfig<string>(stringConfigInvalidKey, string.Copy, stringConfigDefault);
+            Assert.AreEqual(stringReadInvalid, stringConfigDefault);
+
+            string stringReadValid = stringConfigInitial;
+            stringReadValid = LoadBalancerRoundRobin.ReadFromConfig<string>(stringConfigValidKey, string.Copy, stringConfigDefault);
+            Assert.AreEqual(stringReadValid, stringConfigExpected);
+
+            var rnd = new Random();
+
+            int intConfigInitial = rnd.Next();
+            int intConfigDefault = rnd.Next();
+            int intConfigExpected = 10;
+            string intConfigValidKey = "LoadBalancerTestConfigInt";
+            string intConfigInvalidKey = "LoadBalancerTestConfigIntInvalid";
+
+            int intReadInvalid = intConfigInitial;
+            intReadInvalid = LoadBalancerRoundRobin.ReadFromConfig<int>(intConfigInvalidKey, Int32.Parse, intConfigDefault);
+            Assert.AreEqual(intReadInvalid, intConfigDefault);
+
+            int intReadValid = intConfigInitial;
+            intReadValid = LoadBalancerRoundRobin.ReadFromConfig<int>(intConfigValidKey, Int32.Parse, intConfigDefault);
+            Assert.AreEqual(intReadValid, intConfigExpected);
+
+            double doubleConfigInitial = rnd.NextDouble();
+            double doubleConfigDefault = rnd.NextDouble();
+            double doubleConfigExpected = 20.0;
+            string doubleConfigValidKey = "LoadBalancerTestConfigDouble";
+            string doubleConfigInvalidKey = "LoadBalancerTestConfigDoubleInvalid";
+
+            double doubleReadInvalid = doubleConfigInitial;
+            doubleReadInvalid = LoadBalancerRoundRobin.ReadFromConfig<double>(doubleConfigInvalidKey, Double.Parse, doubleConfigDefault);
+            Assert.AreEqual(doubleReadInvalid, doubleConfigDefault);
+
+            double doubleReadValid = doubleConfigInitial;
+            doubleReadValid = LoadBalancerRoundRobin.ReadFromConfig<double>(doubleConfigValidKey, Double.Parse, doubleConfigDefault);
+            Assert.AreEqual(doubleReadValid, doubleConfigExpected);
+            
         }
     
+
+
+        [TestMethod]
+        public void TestLoadBalancerIgnorePolicy()
+        {
+            int numServers = 10;
+            int numBlackListedServers = 8;
+            var balancer = new LoadBalancerRoundRobin(numServers);
+
+            var blackListedServersList = BuildServersList(numBlackListedServers);
+
+            balancer._endpointIgnorePolicy = new IgnoreBlackListedEndpointsPolicy(blackListedServersList);
+            
+            for(int i = 0; i < 2*numServers; i++)
+            {
+                Uri selectedEndpoint = null;
+                
+                selectedEndpoint = balancer.GetEndpoint();
+                var selectedEndpointFoundInBlackList = blackListedServersList.Find(x => x.Equals(selectedEndpoint.OriginalString));
+                Assert.IsNull(selectedEndpointFoundInBlackList);
+                
+                balancer.RecordSuccess(selectedEndpoint);
+            }
+        }
+    
+        [TestMethod]
+        public void TestLoadBalancerIgnoreBlackListedEndpoints()
+        {
+            int numServers = 10;
+            int numBlackListedServers = 8;
+
+            var client = new HBaseClient(numServers);
+
+            var blackListedServers = BuildServersList(numBlackListedServers);
+
+            int result = 0;
+            int numFailures = 0;
+
+            Func<string, Task<int>> f = (endpoint) =>
+            {
+                var blacklistedEndpointFound = blackListedServers.Find(x => x.Equals(endpoint));
+                if (blacklistedEndpointFound != null)
+                {
+                    numFailures++;
+                    throw new TimeoutException();
+                }
+                result = 100;
+                
+                return EmitIntAsync(result);
+            };
+
+            var resultInOutput = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<int>(f);
+
+            Assert.IsTrue(resultInOutput == 100);
+
+            Assert.IsTrue(numFailures >= 0);
+        }
+
         [TestMethod]
         public void TestExecuteAndGetWithVirtualNetworkLoadBalancing()
         {
@@ -326,6 +547,14 @@ namespace Microsoft.HBase.Client.Tests
 
             return true;
         }
-         
+        
+        private async Task<int> EmitIntAsync(int count)
+        {
+            return await Task.FromResult<int>(count);
+        }
+        private async Task NoOpTask()
+        {
+            await Task.FromResult<int>(0);
+        }
     }
 }
