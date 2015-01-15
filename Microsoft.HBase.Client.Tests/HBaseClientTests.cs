@@ -17,6 +17,7 @@ namespace Microsoft.HBase.Client.Tests
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Text;
     using Microsoft.HBase.Client.Tests.Utilities;
@@ -112,7 +113,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
             org.apache.hadoop.hbase.rest.protobuf.generated.Version version = client.GetVersion();
 
-            Console.WriteLine(version);
+            Trace.WriteLine(version);
 
             version.jvmVersion.ShouldNotBeNullOrEmpty();
             version.jerseyVersion.ShouldNotBeNullOrEmpty();
