@@ -48,7 +48,7 @@ namespace Microsoft.HBase.Client
         private readonly IWebRequester _requester;
         private readonly IRetryPolicyFactory _retryPolicyFactory;
         private ILoadBalancer _loadBalancer;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
@@ -85,10 +85,12 @@ namespace Microsoft.HBase.Client
                 _requester = new WebRequesterBasic();
                 _loadBalancer = loadBalancer;
             }
-            
+
             _retryPolicyFactory = retryPolicyFactory;
         }
 
+
+        #region Apis
         /// <summary>
         /// Creates a scanner on the server side.
         /// The resulting ScannerInformation can be used to read query the CellSets returned by this scanner in the #ScannerGetNext/Async method.
@@ -110,9 +112,15 @@ namespace Microsoft.HBase.Client
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
         public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings)
         {
-            return await CreateScannerAsyncInternal(tableName, scannerSettings);   
+            return await CreateScannerAsyncInternal(tableName, scannerSettings);
         }
 
+        /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
         private async Task<ScannerInformation> CreateScannerAsyncInternal(string tableName, Scanner scannerSettings, string alternativeEndpointBase = null)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
@@ -156,6 +164,71 @@ namespace Microsoft.HBase.Client
             }
         }
 
+        /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
+        public bool DeleteScanner(string tableName, ScannerInformation scannerInformation)
+        {
+            return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, ScannerInformation, bool>(DeleteScannerAsyncInternal, tableName, scannerInformation);
+        }
+
+        /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
+        public async Task<bool> DeleteScannerAsync(string tableName, ScannerInformation scannerInformation)
+        {
+            return await DeleteScannerAsyncInternal(tableName, scannerInformation);
+        }
+
+        private async Task<bool> DeleteScannerAsyncInternal(string tableName, ScannerInformation scannerInformation, string alternativeEndpointBase = null)
+        {
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            scannerInformation.ArgumentNotNull("scannerInformation");
+
+            while(true)
+            {
+                IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
+
+                try
+                {
+                    using(HttpWebResponse  response = await DeleteRequestAsync<ScannerInformation>(tableName + "/scanner/"+scannerInformation.ScannerId, null, alternativeEndpointBase ?? Constants.RestEndpointBaseZero))
+                    {
+                        if (response.StatusCode == HttpStatusCode.OK)
+                        {
+                            return true;
+                        }
+                        if (response.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            return false;
+                        }
+
+                        using (var output = new StreamReader(response.GetResponseStream()))
+                        {
+                            string message = output.ReadToEnd();
+                            throw new WebException(
+                               string.Format(
+                                  "Couldn't delete a scanner for table {0}! Response code was: {1}, expected 200! Response body was: {2}",
+                                  tableName,
+                                  response.StatusCode,
+                                  message));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (!retryPolicy.ShouldRetryAttempt(e))
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
@@ -240,23 +313,23 @@ namespace Microsoft.HBase.Client
         /// Deletes a table.
         /// If something went wrong, a WebException is thrown.
         /// </summary>
-        /// <param name="table">the table name</param>
+        /// <param name="tableName">the table name</param>
 
-        public async Task DeleteTableAsync(string table)
+        public async Task DeleteTableAsync(string tableName)
         {
-            await DeleteTableAsyncInternal(table);
+            await DeleteTableAsyncInternal(tableName);
         }
 
-        public async Task DeleteTableAsyncInternal(string table, string alternativeEndpointBase = null)
+        public async Task DeleteTableAsyncInternal(string tableName, string alternativeEndpointBase = null)
         {
-            table.ArgumentNotNullNorEmpty("table");
+            tableName.ArgumentNotNullNorEmpty("tableName");
 
             while (true)
             {
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse webResponse = await DeleteRequestAsync<TableSchema>(table + "/schema", null, alternativeEndpointBase))
+                    using (HttpWebResponse webResponse = await DeleteRequestAsync<TableSchema>(tableName + "/schema", null, alternativeEndpointBase))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK)
                         {
@@ -266,7 +339,7 @@ namespace Microsoft.HBase.Client
                                 throw new WebException(
                                    string.Format(
                                       "Couldn't delete table {0}! Response code was: {1}, expected 200! Response body was: {2}",
-                                      table,
+                                      tableName,
                                       webResponse.StatusCode,
                                       message));
                             }
@@ -320,7 +393,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + rowKey, alternativeEndpointBase);
+                    return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + Uri.EscapeDataString(rowKey), alternativeEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -349,7 +422,7 @@ namespace Microsoft.HBase.Client
         /// </returns>
         public async Task<StorageClusterStatus> GetStorageClusterStatusAsync()
         {
-            return await GetStorageClusterStatusAsync();   
+            return await GetStorageClusterStatusAsync();
         }
 
         private async Task<StorageClusterStatus> GetStorageClusterStatusAsyncInternal(string alternativeEndpointBase = null)
@@ -374,34 +447,34 @@ namespace Microsoft.HBase.Client
         /// <summary>
         /// Gets the table information.
         /// </summary>
-        /// <param name="table">The table.</param>
+        /// <param name="tableName">The table.</param>
         /// <returns>
         /// </returns>
-        public TableInfo GetTableInfo(string table)
+        public TableInfo GetTableInfo(string tableName)
         {
-            return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, TableInfo>(GetTableInfoAsyncInternal, table);
+            return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, TableInfo>(GetTableInfoAsyncInternal, tableName);
         }
 
         /// <summary>
         /// Gets the table information asynchronously.
         /// </summary>
-        /// <param name="table">The table.</param>
+        /// <param name="tableName">The table.</param>
         /// <returns></returns>
-        public async Task<TableInfo> GetTableInfoAsync(string table)
+        public async Task<TableInfo> GetTableInfoAsync(string tableName)
         {
-            return await GetTableInfoAsyncInternal(table);
+            return await GetTableInfoAsyncInternal(tableName);
         }
 
-        private async Task<TableInfo> GetTableInfoAsyncInternal(string table, string alternativeEndpointBase = null)
+        private async Task<TableInfo> GetTableInfoAsyncInternal(string tableName, string alternativeEndpointBase = null)
         {
-            table.ArgumentNotNullNorEmpty("table");
+            tableName.ArgumentNotNullNorEmpty("tableName");
 
             while (true)
             {
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<TableInfo>(table + "/regions", alternativeEndpointBase);
+                    return await GetRequestAndDeserializeAsync<TableInfo>(tableName + "/regions", alternativeEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -416,35 +489,35 @@ namespace Microsoft.HBase.Client
         /// <summary>
         /// Gets the table schema.
         /// </summary>
-        /// <param name="table">The table.</param>
+        /// <param name="tableName">The table.</param>
         /// <returns>
         /// </returns>
-        public TableSchema GetTableSchema(string table)
+        public TableSchema GetTableSchema(string tableName)
         {
-            return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, TableSchema>(GetTableSchemaAsyncInternal, table);
+            return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, TableSchema>(GetTableSchemaAsyncInternal, tableName);
         }
 
         /// <summary>
         /// Gets the table schema asynchronously.
         /// </summary>
-        /// <param name="table">The table.</param>
+        /// <param name="tableName">The table.</param>
         /// <returns>
         /// </returns>
-        public async Task<TableSchema> GetTableSchemaAsync(string table)
+        public async Task<TableSchema> GetTableSchemaAsync(string tableName)
         {
-            return await GetTableSchemaAsyncInternal(table);
+            return await GetTableSchemaAsyncInternal(tableName);
         }
-        
-        private async Task<TableSchema> GetTableSchemaAsyncInternal(string table, string alternativeEndpointBase = null)
+
+        private async Task<TableSchema> GetTableSchemaAsyncInternal(string tableName, string alternativeEndpointBase = null)
         {
-            table.ArgumentNotNullNorEmpty("table");
+            tableName.ArgumentNotNullNorEmpty("tableName");
 
             while (true)
             {
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<TableSchema>(table + "/schema", alternativeEndpointBase);
+                    return await GetRequestAndDeserializeAsync<TableSchema>(tableName + "/schema", alternativeEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -551,16 +624,16 @@ namespace Microsoft.HBase.Client
         /// If necessary it creates a new table with the given schema. 
         /// If something went wrong, a WebException is thrown.
         /// </summary>
-        /// <param name="table">the table name</param>
+        /// <param name="tableName">the table name</param>
         /// <param name="schema">the schema</param>
-        public async Task ModifyTableSchemaAsync(string table, TableSchema schema)
+        public async Task ModifyTableSchemaAsync(string tableName, TableSchema schema)
         {
-            await ModifyTableSchemaAsyncInternal(table, schema);
+            await ModifyTableSchemaAsyncInternal(tableName, schema);
         }
 
-        private async Task ModifyTableSchemaAsyncInternal(string table, TableSchema schema, string alternativeEndpointBase = null)
+        private async Task ModifyTableSchemaAsyncInternal(string tableName, TableSchema schema, string alternativeEndpointBase = null)
         {
-            table.ArgumentNotNullNorEmpty("table");
+            tableName.ArgumentNotNullNorEmpty("tableName");
             schema.ArgumentNotNull("schema");
 
             while (true)
@@ -568,7 +641,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse webResponse = await PostRequestAsync(table + "/schema", schema, alternativeEndpointBase))
+                    using (HttpWebResponse webResponse = await PostRequestAsync(tableName + "/schema", schema, alternativeEndpointBase))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
                         {
@@ -578,7 +651,7 @@ namespace Microsoft.HBase.Client
                                 throw new WebException(
                                    string.Format(
                                       "Couldn't modify table {0}! Response code was: {1}, expected either 200 or 201! Response body was: {2}",
-                                      table,
+                                      tableName,
                                       webResponse.StatusCode,
                                       message));
                             }
@@ -622,7 +695,7 @@ namespace Microsoft.HBase.Client
         private async Task<CellSet> ScannerGetNextAsyncInternal(ScannerInformation scannerInfo, string alternativeEndpointBase = null)
         {
             scannerInfo.ArgumentNotNull("scannerInfo");
-            
+
             while (true)
             {
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
@@ -653,27 +726,27 @@ namespace Microsoft.HBase.Client
         /// <summary>
         /// Stores the given cells in the supplied table.
         /// </summary>
-        /// <param name="table">the table</param>
+        /// <param name="tableName">the table</param>
         /// <param name="cells">the cells to insert</param>
-        public void StoreCells(string table, CellSet cells)
+        public void StoreCells(string tableName, CellSet cells)
         {
-            ExecuteWithVirtualNetworkLoadBalancing<string, CellSet>(StoreCellsAsyncInternal, table, cells);
+            ExecuteWithVirtualNetworkLoadBalancing<string, CellSet>(StoreCellsAsyncInternal, tableName, cells);
         }
 
         /// <summary>
         /// Stores the given cells in the supplied table.
         /// </summary>
-        /// <param name="table">the table</param>
+        /// <param name="tableName">the table</param>
         /// <param name="cells">the cells to insert</param>
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
-        public async Task StoreCellsAsync(string table, CellSet cells)
+        public async Task StoreCellsAsync(string tableName, CellSet cells)
         {
-            await StoreCellsAsyncInternal(table, cells);
+            await StoreCellsAsyncInternal(tableName, cells);
         }
 
-        private async Task StoreCellsAsyncInternal(string table, CellSet cells, string alternativeEndpointBase = null)
+        private async Task StoreCellsAsyncInternal(string tableName, CellSet cells, string alternativeEndpointBase = null)
         {
-            table.ArgumentNotNullNorEmpty("table");
+            tableName.ArgumentNotNullNorEmpty("tableName");
             cells.ArgumentNotNull("cells");
 
             while (true)
@@ -682,7 +755,7 @@ namespace Microsoft.HBase.Client
                 try
                 {
                     // note the fake row key to insert a set of cells
-                    using (HttpWebResponse webResponse = await PutRequestAsync(table + "/somefalsekey", cells, alternativeEndpointBase))
+                    using (HttpWebResponse webResponse = await PutRequestAsync(tableName + "/somefalsekey", cells, alternativeEndpointBase))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK)
                         {
@@ -692,7 +765,7 @@ namespace Microsoft.HBase.Client
                                 throw new WebException(
                                    string.Format(
                                       "Couldn't insert into table {0}! Response code was: {1}, expected 200! Response body was: {2}",
-                                      table,
+                                      tableName,
                                       webResponse.StatusCode,
                                       message));
                             }
@@ -713,17 +786,18 @@ namespace Microsoft.HBase.Client
             }
         }
 
+        #endregion
+
+        #region REST
+
         private async Task<HttpWebResponse> DeleteRequestAsync<TReq>(string endpoint, TReq request, string alternativeEndpointBase = null)
            where TReq : class
         {
             return await ExecuteMethodAsync("DELETE", endpoint, request, alternativeEndpointBase);
         }
 
-        private async Task<HttpWebResponse> ExecuteMethodAsync<TReq>(
-           string method,
-           string endpoint,
-           TReq request,
-           string alternativeEndpointBase = null) where TReq : class
+        private async Task<HttpWebResponse> ExecuteMethodAsync<TReq>(string method, string endpoint, TReq request, string alternativeEndpointBase = null) 
+            where TReq : class
         {
             // TODO make the buffer size configurable 
             using (var input = new MemoryStream())
@@ -764,7 +838,9 @@ namespace Microsoft.HBase.Client
             return await ExecuteMethodAsync("PUT", endpoint, request, alternativeEndpointBase);
         }
 
+        #endregion
 
+        #region VirtualNetworkLoadBalancing
         // Executes the asynchronous method with load balancing in case of virtual network
         internal TResult ExecuteAndGetWithVirtualNetworkLoadBalancing<TResult>(Func<string, Task<TResult>> method)
         {
@@ -872,7 +948,6 @@ namespace Microsoft.HBase.Client
             }
         }
 
-
         // Executes the asynchronous method with load balancing in case of virtual network
         internal void ExecuteWithVirtualNetworkLoadBalancing(Func<string, Task> method)
         {
@@ -968,5 +1043,7 @@ namespace Microsoft.HBase.Client
                 new NoOpBackOffScheme(), numRetries: numRetries);
             }
         }
+        #endregion
+
     }
 }

@@ -56,6 +56,20 @@ namespace Microsoft.HBase.Client
         Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings);
 
         /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
+        bool DeleteScanner(string tableName, ScannerInformation scannerInformation);
+        /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
+        Task<bool> DeleteScannerAsync(string tableName, ScannerInformation scannerInformation);
+        /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>
