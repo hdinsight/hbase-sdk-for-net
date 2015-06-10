@@ -62,6 +62,7 @@ namespace Microsoft.HBase.Client
         /// <param name="scannerInformation">the scan information</param>
         /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
         bool DeleteScanner(string tableName, ScannerInformation scannerInformation);
+
         /// <summary>
         /// Delete a scanner on the server side
         /// </summary>
@@ -69,6 +70,7 @@ namespace Microsoft.HBase.Client
         /// <param name="scannerInformation">the scan information</param>
         /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
         Task<bool> DeleteScannerAsync(string tableName, ScannerInformation scannerInformation);
+
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
@@ -231,5 +233,7 @@ namespace Microsoft.HBase.Client
         /// <param name="cells">the cells to insert</param>
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
         Task StoreCellsAsync(string table, CellSet cells);
+
+
     }
 }

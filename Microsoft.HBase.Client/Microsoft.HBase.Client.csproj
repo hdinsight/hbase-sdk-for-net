@@ -24,7 +24,7 @@
     <IntermediateOutputPath>..\obj\debug\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>..\bin\debug\$(AssemblyName)</OutputPath>
     <!--<DocumentationFile>..\bin\debug\$(AssemblyName)\$(AssemblyName).XML</DocumentationFile>-->
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>..\Production.FxCop.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -35,8 +35,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IntermediateOutputPath>..\obj\release\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>..\bin\release\$(AssemblyName)</OutputPath>
     <!--<DocumentationFile>..\bin\release\$(AssemblyName)\$(AssemblyName).XML</DocumentationFile>-->
@@ -44,6 +44,10 @@
     <CodeAnalysisRuleSet>..\Production.FxCop.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -57,6 +61,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entity\Annotations\AbstractColumnSchemaAttribute.cs" />
+    <Compile Include="Entity\Annotations\ColumnSchemaAttributes.cs" />
+    <Compile Include="Entity\Bytes.cs" />
+    <Compile Include="Entity\HBaseTable.cs" />
+    <Compile Include="Entity\IHBaseTableOperations.cs" />
+    <Compile Include="Entity\TestTable.cs" />
     <Compile Include="Internal\DefaultRetryPolicyFactory.cs" />
     <Compile Include="Exceptions\ArgumentContainsNullException.cs" />
     <Compile Include="Filters\BinaryComparator.cs" />
@@ -136,6 +146,7 @@
       <Link>FxCopCustomDictionary.xml</Link>
     </CodeAnalysisDictionary>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
