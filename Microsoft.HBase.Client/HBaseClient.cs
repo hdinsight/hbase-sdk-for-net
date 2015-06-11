@@ -191,13 +191,13 @@ namespace Microsoft.HBase.Client
             tableName.ArgumentNotNullNorEmpty("tableName");
             scannerInformation.ArgumentNotNull("scannerInformation");
 
-            while(true)
+            while (true)
             {
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
 
                 try
                 {
-                    using(HttpWebResponse  response = await DeleteRequestAsync<ScannerInformation>(tableName + "/scanner/"+scannerInformation.ScannerId, null, alternativeEndpointBase ?? Constants.RestEndpointBaseZero))
+                    using (HttpWebResponse response = await DeleteRequestAsync<ScannerInformation>(tableName + "/scanner/" + scannerInformation.ScannerId, null, alternativeEndpointBase ?? Constants.RestEndpointBaseZero))
                     {
                         if (response.StatusCode == HttpStatusCode.OK)
                         {
@@ -366,9 +366,12 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        public CellSet GetCells(string tableName, string rowKey)
+        public CellSet GetCells(string tableName, string rowKey, string columnQualifiers = null)
         {
-            return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, string, CellSet>(GetCellsAsyncInternal, tableName, rowKey);
+            //return ExecuteAndGetWithVirtualNetworkLoadBalancing<string, string, CellSet>(GetCellsAsyncInternal, tableName, rowKey, columnQualifiers);
+            var task = GetCellsAsync(tableName, rowKey, columnQualifiers);
+            task.Wait();
+            return task.Result;
         }
 
         /// <summary>
@@ -377,12 +380,12 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        public async Task<CellSet> GetCellsAsync(string tableName, string rowKey)
+        public async Task<CellSet> GetCellsAsync(string tableName, string rowKey, string columnQualifiers = null)
         {
-            return await GetCellsAsyncInternal(tableName, rowKey);
+            return await GetCellsAsyncInternal(tableName, rowKey, columnQualifiers);
         }
 
-        private async Task<CellSet> GetCellsAsyncInternal(string tableName, string rowKey, string alternativeEndpointBase = null)
+        private async Task<CellSet> GetCellsAsyncInternal(string tableName, string rowKey, string columnQualifiers, string alternativeEndpointBase = null)
         {
             // TODO add timestamp, versions and column queries
             tableName.ArgumentNotNullNorEmpty("tableName");
@@ -393,7 +396,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + Uri.EscapeDataString(rowKey), alternativeEndpointBase);
+                    return await GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + Uri.EscapeDataString(rowKey) + (string.IsNullOrEmpty(columnQualifiers) ? string.Empty : "/" + columnQualifiers), alternativeEndpointBase);
                 }
                 catch (Exception e)
                 {
@@ -404,6 +407,41 @@ namespace Microsoft.HBase.Client
                 }
             }
         }
+
+        public void DeleteCells(string tableName, string rowKey, string columnQualifiers = null)
+        {
+            var task = DeleteCellsAsync(tableName, rowKey, columnQualifiers);
+            task.Wait();
+            return;
+        }
+
+        public async Task DeleteCellsAsync(string tableName, string rowKey, string columnQualifiers = null)
+        {
+            await DeleteCellsAsyncInternal(tableName, rowKey, columnQualifiers);
+        }
+        private async Task DeleteCellsAsyncInternal(string tableName, string rowKey, string columnQualifiers, string alternativeEndpointBase = null)
+        {
+            // TODO add timestamp, versions and column queries
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            rowKey.ArgumentNotNull("rowKey");
+
+            while (true)
+            {
+                IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
+                try
+                {
+                    await DeleteRequestAsync<CellSet>(tableName + "/" + Uri.EscapeDataString(rowKey) + (string.IsNullOrEmpty(columnQualifiers) ? string.Empty : "/" + columnQualifiers), null, alternativeEndpointBase);
+                }
+                catch (Exception e)
+                {
+                    if (!retryPolicy.ShouldRetryAttempt(e))
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// Gets the storage cluster status.
@@ -422,7 +460,7 @@ namespace Microsoft.HBase.Client
         /// </returns>
         public async Task<StorageClusterStatus> GetStorageClusterStatusAsync()
         {
-            return await GetStorageClusterStatusAsync();
+            return await GetStorageClusterStatusAsyncInternal();
         }
 
         private async Task<StorageClusterStatus> GetStorageClusterStatusAsyncInternal(string alternativeEndpointBase = null)
@@ -1044,6 +1082,8 @@ namespace Microsoft.HBase.Client
             }
         }
         #endregion
+
+
 
     }
 }
