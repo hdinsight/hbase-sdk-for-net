@@ -105,7 +105,7 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        CellSet GetCells(string tableName, string rowKey);
+        CellSet GetCells(string tableName, string rowKey, string columnQualifiers);
 
         /// <summary>
         /// Gets the cells asynchronously.
@@ -113,8 +113,10 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        Task<CellSet> GetCellsAsync(string tableName, string rowKey);
+        Task<CellSet> GetCellsAsync(string tableName, string rowKey, string columnQualifiers);
 
+        void DeleteCells(string tableName, string rowKey, string columnQualifiers);
+        Task DeleteCellsAsync(string tableName, string rowKey, string columnQualifiers);
         /// <summary>
         /// Gets the storage cluster status.
         /// </summary>
