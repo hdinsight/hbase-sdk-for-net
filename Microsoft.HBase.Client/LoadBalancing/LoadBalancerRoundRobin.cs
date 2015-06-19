@@ -154,7 +154,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
                     result = parseConfigValue(configuredValueStr);
                 }
             }
-            catch (Exception e)
+            catch
             {
                 Trace.TraceWarning("Failed to configure parameter with key {0}, failling back on default value {1}", configKey, defaultValue);
             }

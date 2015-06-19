@@ -29,22 +29,22 @@ namespace Microsoft.HBase.Client.Internal
       private readonly TimeSpan _maximumDuration = TimeSpan.FromMinutes(10);
       private readonly TimeSpan _minimumDuration = TimeSpan.FromMinutes(2);
       private readonly TimeSpan _noDelayDuration = TimeSpan.FromMinutes(2);
-      private int _attemptCount;
-      private bool _initialized;
-      private int _nodeCount = 1;
+
+      //private int _attemptCount;
+      //private bool _initialized;
+      //private int _nodeCount = 1;
       private DateTimeOffset _started;
 
       /// <inheritdoc/>
       public bool ShouldRetryAttempt(Exception e)
       {
+          return false;
+          /*
          if (!_initialized)
          {
             Init();
          }
 
-         // Temporary fix that disables retry policy as it doesn't work correctly in common error cases
-         return false;
-         
          _attemptCount++;
 
          DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -72,6 +72,7 @@ namespace Microsoft.HBase.Client.Internal
          }
 
          return !IsFatalException(e);
+           * */
       }
 
       private Exception GetFirstException(Exception e)
@@ -107,7 +108,7 @@ namespace Microsoft.HBase.Client.Internal
       {
          _started = DateTimeOffset.UtcNow;
          // _nodeCount = UnderDevelopmentApi.GetNodeCount();
-         _initialized = true;
+         //_initialized = true;
       }
 
       private bool IsFatalException(Exception e)

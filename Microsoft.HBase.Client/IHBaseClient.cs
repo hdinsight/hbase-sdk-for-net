@@ -56,6 +56,22 @@ namespace Microsoft.HBase.Client
         Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings);
 
         /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
+        bool DeleteScanner(string tableName, ScannerInformation scannerInformation);
+
+        /// <summary>
+        /// Delete a scanner on the server side
+        /// </summary>
+        /// <param name="tableName">the table to scan</param>
+        /// <param name="scannerInformation">the scan information</param>
+        /// <returns>returns true if the scan was deleted, false if the scan not exists. In case of any other error it throws a WebException</returns>
+        Task<bool> DeleteScannerAsync(string tableName, ScannerInformation scannerInformation);
+
+        /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>
@@ -89,7 +105,7 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        CellSet GetCells(string tableName, string rowKey);
+        CellSet GetCells(string tableName, string rowKey, string columnQualifiers);
 
         /// <summary>
         /// Gets the cells asynchronously.
@@ -97,8 +113,10 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        Task<CellSet> GetCellsAsync(string tableName, string rowKey);
+        Task<CellSet> GetCellsAsync(string tableName, string rowKey, string columnQualifiers);
 
+        void DeleteCells(string tableName, string rowKey, string columnQualifiers);
+        Task DeleteCellsAsync(string tableName, string rowKey, string columnQualifiers);
         /// <summary>
         /// Gets the storage cluster status.
         /// </summary>
@@ -217,5 +235,7 @@ namespace Microsoft.HBase.Client
         /// <param name="cells">the cells to insert</param>
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
         Task StoreCellsAsync(string table, CellSet cells);
+
+
     }
 }
