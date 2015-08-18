@@ -20,6 +20,7 @@ namespace Microsoft.HBase.Client.Tests
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
@@ -92,6 +93,18 @@ namespace Microsoft.HBase.Client.Tests
                 }
             }
             Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        public async Task TestScannerDeletion()
+        {
+            var client = new HBaseClient(_credentials);
+
+            // full range scan
+            var scanSettings = new Scanner { batch = 10 };
+            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, scanSettings);
+            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId);
         }
 
         [TestMethod]

@@ -56,6 +56,13 @@ namespace Microsoft.HBase.Client
         Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings);
 
         /// <summary>
+        /// Deletes scanner.        
+        /// </summary>
+        /// <param name="tableName">the table the scanner is associated with.</param>
+        /// <param name="scannerId">the id of the scanner to delete.</param>
+        Task DeleteScannerAsync(string tableName, string scannerId);
+
+        /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>

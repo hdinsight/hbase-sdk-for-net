@@ -157,6 +157,59 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
+        /// Deletes scanner.        
+        /// </summary>
+        /// <param name="tableName">the table the scanner is associated with.</param>
+        /// <param name="scannerId">the id of the scanner to delete.</param>
+        public Task DeleteScannerAsync(string tableName, string scannerId)
+        {
+            return DeleteScannerAsyncInternal(tableName, scannerId);
+        }
+
+        public async Task DeleteScannerAsyncInternal(string tableName, string scannerId, string alternativeEndpointBase = null)
+        {
+
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            scannerId.ArgumentNotNullNorEmpty("scannerId");
+
+            while (true)
+            {
+                IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
+                try
+                {
+                    using (HttpWebResponse webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner" + scannerId, null, alternativeEndpointBase))
+                    {
+                        if (webResponse.StatusCode != HttpStatusCode.OK)
+                        {
+                            using (var output = new StreamReader(webResponse.GetResponseStream()))
+                            {
+                                string message = output.ReadToEnd();
+                                throw new WebException(
+                                   string.Format(
+                                      "Couldn't delete scanner {0} associated with {1} table.! Response code was: {2}, expected 200! Response body was: {3}",
+                                      scannerId,
+                                      tableName,
+                                      webResponse.StatusCode,
+                                      message));
+                            }
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (!retryPolicy.ShouldRetryAttempt(e))
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>
