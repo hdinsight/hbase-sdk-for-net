@@ -78,14 +78,6 @@ namespace org.apache.hadoop.hbase.rest.protobuf.generated
       get { return _filter; }
       set { _filter = value; }
     }
-    private int _caching = default(int);
-    [global::ProtoBuf.ProtoMember(9, IsRequired = false, Name=@"caching", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
-    [global::System.ComponentModel.DefaultValue(default(int))]
-    public int caching
-    {
-      get { return _caching; }
-      set { _caching = value; }
-    }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
