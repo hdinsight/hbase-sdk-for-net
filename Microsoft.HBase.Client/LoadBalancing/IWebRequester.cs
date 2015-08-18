@@ -19,10 +19,17 @@ using System.Threading.Tasks;
 
 namespace Microsoft.HBase.Client
 {
+    using System;
+
     public interface IWebRequester
     {
         HttpWebResponse IssueWebRequest(string endpoint, string method, Stream input);
 
         Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method, Stream input, string alternativeEndpointBase);
+
+        /// <summary>
+        /// Network timeout.
+        /// </summary>
+        TimeSpan Timeout { get; set; }
     }
 }

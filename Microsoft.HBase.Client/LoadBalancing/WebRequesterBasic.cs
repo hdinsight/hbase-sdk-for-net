@@ -41,6 +41,7 @@ namespace Microsoft.HBase.Client
         {
             _contentType = contentType;
             _credentialCache = null;
+            Timeout = TimeSpan.FromSeconds(100);
         }
 
         /// <summary>
@@ -88,6 +89,7 @@ namespace Microsoft.HBase.Client
             httpWebRequest.Method = method;
             httpWebRequest.Accept = _contentType;
             httpWebRequest.ContentType = _contentType;
+            httpWebRequest.Timeout = (int)Timeout.TotalMilliseconds;
 
             if (input != null)
             {
@@ -107,5 +109,7 @@ namespace Microsoft.HBase.Client
 
             return response;
         }
+
+        public TimeSpan Timeout { get; set; }
     }
 }

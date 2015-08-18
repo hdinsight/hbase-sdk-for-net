@@ -45,16 +45,39 @@ namespace Microsoft.HBase.Client
     /// </remarks>
     public sealed class HBaseClient : IHBaseClient
     {
+        private static TimeSpan DefaultTimeout = TimeSpan.FromSeconds(100);
+
         private readonly IWebRequester _requester;
         private readonly IRetryPolicyFactory _retryPolicyFactory;
         private ILoadBalancer _loadBalancer;
-        
+        public TimeSpan Timeout { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HBaseClient"/> class.
+        /// </summary>
+        /// <param name="credentials">The credentials.</param>
+        /// <param name="timeout">Network timeout</param>
+        public HBaseClient(ClusterCredentials credentials, TimeSpan timeout)
+            : this(credentials, new DefaultRetryPolicyFactory(), timeout: timeout)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
         /// <param name="credentials">The credentials.</param>
         public HBaseClient(ClusterCredentials credentials)
             : this(credentials, new DefaultRetryPolicyFactory())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HBaseClient"/> class.
+        /// </summary>
+        /// <param name="credentials">The credentials.</param>
+        /// <param name="timeout">Network timeout.</param>
+        public HBaseClient(int numRegionServers, TimeSpan timeout)
+            : this(null, new DefaultRetryPolicyFactory(), new LoadBalancerRoundRobin(numRegionServers: numRegionServers), timeout)
         {
         }
 
@@ -72,22 +95,27 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="credentials">The credentials.</param>
         /// <param name="retryPolicyFactory">The retry policy factory.</param>
-        public HBaseClient(ClusterCredentials credentials, IRetryPolicyFactory retryPolicyFactory, ILoadBalancer loadBalancer = null)
+        public HBaseClient(ClusterCredentials credentials, IRetryPolicyFactory retryPolicyFactory, ILoadBalancer loadBalancer = null, TimeSpan? timeout = null)
         {
+            Timeout = timeout ?? DefaultTimeout;
+
             retryPolicyFactory.ArgumentNotNull("retryPolicyFactory");
 
             if (credentials != null)
             {
                 _requester = new WebRequesterSecure(credentials);
+                _requester.Timeout = Timeout;
             }
             else
             {
                 _requester = new WebRequesterBasic();
+                _requester.Timeout = Timeout;
                 _loadBalancer = loadBalancer;
             }
             
             _retryPolicyFactory = retryPolicyFactory;
         }
+
 
         /// <summary>
         /// Creates a scanner on the server side.
