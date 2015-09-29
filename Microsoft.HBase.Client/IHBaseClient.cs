@@ -15,6 +15,7 @@
 
 namespace Microsoft.HBase.Client
 {
+    using System;
     using System.Threading.Tasks;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
 
@@ -224,5 +225,10 @@ namespace Microsoft.HBase.Client
         /// <param name="cells">the cells to insert</param>
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
         Task StoreCellsAsync(string table, CellSet cells);
+
+        /// <summary>
+        /// Sets network timeout.
+        /// </summary>
+        TimeSpan Timeout { get; }
     }
 }

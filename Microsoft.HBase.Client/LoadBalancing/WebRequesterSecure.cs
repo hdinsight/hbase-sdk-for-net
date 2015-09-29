@@ -43,6 +43,7 @@ namespace Microsoft.HBase.Client
             _credentials = credentials;
             _contentType = contentType;
             _credentialCache = new CredentialCache();
+            Timeout = TimeSpan.FromSeconds(100);
             InitCache();
         }
 
@@ -76,6 +77,7 @@ namespace Microsoft.HBase.Client
             httpWebRequest.Method = method;
             httpWebRequest.Accept = _contentType;
             httpWebRequest.ContentType = _contentType;
+            httpWebRequest.Timeout = (int)Timeout.TotalMilliseconds;
 
             if (input != null)
             {
@@ -89,6 +91,11 @@ namespace Microsoft.HBase.Client
 
             return (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
         }
+
+        /// <summary>
+        /// Network timeout.
+        /// </summary>
+        public TimeSpan Timeout { get; set; }
 
         private void InitCache()
         {
