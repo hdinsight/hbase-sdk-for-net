@@ -49,12 +49,12 @@ namespace Microsoft.HBase.Client.LoadBalancing
                 servers.Add(string.Format("{0}{1}", _workerHostNamePrefix, i));
             }
             
-            InitializeEndpoints(servers);
+            InitializeEndpoints(servers, _workerRestEndpointPort);
         }
 
-        public LoadBalancerRoundRobin(List<string> regionServerHostNames)
+        public LoadBalancerRoundRobin(List<string> regionServerHostNames, int port)
         {
-            InitializeEndpoints(regionServerHostNames);
+            InitializeEndpoints(regionServerHostNames, port);
         }
 
         public Uri GetEndpoint()
@@ -106,7 +106,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
             return chosenEndpoint;
         }
         
-        private void InitializeEndpoints(List<string> regionServerHostNames)
+        private void InitializeEndpoints(List<string> regionServerHostNames, int port)
         {
             Random rnd = new Random();
 
@@ -117,7 +117,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
 
             foreach (var server in regionServerHostNames)
             {
-                var candidate = string.Format("http://{0}:{1}", server, _workerRestEndpointPort);
+                var candidate = string.Format("http://{0}:{1}", server, port);
                 endpointsList.Add(new Uri(candidate));
             }
             

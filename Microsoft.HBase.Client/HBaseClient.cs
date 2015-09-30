@@ -16,6 +16,7 @@
 namespace Microsoft.HBase.Client
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.Contracts;
     using System.IO;
@@ -61,9 +62,20 @@ namespace Microsoft.HBase.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
-        /// <param name="credentials">The credentials.</param>
+        /// <param name="numRegionServers"></param>
         public HBaseClient(int numRegionServers)
             : this(null, new DefaultRetryPolicyFactory(), new LoadBalancerRoundRobin(numRegionServers: numRegionServers))
+        {
+        }
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HBaseClient"/> class.
+        /// </summary>
+        /// <param name="serverHostNames"></param>
+        /// <param name="port"></param>
+        public HBaseClient(List<string> serverHostNames, int port)
+            : this(null, new DefaultRetryPolicyFactory(), new LoadBalancerRoundRobin(serverHostNames, port))
         {
         }
 
