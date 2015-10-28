@@ -41,12 +41,14 @@ namespace Microsoft.HBase.Client.LoadBalancing
         internal int _endpointIndex;
         internal object lockObj;
 
-        public LoadBalancerRoundRobin(int numRegionServers = 1)
+        public LoadBalancerRoundRobin(int numRegionServers = 1, string clusterDomain = null)
         {
             var servers = new List<string>();
+            string domainPostfix = string.IsNullOrWhiteSpace(clusterDomain) ? string.Empty : "." + clusterDomain;
+
             for (uint i = 0; i < numRegionServers; i++)
             {
-                servers.Add(string.Format("{0}{1}", _workerHostNamePrefix, i));
+                servers.Add(string.Format("{0}{1}{2}", _workerHostNamePrefix, i, domainPostfix));
             }
             
             InitializeEndpoints(servers);
@@ -154,7 +156,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
                     result = parseConfigValue(configuredValueStr);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Trace.TraceWarning("Failed to configure parameter with key {0}, failling back on default value {1}", configKey, defaultValue);
             }

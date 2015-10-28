@@ -164,6 +164,22 @@ namespace Microsoft.HBase.Client.Tests
         }
 
         [TestMethod]
+        public void TestLoadBalancerDomainInit()
+        {
+            int numServers = 10;
+            string testDomain = "test.fakedomain.com";
+            var balancer = new LoadBalancerRoundRobin(numServers, testDomain);
+
+            string[] endpoints = balancer._allEndpoints.Select(u => u.ToString()).OrderBy(s => s).ToArray();
+
+            for (int i = 0; i < endpoints.Length; i++)
+            {
+                string expected = string.Format("http://{0}{1}.{2}:{3}/", LoadBalancerRoundRobin._workerHostNamePrefix, i, testDomain, LoadBalancerRoundRobin._workerRestEndpointPort);
+                Assert.AreEqual(expected, endpoints[i]);
+            }
+        }
+
+        [TestMethod]
         public void TestLoadBalancerConcurrency()
         {
             int numServers = 20;
