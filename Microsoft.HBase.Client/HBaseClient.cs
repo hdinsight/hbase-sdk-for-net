@@ -61,9 +61,14 @@ namespace Microsoft.HBase.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
-        /// <param name="credentials">The credentials.</param>
-        public HBaseClient(int numRegionServers)
-            : this(null, new DefaultRetryPolicyFactory(), new LoadBalancerRoundRobin(numRegionServers: numRegionServers))
+        /// <remarks>
+        /// To find the cluster vnet domain visit:
+        /// https://azure.microsoft.com/en-us/documentation/articles/hdinsight-hbase-provision-vnet/
+        /// </remarks>
+        /// <param name="numRegionServers">The number of region servers in the cluster.</param>
+        /// <param name="clusterDomain">The fully-qualified domain name of the cluster.</param>
+        public HBaseClient(int numRegionServers, string clusterDomain = null)
+            : this(null, new DefaultRetryPolicyFactory(), new LoadBalancerRoundRobin(numRegionServers: numRegionServers, clusterDomain: clusterDomain))
         {
         }
 
