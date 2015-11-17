@@ -44,7 +44,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
 
             // ensure tables from previous tests are cleaned up
-            
+
             TableList tables = client.ListTables();
             foreach (string name in tables.name)
             {
@@ -59,7 +59,7 @@ namespace Microsoft.HBase.Client.Tests
             _testTableSchema = new TableSchema();
             _testTableSchema.name = _testTableName;
             _testTableSchema.columns.Add(new ColumnSchema { name = "d" });
-           
+
             client.CreateTable(_testTableSchema);
         }
 
@@ -103,8 +103,27 @@ namespace Microsoft.HBase.Client.Tests
 
             // full range scan
             var scanSettings = new Scanner { batch = 10 };
-            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, scanSettings);
-            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId);
+            ScannerInformation scannerInfo = await client.CreateScannerAsync(_testTableName, scanSettings, "hbaserest0/");
+            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId, "hbaserest0/");
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        public async Task TestCellsDeletion()
+        {
+            const string testKey = "content";
+            const string testValue = "the force is strong in this column";
+            var client = new HBaseClient(_credentials);
+            var set = new CellSet();
+            var row = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey) };
+            set.rows.Add(row);
+
+            var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
+            row.values.Add(value);
+
+            client.StoreCells(_testTableName, set);
+
+            await client.DeleteCellsAsync(_testTableName, testKey);
         }
 
         [TestMethod]

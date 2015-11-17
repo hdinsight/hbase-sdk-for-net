@@ -53,14 +53,21 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings);
+        Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, string alternativeEndpointBase = null);
 
         /// <summary>
         /// Deletes scanner.        
         /// </summary>
         /// <param name="tableName">the table the scanner is associated with.</param>
         /// <param name="scannerId">the id of the scanner to delete.</param>
-        Task DeleteScannerAsync(string tableName, string scannerId);
+        Task DeleteScannerAsync(string tableName, string scannerId, string alternativeEndpointBase = null);
+
+        /// <summary>
+        /// Deletes row with specific row key.        
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        /// <param name="rowKey">the row to delete</param>
+        Task DeleteCellsAsync(string tableName, string rowKey);
 
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
@@ -208,7 +215,7 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo);
+        Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, string alternativeEndpointBase = null);
 
         /// <summary>
         /// Stores the given cells in the supplied table.
