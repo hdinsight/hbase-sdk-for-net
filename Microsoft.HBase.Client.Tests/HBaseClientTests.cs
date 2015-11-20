@@ -109,6 +109,7 @@ namespace Microsoft.HBase.Client.Tests
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
+        [ExpectedException(typeof(System.Net.WebException), "The remote server returned an error: (404) Not Found.")]
         public async Task TestCellsDeletion()
         {
             const string testKey = "content";
@@ -122,8 +123,14 @@ namespace Microsoft.HBase.Client.Tests
             row.values.Add(value);
 
             client.StoreCells(_testTableName, set);
-
+            CellSet cell = await client.GetCellsAsync(_testTableName, testKey);
+            // make sure the cell is in the table
+            Assert.AreEqual(Encoding.UTF8.GetString(cell.rows[0].key), testKey);
+            // delete cell
             await client.DeleteCellsAsync(_testTableName, testKey);
+            // get cell again, 404 exception expected
+            await client.GetCellsAsync(_testTableName, testKey);
+
         }
 
         [TestMethod]
