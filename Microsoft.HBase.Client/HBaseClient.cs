@@ -48,7 +48,7 @@ namespace Microsoft.HBase.Client
         private readonly IWebRequester _requester;
         private readonly IRetryPolicyFactory _retryPolicyFactory;
         private ILoadBalancer _loadBalancer;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
@@ -90,7 +90,7 @@ namespace Microsoft.HBase.Client
                 _requester = new WebRequesterBasic();
                 _loadBalancer = loadBalancer;
             }
-            
+
             _retryPolicyFactory = retryPolicyFactory;
         }
 
@@ -113,9 +113,9 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings)
+        public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, string alternativeEndpointBase = null)
         {
-            return await CreateScannerAsyncInternal(tableName, scannerSettings);   
+            return await CreateScannerAsyncInternal(tableName, scannerSettings, alternativeEndpointBase);
         }
 
         private async Task<ScannerInformation> CreateScannerAsyncInternal(string tableName, Scanner scannerSettings, string alternativeEndpointBase = null)
@@ -166,9 +166,9 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="tableName">the table the scanner is associated with.</param>
         /// <param name="scannerId">the id of the scanner to delete.</param>
-        public Task DeleteScannerAsync(string tableName, string scannerId)
+        public Task DeleteScannerAsync(string tableName, string scannerId, string alternativeEndpointBase = null)
         {
-            return DeleteScannerAsyncInternal(tableName, scannerId);
+            return DeleteScannerAsyncInternal(tableName, scannerId, alternativeEndpointBase);
         }
 
         public async Task DeleteScannerAsyncInternal(string tableName, string scannerId, string alternativeEndpointBase = null)
@@ -182,7 +182,7 @@ namespace Microsoft.HBase.Client
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
                 try
                 {
-                    using (HttpWebResponse webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner" + scannerId, null, alternativeEndpointBase))
+                    using (HttpWebResponse webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner" + scannerId, null, alternativeEndpointBase ?? Constants.RestEndpointBaseZero))
                     {
                         if (webResponse.StatusCode != HttpStatusCode.OK)
                         {
@@ -193,6 +193,54 @@ namespace Microsoft.HBase.Client
                                    string.Format(
                                       "Couldn't delete scanner {0} associated with {1} table.! Response code was: {2}, expected 200! Response body was: {3}",
                                       scannerId,
+                                      tableName,
+                                      webResponse.StatusCode,
+                                      message));
+                            }
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (!retryPolicy.ShouldRetryAttempt(e))
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
+        public Task DeleteCellsAsync(string tableName, string rowKey)
+        {
+            return DeleteCellsAsyncInternal(tableName, rowKey);
+        }
+
+        public async Task DeleteCellsAsyncInternal(string tableName, string rowKey, string alternativeEndpointBase = null)
+        {
+
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            rowKey.ArgumentNotNullNorEmpty("rowKey");
+
+            while (true)
+            {
+                IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
+                try
+                {
+                    using (HttpWebResponse webResponse = await DeleteRequestAsync<Scanner>(tableName + "/" + rowKey, null, alternativeEndpointBase))
+                    {
+                        if (webResponse.StatusCode != HttpStatusCode.OK)
+                        {
+                            using (var output = new StreamReader(webResponse.GetResponseStream()))
+                            {
+                                string message = output.ReadToEnd();
+                                throw new WebException(
+                                   string.Format(
+                                      "Couldn't delete row {0} associated with {1} table.! Response code was: {2}, expected 200! Response body was: {3}",
+                                      rowKey,
                                       tableName,
                                       webResponse.StatusCode,
                                       message));
@@ -407,7 +455,7 @@ namespace Microsoft.HBase.Client
         /// </returns>
         public async Task<StorageClusterStatus> GetStorageClusterStatusAsync()
         {
-            return await GetStorageClusterStatusAsync();   
+            return await GetStorageClusterStatusAsync();
         }
 
         private async Task<StorageClusterStatus> GetStorageClusterStatusAsyncInternal(string alternativeEndpointBase = null)
@@ -492,7 +540,7 @@ namespace Microsoft.HBase.Client
         {
             return await GetTableSchemaAsyncInternal(table);
         }
-        
+
         private async Task<TableSchema> GetTableSchemaAsyncInternal(string table, string alternativeEndpointBase = null)
         {
             table.ArgumentNotNullNorEmpty("table");
@@ -672,15 +720,15 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo)
+        public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, string alternativeEndpointBase = null)
         {
-            return await ScannerGetNextAsyncInternal(scannerInfo);
+            return await ScannerGetNextAsyncInternal(scannerInfo, alternativeEndpointBase);
         }
 
         private async Task<CellSet> ScannerGetNextAsyncInternal(ScannerInformation scannerInfo, string alternativeEndpointBase = null)
         {
             scannerInfo.ArgumentNotNull("scannerInfo");
-            
+
             while (true)
             {
                 IRetryPolicy retryPolicy = _retryPolicyFactory.Create();
