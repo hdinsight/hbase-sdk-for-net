@@ -13,37 +13,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Requester
 {
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Net;
     using System.Threading.Tasks;
-    using Microsoft.HBase.Client.Internal;
     using Microsoft.HBase.Client.LoadBalancing;
 
     /// <summary>
     /// 
     /// </summary>
-    public sealed class WebRequesterSecure : IWebRequester
+    public sealed class VNetWebRequester : IWebRequester
     {
+        private readonly ILoadBalancer _balancer;
         private readonly string _contentType;
         private readonly CredentialCache _credentialCache;
-        private readonly ClusterCredentials _credentials;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WebRequesterSecure"/> class.
+        /// Initializes a new instance of the <see cref="VNetWebRequester"/> class.
         /// </summary>
-        /// <param name="credentials">The credentials.</param>
+        /// <param name="balancer">the load balancer for the vnet nodes</param>
         /// <param name="contentType">Type of the content.</param>
-        public WebRequesterSecure(ClusterCredentials credentials, string contentType = "application/x-protobuf")
+        public VNetWebRequester(ILoadBalancer balancer, string contentType = "application/x-protobuf")
         {
-            credentials.ArgumentNotNull("credentials");
-
-            _credentials = credentials;
+            _balancer = balancer;
             _contentType = contentType;
-            _credentialCache = new CredentialCache();
-            InitCache();
+            _credentialCache = null;
         }
 
         /// <summary>
@@ -52,10 +49,11 @@ namespace Microsoft.HBase.Client
         /// <param name="endpoint">The endpoint.</param>
         /// <param name="method">The method.</param>
         /// <param name="input">The input.</param>
+        /// <param name="options">request options</param>
         /// <returns></returns>
-        public HttpWebResponse IssueWebRequest(string endpoint, string method = "GET", Stream input = null)
+        public HttpWebResponse IssueWebRequest(string endpoint, string method, Stream input, RequestOptions options)
         {
-            return IssueWebRequestAsync(endpoint, method, input).Result;
+            return IssueWebRequestAsync(endpoint, method, input, options).Result;
         }
 
         /// <summary>
@@ -64,13 +62,20 @@ namespace Microsoft.HBase.Client
         /// <param name="endpoint">The endpoint.</param>
         /// <param name="method">The method.</param>
         /// <param name="input">The input.</param>
-        /// <param name="alternativeEndpointBase">The alternative endpoint base.</param>
+        /// <param name="options">request options</param>
         /// <returns></returns>
-        public async Task<HttpWebResponse> IssueWebRequestAsync(
-            string endpoint, string method = "GET", Stream input = null, string alternativeEndpointBase = null)
+        public async Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method, Stream input, RequestOptions options)
         {
-            string baseEndPoint = alternativeEndpointBase ?? Constants.RestEndpointBase;
-            HttpWebRequest httpWebRequest = WebRequest.CreateHttp(new Uri(_credentials.ClusterUri, baseEndPoint + endpoint));
+            Trace.CorrelationManager.ActivityId = Guid.NewGuid();
+            var target = new Uri(_balancer.GetEndpoint(), options.AlternativeEndpoint + endpoint);
+
+            Trace.TraceInformation("Issuing request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
+
+            HttpWebRequest httpWebRequest = WebRequest.CreateHttp(target);
+            httpWebRequest.ServicePoint.ReceiveBufferSize = options.ReceiveBufferSize;
+            httpWebRequest.ServicePoint.UseNagleAlgorithm = options.UseNagle;
+            httpWebRequest.Timeout = options.Timeout;
+            httpWebRequest.KeepAlive = options.KeepAlive;
             httpWebRequest.Credentials = _credentialCache;
             httpWebRequest.PreAuthenticate = true;
             httpWebRequest.Method = method;
@@ -87,12 +92,13 @@ namespace Microsoft.HBase.Client
                 }
             }
 
-            return (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
-        }
+            Trace.TraceInformation("Waiting for response for request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
 
-        private void InitCache()
-        {
-            _credentialCache.Add(_credentials.ClusterUri, "Basic", new NetworkCredential(_credentials.UserName, _credentials.ClusterPassword));
+            var response = (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
+
+            Trace.TraceInformation("Web request {0} to endpoint {1} successful!", Trace.CorrelationManager.ActivityId, target);
+
+            return response;
         }
     }
 }

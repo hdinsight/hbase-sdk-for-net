@@ -44,7 +44,7 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        ScannerInformation CreateScanner(string tableName, Scanner scannerSettings);
+        ScannerInformation CreateScanner(string tableName, Scanner scannerSettings, RequestOptions options = null);
 
         /// <summary>
         /// Creates a scanner on the server side.
@@ -53,49 +53,63 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, string alternativeEndpointBase = null);
+        Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, RequestOptions options = null);
 
         /// <summary>
         /// Deletes scanner.        
         /// </summary>
         /// <param name="tableName">the table the scanner is associated with.</param>
         /// <param name="scannerId">the id of the scanner to delete.</param>
-        Task DeleteScannerAsync(string tableName, string scannerId, string alternativeEndpointBase = null);
+        void DeleteScanner(string tableName, string scannerId, RequestOptions options = null);
+
+        /// <summary>
+        /// Deletes scanner.        
+        /// </summary>
+        /// <param name="tableName">the table the scanner is associated with.</param>
+        /// <param name="scannerId">the id of the scanner to delete.</param>
+        Task DeleteScannerAsync(string tableName, string scannerId, RequestOptions options = null);
 
         /// <summary>
         /// Deletes row with specific row key.        
         /// </summary>
         /// <param name="tableName">the table name</param>
         /// <param name="rowKey">the row to delete</param>
-        Task DeleteCellsAsync(string tableName, string rowKey);
+        void DeleteCells(string tableName, string rowKey, RequestOptions options = null);
+
+        /// <summary>
+        /// Deletes row with specific row key.        
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        /// <param name="rowKey">the row to delete</param>
+        Task DeleteCellsAsync(string tableName, string rowKey, RequestOptions options = null);
 
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>
         /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
-        bool CreateTable(TableSchema schema);
+        bool CreateTable(TableSchema schema, RequestOptions options = null);
 
         /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>
         /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
-        Task<bool> CreateTableAsync(TableSchema schema);
+        Task<bool> CreateTableAsync(TableSchema schema, RequestOptions options = null);
 
         /// <summary>
         /// Deletes a table.
         /// If something went wrong, a WebException is thrown.
         /// </summary>
         /// <param name="tableName">the table name</param>
-        void DeleteTable(string tableName);
+        void DeleteTable(string tableName, RequestOptions options = null);
 
         /// <summary>
         /// Deletes a table.
         /// If something went wrong, a WebException is thrown.
         /// </summary>
         /// <param name="table">the table name</param>
-        Task DeleteTableAsync(string table);
+        Task DeleteTableAsync(string table, RequestOptions options = null);
 
         /// <summary>
         /// Gets the cells.
@@ -103,7 +117,7 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        CellSet GetCells(string tableName, string rowKey);
+        CellSet GetCells(string tableName, string rowKey, RequestOptions options = null);
 
         /// <summary>
         /// Gets the cells asynchronously.
@@ -111,21 +125,21 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        Task<CellSet> GetCellsAsync(string tableName, string rowKey);
+        Task<CellSet> GetCellsAsync(string tableName, string rowKey, RequestOptions options = null);
 
         /// <summary>
         /// Gets the storage cluster status.
         /// </summary>
         /// <returns>
         /// </returns>
-        StorageClusterStatus GetStorageClusterStatus();
+        StorageClusterStatus GetStorageClusterStatus(RequestOptions options = null);
 
         /// <summary>
         /// Gets the storage cluster status asynchronous.
         /// </summary>
         /// <returns>
         /// </returns>
-        Task<StorageClusterStatus> GetStorageClusterStatusAsync();
+        Task<StorageClusterStatus> GetStorageClusterStatusAsync(RequestOptions options = null);
 
         /// <summary>
         /// Gets the table information.
@@ -133,14 +147,14 @@ namespace Microsoft.HBase.Client
         /// <param name="table">The table.</param>
         /// <returns>
         /// </returns>
-        TableInfo GetTableInfo(string table);
+        TableInfo GetTableInfo(string table, RequestOptions options = null);
 
         /// <summary>
         /// Gets the table information asynchronously.
         /// </summary>
         /// <param name="table">The table.</param>
         /// <returns></returns>
-        Task<TableInfo> GetTableInfoAsync(string table);
+        Task<TableInfo> GetTableInfoAsync(string table, RequestOptions options = null);
 
         /// <summary>
         /// Gets the table schema.
@@ -148,7 +162,7 @@ namespace Microsoft.HBase.Client
         /// <param name="table">The table.</param>
         /// <returns>
         /// </returns>
-        TableSchema GetTableSchema(string table);
+        TableSchema GetTableSchema(string table, RequestOptions options = null);
 
         /// <summary>
         /// Gets the table schema asynchronously.
@@ -156,34 +170,34 @@ namespace Microsoft.HBase.Client
         /// <param name="table">The table.</param>
         /// <returns>
         /// </returns>
-        Task<TableSchema> GetTableSchemaAsync(string table);
+        Task<TableSchema> GetTableSchemaAsync(string table, RequestOptions options = null);
 
         /// <summary>
         /// Gets the version.
         /// </summary>
         /// <returns>
         /// </returns>
-        org.apache.hadoop.hbase.rest.protobuf.generated.Version GetVersion();
+        org.apache.hadoop.hbase.rest.protobuf.generated.Version GetVersion(RequestOptions options = null);
 
         /// <summary>
         /// Gets the version asynchronously.
         /// </summary>
         /// <returns>
         /// </returns>
-        Task<org.apache.hadoop.hbase.rest.protobuf.generated.Version> GetVersionAsync();
+        Task<org.apache.hadoop.hbase.rest.protobuf.generated.Version> GetVersionAsync(RequestOptions options = null);
 
         /// <summary>
         /// Lists the tables.
         /// </summary>
         /// <returns></returns>
-        TableList ListTables();
+        TableList ListTables(RequestOptions options = null);
 
         /// <summary>
         /// Lists the tables asynchronously.
         /// </summary>
         /// <returns>
         /// </returns>
-        Task<TableList> ListTablesAsync();
+        Task<TableList> ListTablesAsync(RequestOptions options = null);
 
         /// <summary>
         /// Modifies a table schema. 
@@ -192,7 +206,7 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="tableName">the table name</param>
         /// <param name="schema">the schema</param>
-        void ModifyTableSchema(string tableName, TableSchema schema);
+        void ModifyTableSchema(string tableName, TableSchema schema, RequestOptions options = null);
 
         /// <summary>
         /// Modifies a table schema. 
@@ -201,28 +215,28 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="table">the table name</param>
         /// <param name="schema">the schema</param>
-        Task ModifyTableSchemaAsync(string table, TableSchema schema);
+        Task ModifyTableSchemaAsync(string table, TableSchema schema, RequestOptions options = null);
 
         /// <summary>
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        CellSet ScannerGetNext(ScannerInformation scannerInfo);
+        CellSet ScannerGetNext(ScannerInformation scannerInfo, RequestOptions options = null);
 
         /// <summary>
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, string alternativeEndpointBase = null);
+        Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options = null);
 
         /// <summary>
         /// Stores the given cells in the supplied table.
         /// </summary>
         /// <param name="table">the table</param>
         /// <param name="cells">the cells to insert</param>
-        void StoreCells(string table, CellSet cells);
+        void StoreCells(string table, CellSet cells, RequestOptions options = null);
 
         /// <summary>
         /// Stores the given cells in the supplied table.
@@ -230,6 +244,6 @@ namespace Microsoft.HBase.Client
         /// <param name="table">the table</param>
         /// <param name="cells">the cells to insert</param>
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
-        Task StoreCellsAsync(string table, CellSet cells);
+        Task StoreCellsAsync(string table, CellSet cells, RequestOptions options = null);
     }
 }

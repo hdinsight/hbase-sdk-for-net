@@ -29,6 +29,7 @@ namespace Microsoft.HBase.Client.Tests
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
 
+    /*
     [TestClass]
     public class VirtualNetworkLoadBalancerTests : DisposableContextSpecification 
     {
@@ -572,5 +573,5 @@ namespace Microsoft.HBase.Client.Tests
         {
             await Task.FromResult<int>(0);
         }
-    }
+    }*/
 }
