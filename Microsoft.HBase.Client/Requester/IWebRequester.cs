@@ -13,30 +13,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Requester
 {
-    using System;
-    using Microsoft.HBase.Client.LoadBalancing;
+    using System.IO;
+    using System.Net;
+    using System.Threading.Tasks;
 
-    public class FixedIntervalBackOffScheme : IBackOffScheme
+    public interface IWebRequester
     {
-        private TimeSpan _backOffInterval;
+        HttpWebResponse IssueWebRequest(string endpoint, string method, Stream input, RequestOptions options);
 
-        public FixedIntervalBackOffScheme(TimeSpan backOffInterval = default(TimeSpan))
-        {
-            if (backOffInterval == default(TimeSpan))
-            {
-                _backOffInterval = TimeSpan.FromSeconds(Constants.BackOffIntervalDefault);
-            }
-            else
-            {
-                _backOffInterval = backOffInterval;
-            }
-        }
-
-        public TimeSpan GetRetryInterval(int attemptCount)
-        {
-            return _backOffInterval;
-        }
+        Task<HttpWebResponse> IssueWebRequestAsync(string endpoint, string method, Stream input, RequestOptions options);
     }
 }

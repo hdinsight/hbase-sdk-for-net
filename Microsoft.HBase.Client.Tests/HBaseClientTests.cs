@@ -103,8 +103,10 @@ namespace Microsoft.HBase.Client.Tests
 
             // full range scan
             var scanSettings = new Scanner { batch = 10 };
-            ScannerInformation scannerInfo = await client.CreateScannerAsync(_testTableName, scanSettings, "hbaserest0/");
-            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId, "hbaserest0/");
+            var options = RequestOptions.GetDefaultOptions();
+            options.AlternativeEndpoint = "hbaserest0/";
+            ScannerInformation scannerInfo = await client.CreateScannerAsync(_testTableName, scanSettings, options);
+            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId, options);
         }
 
         [TestMethod]
