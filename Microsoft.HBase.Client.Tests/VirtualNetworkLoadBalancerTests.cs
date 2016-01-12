@@ -19,18 +19,14 @@ namespace Microsoft.HBase.Client.Tests
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.HBase.Client.Internal;
     using Microsoft.HBase.Client.LoadBalancing;
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using org.apache.hadoop.hbase.rest.protobuf.generated;
 
     [TestClass]
-    public class VirtualNetworkLoadBalancerTests : DisposableContextSpecification 
+    public class VirtualNetworkLoadBalancerTests : DisposableContextSpecification
     {
         protected override void Context()
         {
@@ -48,16 +44,16 @@ namespace Microsoft.HBase.Client.Tests
 
             var balancer = new LoadBalancerRoundRobin(numRegionServers: numServers);
             Assert.AreEqual(balancer.GetNumAvailableEndpoints(), numServers);
-            
+
             var expectedServersList = BuildServersList(numServers);
 
             var actualServersList = new List<string>();
 
-            foreach(var endpoint in balancer._allEndpoints)
+            foreach (var endpoint in balancer._allEndpoints)
             {
                 actualServersList.Add(endpoint.OriginalString);
             }
-            
+
             Assert.IsTrue(CompareLists(actualServersList, expectedServersList));
         }
 
@@ -70,45 +66,11 @@ namespace Microsoft.HBase.Client.Tests
             Assert.AreEqual(LoadBalancerRoundRobin._workerRestEndpointPort, 8090);
             Assert.AreEqual(LoadBalancerRoundRobin._refreshInterval.TotalMilliseconds, 10.0);
         }
-        
-        [TestMethod]
-        public void TestLoadBalancerRetriesExhausted()
-        {
-            int numServers = 4;
-            int numFailures = 5;
-            var client = new HBaseClient(numServers);
-
-            int count = 0;
-            Func<string, Task<int>> f = (endpoint) =>
-            {
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException(count.ToString());
-                }
-
-                return EmitIntAsync(count);
-            };
-
-            try
-            {
-                var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing(f);
-            }
-            catch (TimeoutException ex)
-            {
-                Assert.AreEqual(ex.Message, numServers.ToString());
-
-                return;
-            }
-
-            Assert.Fail();
-        }
 
         protected class IgnoreBlackListedEndpointsPolicy : IEndpointIgnorePolicy
         {
 
-            private List<string> _blackListedEndpoints;
+            private readonly List<string> _blackListedEndpoints;
 
             public IgnoreBlackListedEndpointsPolicy(List<string> blacklistedEndpoints)
             {
@@ -145,7 +107,7 @@ namespace Microsoft.HBase.Client.Tests
         public void TestLoadBalancerRoundRobin()
         {
             int numServers = 10;
-            
+
             var balancer = new LoadBalancerRoundRobin(numServers);
             int initRRIdx = balancer._endpointIndex;
 
@@ -184,7 +146,7 @@ namespace Microsoft.HBase.Client.Tests
         {
             int numServers = 20;
             var balancer = new LoadBalancerRoundRobin(numServers);
-          
+
             var uniqueEndpointsFetched = new ConcurrentDictionary<string, bool>();
 
             Parallel.For(0, numServers, (i) =>
@@ -245,10 +207,8 @@ namespace Microsoft.HBase.Client.Tests
             double doubleReadValid = doubleConfigInitial;
             doubleReadValid = LoadBalancerRoundRobin.ReadFromConfig<double>(doubleConfigValidKey, Double.Parse, doubleConfigDefault);
             Assert.AreEqual(doubleReadValid, doubleConfigExpected);
-            
-        }
-    
 
+        }
 
         [TestMethod]
         public void TestLoadBalancerIgnorePolicy()
@@ -260,224 +220,17 @@ namespace Microsoft.HBase.Client.Tests
             var blackListedServersList = BuildServersList(numBlackListedServers);
 
             balancer._endpointIgnorePolicy = new IgnoreBlackListedEndpointsPolicy(blackListedServersList);
-            
-            for(int i = 0; i < 2*numServers; i++)
+
+            for (int i = 0; i < 2 * numServers; i++)
             {
                 Uri selectedEndpoint = null;
-                
+
                 selectedEndpoint = balancer.GetEndpoint();
                 var selectedEndpointFoundInBlackList = blackListedServersList.Find(x => x.Equals(selectedEndpoint.OriginalString));
                 Assert.IsNull(selectedEndpointFoundInBlackList);
-                
+
                 balancer.RecordSuccess(selectedEndpoint);
             }
-        }
-    
-        [TestMethod]
-        public void TestLoadBalancerIgnoreBlackListedEndpoints()
-        {
-            int numServers = 10;
-            int numBlackListedServers = 8;
-
-            var client = new HBaseClient(numServers);
-
-            var blackListedServers = BuildServersList(numBlackListedServers);
-
-            int result = 0;
-            int numFailures = 0;
-
-            Func<string, Task<int>> f = (endpoint) =>
-            {
-                var blacklistedEndpointFound = blackListedServers.Find(x => x.Equals(endpoint));
-                if (blacklistedEndpointFound != null)
-                {
-                    numFailures++;
-                    throw new TimeoutException();
-                }
-                result = 100;
-                
-                return EmitIntAsync(result);
-            };
-
-            var resultInOutput = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<int>(f);
-
-            Assert.IsTrue(resultInOutput == 100);
-
-            Assert.IsTrue(numFailures >= 0);
-        }
-
-        [TestMethod]
-        public void TestExecuteAndGetWithVirtualNetworkLoadBalancing()
-        {
-            int numServers = 4;
-            int numFailures = 3;
-            var client = new HBaseClient(numServers);
-
-            int count = 0;
-            Func<string, Task<int>> f = (endpoint) =>
-            {
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException();
-                }
-                
-                return EmitIntAsync(count);
-            };
-            
-            var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<int>(f);
-
-            Assert.AreEqual(count, numFailures);
-            Assert.AreEqual(output, numFailures);
-        }
-
-        [TestMethod]
-        public void TestExecuteAndGetWithVirtualNetworkLoadBalancingOneArg()
-        {
-            int numServers = 4;
-            int numFailures = 3;
-            var client = new HBaseClient(numServers);
-
-            var arg1Value = "arg1";
-
-            int count = 0;
-
-            Func<string, string, Task<int>> f = (arg1, endpoint) =>
-            {
-                Assert.AreEqual(arg1Value, arg1);
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException();
-                }
-
-                return EmitIntAsync(count);
-            };
-
-            var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<string, int>(f, arg1Value);
-
-            Assert.AreEqual(count, numFailures);
-            Assert.AreEqual(output, numFailures);
-        }
-
-        [TestMethod]
-        public void TestExecuteAndGetWithVirtualNetworkLoadBalancingTwoArgs()
-        {
-            int numServers = 4;
-            int numFailures = 3;
-            var client = new HBaseClient(numServers);
-
-            var arg1Value = "arg1";
-            var arg2Value = "arg2";
-
-            int count = 0;
-
-            Func<string, string, string, Task<int>> f = (arg1, arg2, endpoint) =>
-            {
-                Assert.AreEqual(arg1Value, arg1);
-                Assert.AreEqual(arg2Value, arg2);
-
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException();
-                }
-
-                return EmitIntAsync(count);
-            };
-
-            var output = client.ExecuteAndGetWithVirtualNetworkLoadBalancing<string, string, int>(f, arg1Value, arg2Value);
-
-            Assert.AreEqual(count, numFailures);
-            Assert.AreEqual(output, numFailures);
-        }
-        
-        [TestMethod]
-        public void TestExecuteWithVirtualNetworkLoadBalancing()
-        {
-            int numServers = 4;
-            int numFailures = 3;
-            var client = new HBaseClient(numServers);
-
-            int count = 0;
-            Func<string, Task> f = (endpoint) =>
-            {
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException();
-                }
-
-                return NoOpTask();
-            };
-
-            client.ExecuteWithVirtualNetworkLoadBalancing(f);
-
-            Assert.AreEqual(count, numFailures);
-        }
-
-        [TestMethod]
-        public void TestExecuteWithVirtualNetworkLoadBalancingOneArg()
-        {
-            int numServers = 4;
-            int numFailures = 3;
-            var client = new HBaseClient(numServers);
-            
-            var arg1Value = "arg1";
-
-            int count = 0;
-            Func<string, string, Task> f = (arg1, endpoint) =>
-            {
-                Assert.AreEqual(arg1Value, arg1);
-
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException();
-                }
-
-                return NoOpTask();
-            };
-
-            client.ExecuteWithVirtualNetworkLoadBalancing(f, arg1Value);
-
-            Assert.AreEqual(count, numFailures);
-        }
-
-        [TestMethod]
-        public void TestExecuteWithVirtualNetworkLoadBalancingTwoArgs()
-        {
-            int numServers = 4;
-            int numFailures = 3;
-            var client = new HBaseClient(numServers);
-
-            var arg1Value = "arg1";
-            var arg2Value = "arg2";
-
-            int count = 0;
-            Func<string, string, string, Task> f = (arg1, arg2, endpoint) =>
-            {
-                Assert.AreEqual(arg1Value, arg1);
-                Assert.AreEqual(arg2Value, arg2);
-
-                count++;
-
-                if (count < numFailures)
-                {
-                    throw new TimeoutException();
-                }
-
-                return NoOpTask();
-            };
-
-            client.ExecuteWithVirtualNetworkLoadBalancing(f, arg1Value, arg2Value);
-
-            Assert.AreEqual(count, numFailures);
         }
 
         [TestMethod]
@@ -522,7 +275,7 @@ namespace Microsoft.HBase.Client.Tests
             var failedAfter = Array.FindAll(endpointsInfoList, x => x.State == IgnoreFailedEndpointsPolicy.EndpointState.Failed);
             var availableAfter = Array.FindAll(endpointsInfoList, x => x.State == IgnoreFailedEndpointsPolicy.EndpointState.Available);
 
-            Assert.AreEqual(failedAfter.Length, numServers-1);
+            Assert.AreEqual(failedAfter.Length, numServers - 1);
             Assert.AreEqual(availableAfter.Length, 1);
         }
 
@@ -535,10 +288,10 @@ namespace Microsoft.HBase.Client.Tests
             }
             return list;
         }
-        
+
         private bool CompareLists(List<string> a, List<string> b)
         {
-            if((a == null) && (b != null))
+            if ((a == null) && (b != null))
             {
                 return false;
             }
@@ -555,7 +308,7 @@ namespace Microsoft.HBase.Client.Tests
 
             foreach (var aElem in a)
             {
-                if (b.FirstOrDefault(bElem => bElem.Equals(aElem, StringComparison.OrdinalIgnoreCase)) == default (string))
+                if (b.FirstOrDefault(bElem => bElem.Equals(aElem, StringComparison.OrdinalIgnoreCase)) == default(string))
                 {
                     return false;
                 }
@@ -563,7 +316,7 @@ namespace Microsoft.HBase.Client.Tests
 
             return true;
         }
-        
+
         private async Task<int> EmitIntAsync(int count)
         {
             return await Task.FromResult<int>(count);
