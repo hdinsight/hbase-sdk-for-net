@@ -676,7 +676,7 @@ namespace Microsoft.HBase.Client
                 {
                     using (HttpWebResponse webResponse = await PostRequestAsync(table + "/schema", schema, alternativeEndpointBase))
                     {
-                        if (webResponse.StatusCode != HttpStatusCode.OK || webResponse.StatusCode != HttpStatusCode.Created)
+                        if (webResponse.StatusCode != HttpStatusCode.OK && webResponse.StatusCode != HttpStatusCode.Created)
                         {
                             using (var output = new StreamReader(webResponse.GetResponseStream()))
                             {
