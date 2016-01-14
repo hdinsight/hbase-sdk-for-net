@@ -13,7 +13,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.HBase.Client.Tests
+namespace Microsoft.HBase.Client.Tests.Clients
 {
     using System;
     using System.Collections.Generic;
@@ -25,14 +25,12 @@ namespace Microsoft.HBase.Client.Tests
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
 
-    [TestClass]
-    public class HBaseClientTests : DisposableContextSpecification
+    public abstract class HBaseClientTestBase : DisposableContextSpecification
     {
+        // TEST TODOS:
         // TODO: add test for ModifyTableSchema
 
         private const string TestTablePrefix = "marlintest";
-
-        private ClusterCredentials _credentials;
         private readonly Random _random = new Random();
 
         private string _testTableName;
@@ -40,11 +38,9 @@ namespace Microsoft.HBase.Client.Tests
 
         protected override void Context()
         {
-            _credentials = ClusterCredentialsFactory.CreateFromFile(@".\credentials.txt");
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
 
             // ensure tables from previous tests are cleaned up
-
             TableList tables = client.ListTables();
             foreach (string name in tables.name)
             {
@@ -63,17 +59,13 @@ namespace Microsoft.HBase.Client.Tests
             client.CreateTable(_testTableSchema);
         }
 
-        [TestCleanup]
-        public override void TestCleanup()
-        {
-            // moved table cleanup to Context
-        }
+        public abstract IHBaseClient CreateClient();
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
         public void TestFullScan()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
 
             StoreTestData(client);
 
@@ -99,12 +91,15 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public async Task TestScannerDeletion()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
 
             // full range scan
             var scanSettings = new Scanner { batch = 10 };
-            ScannerInformation scannerInfo = await client.CreateScannerAsync(_testTableName, scanSettings, "hbaserest0/");
-            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId, "hbaserest0/");
+            var options = RequestOptions.GetDefaultOptions();
+            options.AlternativeEndpoint = "hbaserest0/";
+            ScannerInformation scannerInfo = await client.CreateScannerAsync(_testTableName, scanSettings, options);
+            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId, options);
+            // TODO add asserts this is actually deleted
         }
 
         [TestMethod]
@@ -114,7 +109,7 @@ namespace Microsoft.HBase.Client.Tests
         {
             const string testKey = "content";
             const string testValue = "the force is strong in this column";
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             var set = new CellSet();
             var row = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey) };
             set.rows.Add(row);
@@ -130,14 +125,13 @@ namespace Microsoft.HBase.Client.Tests
             await client.DeleteCellsAsync(_testTableName, testKey);
             // get cell again, 404 exception expected
             await client.GetCellsAsync(_testTableName, testKey);
-
         }
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
         public void TestGetStorageClusterStatus()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             StorageClusterStatus status = client.GetStorageClusterStatus();
             // TODO not really a good test
             Assert.IsTrue(status.requests >= 0, "number of requests is negative");
@@ -149,7 +143,7 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public void TestGetVersion()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             org.apache.hadoop.hbase.rest.protobuf.generated.Version version = client.GetVersion();
 
             Trace.WriteLine(version);
@@ -164,7 +158,7 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public void TestListTables()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
 
             TableList tables = client.ListTables();
             List<string> testtables = tables.name.Where(item => item.StartsWith("marlintest", StringComparison.Ordinal)).ToList();
@@ -176,15 +170,12 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public void TestScannerCreation()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             var batchSetting = new Scanner { batch = 2 };
 
             ScannerInformation scannerInfo = client.CreateScanner(_testTableName, batchSetting);
             Assert.AreEqual(_testTableName, scannerInfo.TableName);
-            Assert.IsTrue(
-                scannerInfo.Location.Authority.StartsWith("headnode", StringComparison.Ordinal),
-                "returned location didn't start with \"headnode\", it was: {0}",
-                scannerInfo.Location);
+            Assert.IsNotNull(scannerInfo.ScannerId);
         }
 
         [TestMethod]
@@ -193,7 +184,7 @@ namespace Microsoft.HBase.Client.Tests
         {
             const string testKey = "content";
             const string testValue = "the force is strong in this column";
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             var set = new CellSet();
             var row = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey) };
             set.rows.Add(row);
@@ -213,7 +204,7 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public void TestSubsetScan()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             const int startRow = 15;
             const int endRow = 15 + 13;
             StoreTestData(client);
@@ -239,14 +230,14 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public void TestTableSchema()
         {
-            var client = new HBaseClient(_credentials);
+            var client = CreateClient();
             TableSchema schema = client.GetTableSchema(_testTableName);
             Assert.AreEqual(_testTableName, schema.name);
             Assert.AreEqual(_testTableSchema.columns.Count, schema.columns.Count);
             Assert.AreEqual(_testTableSchema.columns[0].name, schema.columns[0].name);
         }
 
-        private void StoreTestData(HBaseClient hBaseClient)
+        private void StoreTestData(IHBaseClient hBaseClient)
         {
             // we are going to insert the keys 0 to 100 and then do some range queries on that
             const string testValue = "the force is strong in this column";

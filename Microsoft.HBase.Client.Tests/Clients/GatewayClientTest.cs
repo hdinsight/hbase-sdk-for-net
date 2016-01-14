@@ -13,30 +13,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.HBase.Client
+namespace Microsoft.HBase.Client.Tests.Clients
 {
-    using System;
-    using Microsoft.HBase.Client.LoadBalancing;
+    using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    public class FixedIntervalBackOffScheme : IBackOffScheme
+    [TestClass]
+    public class GatewayClientTest : HBaseClientTestBase
     {
-        private TimeSpan _backOffInterval;
-
-        public FixedIntervalBackOffScheme(TimeSpan backOffInterval = default(TimeSpan))
+        public override IHBaseClient CreateClient()
         {
-            if (backOffInterval == default(TimeSpan))
-            {
-                _backOffInterval = TimeSpan.FromSeconds(Constants.BackOffIntervalDefault);
-            }
-            else
-            {
-                _backOffInterval = backOffInterval;
-            }
-        }
-
-        public TimeSpan GetRetryInterval(int attemptCount)
-        {
-            return _backOffInterval;
+            var options = RequestOptions.GetDefaultOptions();
+            options.RetryPolicy = RetryPolicy.NoRetry;
+            options.TimeoutMillis = 30000;
+            options.KeepAlive = false;
+            return new HBaseClient(ClusterCredentialsFactory.CreateFromFile(@".\credentials.txt"), options);
         }
     }
 }

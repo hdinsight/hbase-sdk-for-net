@@ -49,6 +49,10 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling, Version=6.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8\Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
@@ -74,13 +78,15 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Clients\GatewayClientTest.cs" />
+    <Compile Include="Clients\VNetClientTest.cs" />
     <Compile Include="ClusterCredentialsFactory.cs" />
     <Compile Include="ClusterCredentialsFactoryTests.cs" />
     <Compile Include="ClusterCredentialsTests.cs" />
     <Compile Include="FilterTestRecord.cs" />
     <Compile Include="FilterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="HBaseClientTests.cs" />
+    <Compile Include="Clients\HBaseClientTestBase.cs" />
     <Compile Include="PublicInternalArchitectureTests.cs" />
     <Compile Include="ScannerInformationTests.cs" />
     <Compile Include="Utilities\AssertEqualityComparer.cs" />
