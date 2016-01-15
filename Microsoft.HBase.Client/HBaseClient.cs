@@ -79,7 +79,7 @@ namespace Microsoft.HBase.Client
         public HBaseClient(ClusterCredentials credentials, RequestOptions globalRequestOptions = null, ILoadBalancer loadBalancer = null)
         {
             _globalRequestOptions = globalRequestOptions ?? RequestOptions.GetDefaultOptions();
-
+            _globalRequestOptions.Validate();
             if (credentials != null) // gateway mode
             {
                 _requester = new GatewayWebRequester(credentials);

@@ -48,5 +48,13 @@ namespace Microsoft.HBase.Client.Internal
                 throw new ArgumentEmptyException(paramName ?? string.Empty, null, null);
             }
         }
+
+        internal static void ArgumentNotNegative(int value, string name)
+        {
+            if (value < 0)
+            {
+                throw new ArgumentException(string.Format("Argument {0} wasn't >= 0! Given: {1}", name, value));
+            }
+        }
     }
 }

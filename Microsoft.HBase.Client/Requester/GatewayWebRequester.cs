@@ -70,6 +70,7 @@ namespace Microsoft.HBase.Client.Requester
         public async Task<Response> IssueWebRequestAsync(
             string endpoint, string method, Stream input, RequestOptions options)
         {
+            options.Validate();
             Stopwatch watch = Stopwatch.StartNew();
             UriBuilder builder = new UriBuilder(
                 _credentials.ClusterUri.Scheme,
@@ -87,6 +88,14 @@ namespace Microsoft.HBase.Client.Requester
             httpWebRequest.Method = method;
             httpWebRequest.Accept = _contentType;
             httpWebRequest.ContentType = _contentType;
+
+            if (options.AdditionalHeaders != null)
+            {
+                foreach (var kv in options.AdditionalHeaders)
+                {
+                    httpWebRequest.Headers.Add(kv.Key, kv.Value);
+                }
+            }
 
             if (input != null)
             {

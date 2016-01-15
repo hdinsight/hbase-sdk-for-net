@@ -15,13 +15,13 @@
 
 namespace Microsoft.HBase.Client
 {
+    using System.Collections.Generic;
+    using Microsoft.HBase.Client.Internal;
     using Microsoft.HBase.Client.LoadBalancing;
     using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
     public class RequestOptions
     {
-        // TODO add some validation on the setters, e.g. AlternativeEndpoint needs to end with "/", RetryPolicy shouldn't be null, timeouts not negative.
-
         public RetryPolicy RetryPolicy { get; set; }
         public string AlternativeEndpoint { get; set; }
         public bool KeepAlive { get; set; }
@@ -30,6 +30,16 @@ namespace Microsoft.HBase.Client
         public int ReceiveBufferSize { get; set; }
         public bool UseNagle { get; set; }
         public int Port { get; set; }
+        public Dictionary<string, string> AdditionalHeaders { get; set; }
+
+        public void Validate()
+        {
+            RetryPolicy.ArgumentNotNull("RetryPolicy");
+            ArgumentGuardExtensions.ArgumentNotNegative(TimeoutMillis, "TimeoutMillis");
+            ArgumentGuardExtensions.ArgumentNotNegative(ReceiveBufferSize, "ReceiveBufferSize");
+            ArgumentGuardExtensions.ArgumentNotNegative(SerializationBufferSize, "SerializationBufferSize");
+            ArgumentGuardExtensions.ArgumentNotNegative(Port, "Port");
+        }
 
         public static RequestOptions GetDefaultOptions()
         {

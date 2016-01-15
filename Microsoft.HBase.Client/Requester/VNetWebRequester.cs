@@ -66,6 +66,7 @@ namespace Microsoft.HBase.Client.Requester
         /// <returns></returns>
         public async Task<Response> IssueWebRequestAsync(string endpoint, string method, Stream input, RequestOptions options)
         {
+            options.Validate();
             Stopwatch watch = Stopwatch.StartNew();
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
             var balancedEndpoint = _balancer.GetEndpoint();
@@ -92,6 +93,14 @@ namespace Microsoft.HBase.Client.Requester
                 httpWebRequest.Method = method;
                 httpWebRequest.Accept = _contentType;
                 httpWebRequest.ContentType = _contentType;
+
+                if (options.AdditionalHeaders != null)
+                {
+                    foreach (var kv in options.AdditionalHeaders)
+                    {
+                        httpWebRequest.Headers.Add(kv.Key, kv.Value);
+                    }
+                }
 
                 if (input != null)
                 {
