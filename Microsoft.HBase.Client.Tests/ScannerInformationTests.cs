@@ -16,6 +16,7 @@
 namespace Microsoft.HBase.Client.Tests
 {
     using System;
+    using System.Net;
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -31,7 +32,7 @@ namespace Microsoft.HBase.Client.Tests
 
         protected override void Context()
         {
-            target = new ScannerInformation(expectedLocation, expectedTableName);
+            target = new ScannerInformation(expectedLocation, expectedTableName, new WebHeaderCollection());
         }
 
         [TestMethod]
@@ -67,7 +68,7 @@ namespace Microsoft.HBase.Client.Tests
         public void It_should_reject_empty_table_names()
         {
             object instance = null;
-            typeof(ArgumentEmptyException).ShouldBeThrownBy(() => instance = new ScannerInformation(validLocation, string.Empty));
+            typeof(ArgumentEmptyException).ShouldBeThrownBy(() => instance = new ScannerInformation(validLocation, string.Empty, new WebHeaderCollection()));
             instance.ShouldBeNull();
         }
 
@@ -76,7 +77,7 @@ namespace Microsoft.HBase.Client.Tests
         public void It_should_reject_null_locations()
         {
             object instance = null;
-            typeof(ArgumentNullException).ShouldBeThrownBy(() => instance = new ScannerInformation(null, validTableName));
+            typeof(ArgumentNullException).ShouldBeThrownBy(() => instance = new ScannerInformation(null, validTableName, new WebHeaderCollection()));
             instance.ShouldBeNull();
         }
 
@@ -85,7 +86,7 @@ namespace Microsoft.HBase.Client.Tests
         public void It_should_reject_null_table_names()
         {
             object instance = null;
-            typeof(ArgumentNullException).ShouldBeThrownBy(() => instance = new ScannerInformation(validLocation, null));
+            typeof(ArgumentNullException).ShouldBeThrownBy(() => instance = new ScannerInformation(validLocation, null, new WebHeaderCollection()));
             instance.ShouldBeNull();
         }
     }

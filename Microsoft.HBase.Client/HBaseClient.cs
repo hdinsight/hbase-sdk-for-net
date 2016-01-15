@@ -139,7 +139,8 @@ namespace Microsoft.HBase.Client
                 {
                     throw new ArgumentException("Couldn't find header 'Location' in the response!");
                 }
-                return new ScannerInformation(new Uri(location), tableName);
+
+                return new ScannerInformation(new Uri(location), tableName, response.WebResponse.Headers);
             }
         }
 

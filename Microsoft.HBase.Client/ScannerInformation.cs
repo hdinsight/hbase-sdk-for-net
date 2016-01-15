@@ -16,6 +16,7 @@
 namespace Microsoft.HBase.Client
 {
     using System;
+    using System.Net;
     using Microsoft.HBase.Client.Internal;
 
     /// <summary>
@@ -29,13 +30,16 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="location">The location.</param>
         /// <param name="tableName">Name of the table.</param>
-        public ScannerInformation(Uri location, string tableName)
+        /// <param name="responseHeaderCollection">additional header information from the response</param>
+        public ScannerInformation(Uri location, string tableName, WebHeaderCollection responseHeaderCollection)
         {
             location.ArgumentNotNull("location");
             tableName.ArgumentNotNullNorEmpty("tableName");
+            responseHeaderCollection.ArgumentNotNull("responseHeaderCollection");
 
             Location = location;
             TableName = tableName;
+            ResponseHeaderCollection = responseHeaderCollection;
         }
 
         /// <summary>
@@ -56,6 +60,8 @@ namespace Microsoft.HBase.Client
         {
             get { return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/')); }
         }
+
+        public WebHeaderCollection ResponseHeaderCollection { get; private set; }
 
         /// <summary>
         /// Gets the name of the table.
