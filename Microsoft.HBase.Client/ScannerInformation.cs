@@ -58,9 +58,13 @@ namespace Microsoft.HBase.Client
         /// </value>
         public string ScannerId
         {
-            get { return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/')); }
+            get { return Location.PathAndQuery.Substring(Location.PathAndQuery.LastIndexOf('/') + 1); }
         }
 
+        /// <summary>
+        /// Additional headers from the CreateScanner response.
+        /// This can be used to implement a sticky load balancing, e.g. by supplying a remote identifier. 
+        /// </summary>
         public WebHeaderCollection ResponseHeaderCollection { get; private set; }
 
         /// <summary>

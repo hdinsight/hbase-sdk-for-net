@@ -176,6 +176,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             ScannerInformation scannerInfo = client.CreateScanner(_testTableName, batchSetting);
             Assert.AreEqual(_testTableName, scannerInfo.TableName);
             Assert.IsNotNull(scannerInfo.ScannerId);
+            Assert.IsFalse(scannerInfo.ScannerId.StartsWith("/"), "scanner id starts with a slash");
             Assert.IsNotNull(scannerInfo.ResponseHeaderCollection);
         }
 

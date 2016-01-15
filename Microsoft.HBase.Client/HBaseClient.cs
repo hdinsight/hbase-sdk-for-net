@@ -165,7 +165,7 @@ namespace Microsoft.HBase.Client
 
         private async Task DeleteScannerAsyncInternal(string tableName, string scannerId, RequestOptions options)
         {
-            using (Response webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner" + scannerId, null, options))
+            using (Response webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner/" + scannerId, null, options))
             {
                 if (webResponse.WebResponse.StatusCode != HttpStatusCode.OK)
                 {
@@ -448,7 +448,7 @@ namespace Microsoft.HBase.Client
         public async Task<TableList> ListTablesAsync(RequestOptions options = null)
         {
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableList>("/", optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableList>("", optionToUse));
         }
 
         /// <summary>
@@ -605,7 +605,7 @@ namespace Microsoft.HBase.Client
         private async Task<T> GetRequestAndDeserializeAsync<T>(string endpoint, RequestOptions options)
         {
             options.ArgumentNotNull("request options");
-            endpoint.ArgumentNotNullNorEmpty("endpoint");
+            endpoint.ArgumentNotNull("endpoint");
             using (Response response = await _requester.IssueWebRequestAsync(endpoint, "GET", null, options))
             {
                 using (Stream responseStream = response.WebResponse.GetResponseStream())
@@ -618,7 +618,7 @@ namespace Microsoft.HBase.Client
         private async Task<Response> GetRequestAsync(string endpoint, RequestOptions options)
         {
             options.ArgumentNotNull("request options");
-            endpoint.ArgumentNotNullNorEmpty("endpoint");
+            endpoint.ArgumentNotNull("endpoint");
             return await _requester.IssueWebRequestAsync(endpoint, "GET", null, options);
         }
 
@@ -626,7 +626,7 @@ namespace Microsoft.HBase.Client
            where TReq : class
         {
             options.ArgumentNotNull("request options");
-            endpoint.ArgumentNotNullNorEmpty("endpoint");
+            endpoint.ArgumentNotNull("endpoint");
             return await ExecuteMethodAsync("POST", endpoint, request, options);
         }
 
@@ -634,7 +634,7 @@ namespace Microsoft.HBase.Client
            where TReq : class
         {
             options.ArgumentNotNull("request options");
-            endpoint.ArgumentNotNullNorEmpty("endpoint");
+            endpoint.ArgumentNotNull("endpoint");
             return await ExecuteMethodAsync("PUT", endpoint, request, options);
         }
     }
