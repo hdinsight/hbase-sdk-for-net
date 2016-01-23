@@ -31,6 +31,7 @@ namespace Microsoft.HBase.Client
         public bool UseNagle { get; set; }
         public int Port { get; set; }
         public Dictionary<string, string> AdditionalHeaders { get; set; }
+        public string AlternativeHost { get; set; }
 
         public void Validate()
         {
@@ -52,7 +53,8 @@ namespace Microsoft.HBase.Client
                 SerializationBufferSize = 1024 * 1024 * 1,
                 UseNagle = false,
                 AlternativeEndpoint = Constants.RestEndpointBase,
-                Port = 443
+                Port = 443,
+                AlternativeHost = null
             };
         }
 
