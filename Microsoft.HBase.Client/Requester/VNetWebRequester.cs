@@ -71,9 +71,12 @@ namespace Microsoft.HBase.Client.Requester
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
             var balancedEndpoint = _balancer.GetEndpoint();
 
+            // Grab the host. Use the alternative host if one is specified
+            string host = (options.AlternativeHost != null) ? options.AlternativeHost : balancedEndpoint.Host;
+
             UriBuilder builder = new UriBuilder(
                 balancedEndpoint.Scheme,
-                balancedEndpoint.Host,
+                host,
                 options.Port,
                 options.AlternativeEndpoint + endpoint);
 
