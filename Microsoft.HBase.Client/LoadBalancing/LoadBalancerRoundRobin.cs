@@ -38,7 +38,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
         
         internal Uri[] _allEndpoints;
         internal IEndpointIgnorePolicy _endpointIgnorePolicy;
-        internal int _endpointIndex;
+        internal uint _endpointIndex;
         internal object lockObj;
 
         public LoadBalancerRoundRobin(int numRegionServers = 1, string clusterDomain = null)
@@ -92,6 +92,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
         {
             Uri chosenEndpoint;
             int attemptCounter = 0;
+
             do
             {
                 chosenEndpoint = _allEndpoints[_endpointIndex++ % _allEndpoints.Length];
@@ -115,7 +116,7 @@ namespace Microsoft.HBase.Client.LoadBalancing
             lockObj = new object();
 
             var endpointsList = new List<Uri>();
-            _endpointIndex = rnd.Next();
+            _endpointIndex = (uint) rnd.Next();
 
             foreach (var server in regionServerHostNames)
             {
