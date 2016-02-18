@@ -51,9 +51,9 @@ namespace Microsoft.HBase.Client.Requester
         /// <param name="input">The input.</param>
         /// <param name="options">request options</param>
         /// <returns></returns>
-        public Response IssueWebRequest(string endpoint, string method, Stream input, RequestOptions options)
+        public Response IssueWebRequest(string endpoint, string query, string method, Stream input, RequestOptions options)
         {
-            return IssueWebRequestAsync(endpoint, method, input, options).Result;
+            return IssueWebRequestAsync(endpoint, query, method, input, options).Result;
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Microsoft.HBase.Client.Requester
         /// <param name="input">The input.</param>
         /// <param name="options">request options</param>
         /// <returns></returns>
-        public async Task<Response> IssueWebRequestAsync(string endpoint, string method, Stream input, RequestOptions options)
+        public async Task<Response> IssueWebRequestAsync(string endpoint, string query, string method, Stream input, RequestOptions options)
         {
             options.Validate();
             Stopwatch watch = Stopwatch.StartNew();
@@ -79,6 +79,11 @@ namespace Microsoft.HBase.Client.Requester
                 host,
                 options.Port,
                 options.AlternativeEndpoint + endpoint);
+
+            if (query != null)
+            {
+                builder.Query = query;
+            }
 
             var target = builder.Uri;
 
@@ -96,6 +101,9 @@ namespace Microsoft.HBase.Client.Requester
                 httpWebRequest.Method = method;
                 httpWebRequest.Accept = _contentType;
                 httpWebRequest.ContentType = _contentType;
+                // This allows 304 (NotModified) requests to catch
+                //https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.allowautoredirect(v=vs.110).aspx
+                httpWebRequest.AllowAutoRedirect = false;
 
                 if (options.AdditionalHeaders != null)
                 {
@@ -107,9 +115,8 @@ namespace Microsoft.HBase.Client.Requester
 
                 if (input != null)
                 {
-                    // seek to the beginning, so we copy everything in this buffer
-                    input.Seek(0, SeekOrigin.Begin);
-                    using (Stream req = httpWebRequest.GetRequestStream())
+                    // expecting the caller to seek to the beginning or to the location where it needs to be copied from
+                    using (Stream req = await httpWebRequest.GetRequestStreamAsync())
                     {
                         await input.CopyToAsync(req);
                     }
@@ -127,7 +134,7 @@ namespace Microsoft.HBase.Client.Requester
                     RequestLatency = watch.Elapsed,
                     PostRequestAction = (r) =>
                     {
-                        if (r.WebResponse.StatusCode == HttpStatusCode.OK || r.WebResponse.StatusCode == HttpStatusCode.Created)
+                        if (r.WebResponse.StatusCode == HttpStatusCode.OK || r.WebResponse.StatusCode == HttpStatusCode.Created || r.WebResponse.StatusCode == HttpStatusCode.NotModified)
                         {
                             _balancer.RecordSuccess(balancedEndpoint);
                         }
@@ -137,6 +144,22 @@ namespace Microsoft.HBase.Client.Requester
                         }
                     }
                 };
+            }
+            catch(WebException we)
+            {
+                // 404 is valid response
+                var resp = we.Response as HttpWebResponse;
+                if(resp.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _balancer.RecordSuccess(balancedEndpoint);
+                    Debug.WriteLine("Web request {0} to endpoint {1} successful!", Trace.CorrelationManager.ActivityId, target);
+                }
+                else
+                {
+                    _balancer.RecordFailure(balancedEndpoint);
+                    Debug.WriteLine("Web request {0} to endpoint {1} failed!", Trace.CorrelationManager.ActivityId, target);
+                }
+                throw we;
             }
             catch (Exception e)
             {

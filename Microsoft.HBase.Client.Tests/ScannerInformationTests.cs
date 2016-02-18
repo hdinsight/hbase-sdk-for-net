@@ -46,7 +46,7 @@ namespace Microsoft.HBase.Client.Tests
         [TestCategory(TestRunMode.CheckIn)]
         public void It_should_have_the_expected_scanner_identifier()
         {
-            target.ScannerId.ShouldEqual(expectedScannerId);
+            target.ScannerId.ShouldEqual(expectedScannerId.Substring(1));
         }
 
         [TestMethod]
