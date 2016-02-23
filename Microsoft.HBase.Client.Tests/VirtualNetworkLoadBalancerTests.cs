@@ -109,7 +109,7 @@ namespace Microsoft.HBase.Client.Tests
             int numServers = 10;
 
             var balancer = new LoadBalancerRoundRobin(numServers);
-            int initRRIdx = balancer._endpointIndex;
+            uint initRRIdx = balancer._endpointIndex;
 
             for (int i = 0; i < 2 * numServers; i++)
             {

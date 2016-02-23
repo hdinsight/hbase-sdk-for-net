@@ -21,7 +21,7 @@ namespace Microsoft.HBase.Client.Requester
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.HBase.Client.Internal;
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -54,9 +54,9 @@ namespace Microsoft.HBase.Client.Requester
         /// <param name="input">The input.</param>
         /// <param name="options">request options</param>
         /// <returns></returns>
-        public Response IssueWebRequest(string endpoint, string method, Stream input, RequestOptions options)
+        public Response IssueWebRequest(string endpoint, string query, string method, Stream input, RequestOptions options)
         {
-            return IssueWebRequestAsync(endpoint, method, input, options).Result;
+            return IssueWebRequestAsync(endpoint, query, method, input, options).Result;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.HBase.Client.Requester
         /// <param name="options">request options</param>
         /// <returns></returns>
         public async Task<Response> IssueWebRequestAsync(
-            string endpoint, string method, Stream input, RequestOptions options)
+            string endpoint, string query, string method, Stream input, RequestOptions options)
         {
             options.Validate();
             Stopwatch watch = Stopwatch.StartNew();
@@ -77,6 +77,12 @@ namespace Microsoft.HBase.Client.Requester
                 _credentials.ClusterUri.Host,
                 options.Port,
                 options.AlternativeEndpoint + endpoint);
+
+            if (query != null)
+            {
+                builder.Query = query;
+            }
+            
             Debug.WriteLine("Issuing request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, builder.Uri);
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(builder.Uri);
             httpWebRequest.ServicePoint.ReceiveBufferSize = options.ReceiveBufferSize;
@@ -88,6 +94,9 @@ namespace Microsoft.HBase.Client.Requester
             httpWebRequest.Method = method;
             httpWebRequest.Accept = _contentType;
             httpWebRequest.ContentType = _contentType;
+            // This allows 304 (NotModified) requests to catch
+            //https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.allowautoredirect(v=vs.110).aspx
+            httpWebRequest.AllowAutoRedirect = false;
 
             if (options.AdditionalHeaders != null)
             {
@@ -99,9 +108,8 @@ namespace Microsoft.HBase.Client.Requester
 
             if (input != null)
             {
-                // seek to the beginning, so we copy everything in this buffer
-                input.Seek(0, SeekOrigin.Begin);
-                using (Stream req = httpWebRequest.GetRequestStream())
+                // expecting the caller to seek to the beginning or to the location where it needs to be copied from
+                using (Stream req = await httpWebRequest.GetRequestStreamAsync())
                 {
                     await input.CopyToAsync(req);
                 }

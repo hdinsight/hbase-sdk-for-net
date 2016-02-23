@@ -49,6 +49,9 @@ namespace Microsoft.HBase.Client
         private readonly IWebRequester _requester;
         private readonly RequestOptions _globalRequestOptions;
 
+        private const string CheckAndPutQuery = "check=put";
+        private const string CheckAndDeleteQuery = "check=delete";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
         /// </summary>
@@ -247,7 +250,7 @@ namespace Microsoft.HBase.Client
                 throw new ArgumentException("schema.name was either null or empty!", "schema");
             }
 
-            using (Response webResponse = await PutRequestAsync(schema.name + "/schema", schema, options))
+            using (Response webResponse = await PutRequestAsync(schema.name + "/schema", null, schema, options))
             {
                 if (webResponse.WebResponse.StatusCode == HttpStatusCode.Created)
                 {
@@ -545,6 +548,46 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and updates
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="row">row to update</param>
+        /// <param name="cellToCheck">cell to check</param>
+        /// <returns>true if the record was updated; false if condition failed at check</returns>
+        public async Task<bool> CheckAndPutAsync(string table, CellSet.Row row, Cell cellToCheck, RequestOptions options = null)
+        {
+            table.ArgumentNotNullNorEmpty("table");
+            row.ArgumentNotNull("row");
+            row.values.Add(cellToCheck);
+            var cellSet = new CellSet();
+            cellSet.rows.Add(row);
+            var optionToUse = options ?? _globalRequestOptions;
+
+            return await optionToUse.RetryPolicy.ExecuteAsync<bool>(() => StoreCellsAsyncInternal(table, cellSet, optionToUse, Encoding.UTF8.GetString(row.key), CheckAndPutQuery));
+           
+        }
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and deletes
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="cellToCheck">cell to check for deleting the row</param>
+        /// <returns>true if the record was deleted; false if condition failed at check</returns>
+        public async Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, RequestOptions options = null)
+        {
+            table.ArgumentNotNullNorEmpty("table");
+            cellToCheck.ArgumentNotNull("cellToCheck");
+            CellSet.Row row = new CellSet.Row() { key = cellToCheck.row }; 
+            row.values.Add(cellToCheck);
+            var cellSet = new CellSet();
+            cellSet.rows.Add(row);
+            var optionToUse = options ?? _globalRequestOptions;
+
+            return await optionToUse.RetryPolicy.ExecuteAsync<bool>(() => StoreCellsAsyncInternal(table, cellSet, optionToUse, Encoding.UTF8.GetString(row.key), CheckAndDeleteQuery));
+           
+        }
+
+        /// <summary>
         /// Stores the given cells in the supplied table.
         /// </summary>
         /// <param name="table">the table</param>
@@ -559,11 +602,17 @@ namespace Microsoft.HBase.Client
             await optionToUse.RetryPolicy.ExecuteAsync(() => StoreCellsAsyncInternal(table, cells, optionToUse));
         }
 
-        private async Task StoreCellsAsyncInternal(string table, CellSet cells, RequestOptions options)
+        private async Task<bool> StoreCellsAsyncInternal(string table, CellSet cells, RequestOptions options, string key = null, string query = null)
         {
+            string path = key == null ? table + "/somefalsekey" : table + "/" + key;
             // note the fake row key to insert a set of cells
-            using (Response webResponse = await PutRequestAsync(table + "/somefalsekey", cells, options))
+            using (Response webResponse = await PutRequestAsync(path, query, cells, options))
             {
+                if(webResponse.WebResponse.StatusCode == HttpStatusCode.NotModified)
+                {
+                    return false;
+                }
+
                 if (webResponse.WebResponse.StatusCode != HttpStatusCode.OK)
                 {
                     using (var output = new StreamReader(webResponse.WebResponse.GetResponseStream()))
@@ -578,16 +627,18 @@ namespace Microsoft.HBase.Client
                     }
                 }
             }
+            return true;
         }
 
         private async Task<Response> DeleteRequestAsync<TReq>(string endpoint, TReq request, RequestOptions options)
            where TReq : class
         {
-            return await ExecuteMethodAsync("DELETE", endpoint, request, options);
+            return await ExecuteMethodAsync("DELETE", null, endpoint, request, options);
         }
 
         private async Task<Response> ExecuteMethodAsync<TReq>(
            string method,
+           string query,
            string endpoint,
            TReq request,
            RequestOptions options) where TReq : class
@@ -598,7 +649,8 @@ namespace Microsoft.HBase.Client
                 {
                     Serializer.Serialize(input, request);
                 }
-                return await _requester.IssueWebRequestAsync(endpoint, method, input, options);
+                input.Seek(0, SeekOrigin.Begin);
+                return await _requester.IssueWebRequestAsync(endpoint, query, method, input, options);
             }
         }
 
@@ -606,7 +658,7 @@ namespace Microsoft.HBase.Client
         {
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
-            using (Response response = await _requester.IssueWebRequestAsync(endpoint, "GET", null, options))
+            using (Response response = await _requester.IssueWebRequestAsync(endpoint, null, "GET", null, options))
             {
                 using (Stream responseStream = response.WebResponse.GetResponseStream())
                 {
@@ -619,7 +671,7 @@ namespace Microsoft.HBase.Client
         {
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
-            return await _requester.IssueWebRequestAsync(endpoint, "GET", null, options);
+            return await _requester.IssueWebRequestAsync(endpoint, null, "GET", null, options);
         }
 
         private async Task<Response> PostRequestAsync<TReq>(string endpoint, TReq request, RequestOptions options)
@@ -627,15 +679,15 @@ namespace Microsoft.HBase.Client
         {
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
-            return await ExecuteMethodAsync("POST", endpoint, request, options);
+            return await ExecuteMethodAsync("POST", null, endpoint, request, options);
         }
 
-        private async Task<Response> PutRequestAsync<TReq>(string endpoint, TReq request, RequestOptions options)
+        private async Task<Response> PutRequestAsync<TReq>(string endpoint, string query, TReq request, RequestOptions options)
            where TReq : class
         {
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
-            return await ExecuteMethodAsync("PUT", endpoint, request, options);
+            return await ExecuteMethodAsync("PUT", query, endpoint, request, options);
         }
     }
 }

@@ -22,9 +22,9 @@ namespace Microsoft.HBase.Client.Requester
 
     public interface IWebRequester
     {
-        Response IssueWebRequest(string endpoint, string method, Stream input, RequestOptions options);
+        Response IssueWebRequest(string endpoint, string query, string method, Stream input, RequestOptions options);
 
-        Task<Response> IssueWebRequestAsync(string endpoint, string method, Stream input, RequestOptions options);
+        Task<Response> IssueWebRequestAsync(string endpoint, string query, string method, Stream input, RequestOptions options);
     }
 
     public class Response : IDisposable
