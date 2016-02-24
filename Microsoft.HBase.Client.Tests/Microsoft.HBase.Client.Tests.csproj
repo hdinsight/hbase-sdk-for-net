@@ -84,6 +84,7 @@
     <Compile Include="ClusterCredentialsFactoryTests.cs" />
     <Compile Include="ClusterCredentialsTests.cs" />
     <Compile Include="FilterTestRecord.cs" />
+    <Compile Include="CellOperationsTests.cs" />
     <Compile Include="FilterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Clients\HBaseClientTestBase.cs" />

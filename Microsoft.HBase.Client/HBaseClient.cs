@@ -26,7 +26,7 @@ namespace Microsoft.HBase.Client
     using Microsoft.HBase.Client.Requester;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
     using ProtoBuf;
-
+    using System.Globalization;
     /// <summary>
     /// A C# connector to HBase. 
     /// </summary>
@@ -51,6 +51,7 @@ namespace Microsoft.HBase.Client
 
         private const string CheckAndPutQuery = "check=put";
         private const string CheckAndDeleteQuery = "check=delete";
+        private const string RowKeyColumnFamilyTimeStampFormat = "{0}/{1}/{2}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
@@ -200,9 +201,25 @@ namespace Microsoft.HBase.Client
             return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, rowKey, optionToUse));
         }
 
-        private async Task DeleteCellsAsyncInternal(string tableName, string rowKey, RequestOptions options)
+        public void DeleteCells(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
         {
-            using (Response webResponse = await DeleteRequestAsync<Scanner>(tableName + "/" + rowKey, null, options))
+            DeleteCellsAsync(tableName, rowKey, columnFamily, timestamp, options).Wait();
+        }
+
+        public Task DeleteCellsAsync(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
+        {
+
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            rowKey.ArgumentNotNullNorEmpty("rowKey");
+            columnFamily.ArgumentNotNullNorEmpty("columnFamily");
+            var optionToUse = options ?? _globalRequestOptions;
+
+            return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, String.Format(CultureInfo.InvariantCulture, RowKeyColumnFamilyTimeStampFormat, rowKey, columnFamily, timestamp), optionToUse));
+        }
+
+        private async Task DeleteCellsAsyncInternal(string tableName, string path, RequestOptions options)
+        {
+            using (Response webResponse = await DeleteRequestAsync<Scanner>(tableName + "/" + path, null, options))
             {
                 if (webResponse.WebResponse.StatusCode != HttpStatusCode.OK)
                 {
@@ -212,7 +229,7 @@ namespace Microsoft.HBase.Client
                         throw new WebException(
                             string.Format(
                                 "Couldn't delete row {0} associated with {1} table.! Response code was: {2}, expected 200! Response body was: {3}",
-                                rowKey,
+                                path,
                                 tableName,
                                 webResponse.WebResponse.StatusCode,
                                 message));
@@ -554,6 +571,20 @@ namespace Microsoft.HBase.Client
         /// <param name="row">row to update</param>
         /// <param name="cellToCheck">cell to check</param>
         /// <returns>true if the record was updated; false if condition failed at check</returns>
+        public bool CheckAndPut(string table, CellSet.Row row, Cell cellToCheck, RequestOptions options = null)
+        {
+            Task<bool> t = CheckAndPutAsync(table, row, cellToCheck, options);
+            t.Wait();
+            return t.Result;
+        }
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and updates
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="row">row to update</param>
+        /// <param name="cellToCheck">cell to check</param>
+        /// <returns>true if the record was updated; false if condition failed at check</returns>
         public async Task<bool> CheckAndPutAsync(string table, CellSet.Row row, Cell cellToCheck, RequestOptions options = null)
         {
             table.ArgumentNotNullNorEmpty("table");
@@ -565,6 +596,19 @@ namespace Microsoft.HBase.Client
 
             return await optionToUse.RetryPolicy.ExecuteAsync<bool>(() => StoreCellsAsyncInternal(table, cellSet, optionToUse, Encoding.UTF8.GetString(row.key), CheckAndPutQuery));
            
+        }
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and deletes
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="cellToCheck">cell to check for deleting the row</param>
+        /// <returns>true if the record was deleted; false if condition failed at check</returns>
+        public bool CheckAndDelete(string table, Cell cellToCheck, RequestOptions options = null)
+        {
+            Task<bool> t = CheckAndDeleteAsync(table, cellToCheck, options);
+            t.Wait();
+            return t.Result;
         }
 
         /// <summary>

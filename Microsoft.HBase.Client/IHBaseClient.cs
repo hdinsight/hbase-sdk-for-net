@@ -84,6 +84,24 @@ namespace Microsoft.HBase.Client
         Task DeleteCellsAsync(string tableName, string rowKey, RequestOptions options = null);
 
         /// <summary>
+        /// Deletes row with specific row key and specific columnFamily and versions less than the mentioned one  
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        /// <param name="rowKey">the row to delete</param>
+        /// <param name="columnFamily">the column family to delete</param>
+        /// <param name="timestamp">timestamp's lower than this will be deleted for the row</param>
+        void DeleteCells(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null);
+
+        /// <summary>
+        /// Deletes row with specific row key and specific columnFamily and versions less than the mentioned one
+        /// </summary>
+        /// <param name="tableName">the table name</param>
+        /// <param name="rowKey">the row to delete</param>
+        /// <param name="columnFamily">the column family to delete</param>
+        /// <param name="timestamp">timestamp's lower than this will be deleted for the row</param>
+        Task DeleteCellsAsync(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null);
+
+        /// <summary>
         /// Creates a table and/or fully replaces its schema.
         /// </summary>
         /// <param name="schema">the schema</param>
@@ -245,5 +263,40 @@ namespace Microsoft.HBase.Client
         /// <param name="cells">the cells to insert</param>
         /// <returns>a task that is awaitable, signifying the end of this operation</returns>
         Task StoreCellsAsync(string table, CellSet cells, RequestOptions options = null);
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and updates
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="row">row to update</param>
+        /// <param name="cellToCheck">cell to check</param>
+        /// <returns>true if the record was updated; false if condition failed at check</returns>
+        Task<bool> CheckAndPutAsync(string table, CellSet.Row row, Cell cellToCheck, RequestOptions options = null);
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and deletes
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="cellToCheck">cell to check for deleting the row</param>
+        /// <returns>true if the record was deleted; false if condition failed at check</returns>
+        Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, RequestOptions options = null);
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and updates
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="row">row to update</param>
+        /// <param name="cellToCheck">cell to check</param>
+        /// <returns>true if the record was updated; false if condition failed at check</returns>
+        bool CheckAndPut(string table, CellSet.Row row, Cell cellToCheck, RequestOptions options = null);
+
+        /// <summary>
+        /// Automically checks if a row/family/qualifier value matches the expected value and deletes
+        /// </summary>
+        /// <param name="table">the table</param>
+        /// <param name="cellToCheck">cell to check for deleting the row</param>
+        /// <returns>true if the record was deleted; false if condition failed at check</returns>
+        bool CheckAndDelete(string table, Cell cellToCheck, RequestOptions options = null);
+
     }
 }
