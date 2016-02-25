@@ -278,8 +278,9 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="table">the table</param>
         /// <param name="cellToCheck">cell to check for deleting the row</param>
+        /// <param name="row">row cells to delete</param>
         /// <returns>true if the record was deleted; false if condition failed at check</returns>
-        Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, RequestOptions options = null);
+        Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, CellSet.Row row = null, RequestOptions options = null);
 
         /// <summary>
         /// Automically checks if a row/family/qualifier value matches the expected value and updates
@@ -295,8 +296,9 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="table">the table</param>
         /// <param name="cellToCheck">cell to check for deleting the row</param>
+        /// <param name="row">row cells to delete</param>
         /// <returns>true if the record was deleted; false if condition failed at check</returns>
-        bool CheckAndDelete(string table, Cell cellToCheck, RequestOptions options = null);
+        bool CheckAndDelete(string table, Cell cellToCheck, CellSet.Row row = null, RequestOptions options = null);
 
     }
 }

@@ -604,9 +604,9 @@ namespace Microsoft.HBase.Client
         /// <param name="table">the table</param>
         /// <param name="cellToCheck">cell to check for deleting the row</param>
         /// <returns>true if the record was deleted; false if condition failed at check</returns>
-        public bool CheckAndDelete(string table, Cell cellToCheck, RequestOptions options = null)
+        public bool CheckAndDelete(string table, Cell cellToCheck, CellSet.Row rowToDelete = null, RequestOptions options = null)
         {
-            Task<bool> t = CheckAndDeleteAsync(table, cellToCheck, options);
+            Task<bool> t = CheckAndDeleteAsync(table, cellToCheck, rowToDelete, options);
             t.Wait();
             return t.Result;
         }
@@ -617,11 +617,21 @@ namespace Microsoft.HBase.Client
         /// <param name="table">the table</param>
         /// <param name="cellToCheck">cell to check for deleting the row</param>
         /// <returns>true if the record was deleted; false if condition failed at check</returns>
-        public async Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, RequestOptions options = null)
+        public async Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, CellSet.Row rowToDelete = null, RequestOptions options = null)
         {
             table.ArgumentNotNullNorEmpty("table");
             cellToCheck.ArgumentNotNull("cellToCheck");
-            CellSet.Row row = new CellSet.Row() { key = cellToCheck.row }; 
+
+            CellSet.Row row;
+            if (rowToDelete != null)
+            {
+                row = rowToDelete;
+            }
+            else
+            {
+                row = new CellSet.Row() { key = cellToCheck.row };
+            }
+
             row.values.Add(cellToCheck);
             var cellSet = new CellSet();
             cellSet.rows.Add(row);
