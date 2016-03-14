@@ -117,7 +117,11 @@ namespace Microsoft.HBase.Client
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             scannerSettings.ArgumentNotNull("scannerSettings");
-            var optionToUse = options ?? _globalRequestOptions;
+
+            var defaultScanRequestOption = RequestOptions.GetDefaultOptions();
+            defaultScanRequestOption.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            
+            var optionToUse = options ?? defaultScanRequestOption;
             return await optionToUse.RetryPolicy.ExecuteAsync(() => CreateScannerAsyncInternal(tableName, scannerSettings, optionToUse));
         }
 
@@ -163,7 +167,10 @@ namespace Microsoft.HBase.Client
             tableName.ArgumentNotNullNorEmpty("tableName");
             scannerId.ArgumentNotNullNorEmpty("scannerId");
 
-            var optionToUse = options ?? _globalRequestOptions;
+            var defaultScanRequestOption = RequestOptions.GetDefaultOptions();
+            defaultScanRequestOption.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+
+            var optionToUse = options ?? defaultScanRequestOption;
             return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerId, optionToUse));
         }
 
@@ -537,7 +544,11 @@ namespace Microsoft.HBase.Client
         public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options = null)
         {
             scannerInfo.ArgumentNotNull("scannerInfo");
-            var optionToUse = options ?? _globalRequestOptions;
+
+            var defaultScanRequestOption = RequestOptions.GetDefaultOptions();
+            defaultScanRequestOption.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+
+            var optionToUse = options ?? defaultScanRequestOption;
             return await optionToUse.RetryPolicy.ExecuteAsync(() => ScannerGetNextAsyncInternal(scannerInfo, optionToUse));
         }
 
