@@ -19,8 +19,9 @@ namespace Microsoft.HBase.Client.Tests.Clients
     using Microsoft.HBase.Client.LoadBalancing;
     using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Microsoft.HBase.Client.Tests.Utilities;
 
-    //    [TestClass]
+    //[TestClass]
     public class VNetClientTest : HBaseClientTestBase
     {
         public override IHBaseClient CreateClient()
@@ -38,6 +39,31 @@ namespace Microsoft.HBase.Client.Tests.Clients
             options.AlternativeEndpoint = "/";
 
             return new HBaseClient(null, options, new LoadBalancerRoundRobin(regionServerHostNames));
+        }
+
+        //[TestMethod]
+        //[TestCategory(TestRunMode.CheckIn)]
+        public override void TestFullScan()
+        {
+        }
+
+        //[TestMethod]
+        //[TestCategory(TestRunMode.CheckIn)]
+        public override void TestScannerCreation()
+        {
+        }
+
+        //[TestMethod]
+        //[TestCategory(TestRunMode.CheckIn)]
+        //[ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
+        public override void TestScannerDeletion()
+        {
+        }
+
+        //[TestMethod]
+        //[TestCategory(TestRunMode.CheckIn)]
+        public override void TestSubsetScan()
+        {
         }
     }
 }

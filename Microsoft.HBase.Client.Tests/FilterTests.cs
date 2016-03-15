@@ -24,6 +24,7 @@ namespace Microsoft.HBase.Client.Tests
     using Microsoft.HBase.Client.Tests.Utilities;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
+    using Microsoft.HBase.Client.LoadBalancing;
 
     // ReSharper disable InconsistentNaming
 
@@ -80,11 +81,23 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = new HBaseClient(_credentials);
             var scan = new Scanner();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scan, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
+                actualRecords.ShouldContainOnly(_allExpectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scan);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(_allExpectedRecords);
         }
 
         [TestMethod]
@@ -98,11 +111,23 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new ColumnCountGetFilter(2);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -116,11 +141,23 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new ColumnPaginationFilter(1, 1);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -133,11 +170,23 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new ColumnPrefixFilter(Encoding.UTF8.GetBytes(LineNumberColumnName));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -150,11 +199,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new ColumnRangeFilter(Encoding.UTF8.GetBytes(ColumnNameA), true, Encoding.UTF8.GetBytes(ColumnNameB), false);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -172,11 +234,23 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.Equal,
                 new BinaryComparator(BitConverter.GetBytes(1)));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -190,11 +264,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new FamilyFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(Encoding.UTF8.GetBytes(ColumnFamilyName1)));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -220,11 +307,24 @@ namespace Microsoft.HBase.Client.Tests
 
             var filter = new FilterList(FilterList.Operator.MustPassAll, f0, f1);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -250,11 +350,24 @@ namespace Microsoft.HBase.Client.Tests
 
             var filter = new FilterList(FilterList.Operator.MustPassOne, f0, f1);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -269,11 +382,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new KeyOnlyFilter();
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
 
@@ -290,11 +416,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new InclusiveStopFilter(rawRowKey);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
 
@@ -310,11 +449,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new KeyOnlyFilter();
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -330,11 +482,23 @@ namespace Microsoft.HBase.Client.Tests
             var prefixes = new List<byte[]> { Encoding.UTF8.GetBytes(ColumnNameA), Encoding.UTF8.GetBytes(ColumnNameB) };
             var filter = new MultipleColumnPrefixFilter(prefixes);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -345,11 +509,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new PageFilter(2);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner,scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.Count.ShouldBeGreaterThanOrEqualTo(2);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.Count.ShouldBeGreaterThanOrEqualTo(2);
         }
 
         [TestMethod]
@@ -372,11 +549,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new PrefixFilter(prefix);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -389,11 +579,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new QualifierFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(Encoding.UTF8.GetBytes(LineNumberColumnName)));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -406,11 +609,24 @@ namespace Microsoft.HBase.Client.Tests
             // set this large enough so that we get all records back
             var filter = new RandomRowFilter(2000.0F);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(_allExpectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(_allExpectedRecords);
         }
 
         [TestMethod]
@@ -425,11 +641,24 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new RowFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(Encoding.UTF8.GetBytes(example.RowKey)));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -450,11 +679,24 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.Equal,
                 Encoding.UTF8.GetBytes(bValue));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -474,11 +716,23 @@ namespace Microsoft.HBase.Client.Tests
                 filterIfMissing: true);
 
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -496,11 +750,24 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.GreaterThan,
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -519,11 +786,23 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.GreaterThanOrEqualTo,
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -541,11 +820,23 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.LessThan,
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -564,11 +855,24 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.LessThanOrEqualTo,
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -586,11 +890,23 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.NoOperation,
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
 
@@ -608,11 +924,24 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.NotEqual,
                 BitConverter.GetBytes(1));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -633,11 +962,23 @@ namespace Microsoft.HBase.Client.Tests
                 comparer,
                 filterIfMissing: false);
             scanner.filter = filter.ToEncodedString();
-           
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -658,11 +999,24 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.Equal,
                 comparer);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
 
-            actualRecords.ShouldContainOnly(expectedRecords);
         }
 
         [TestMethod]
@@ -682,11 +1036,23 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.Equal,
                 comparer);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -710,11 +1076,23 @@ namespace Microsoft.HBase.Client.Tests
                 CompareFilter.CompareOp.Equal,
                 comparer);
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -727,11 +1105,23 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new SkipFilter(new ValueFilter(CompareFilter.CompareOp.NotEqual, new BinaryComparator(BitConverter.GetBytes(0))));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -743,18 +1133,44 @@ namespace Microsoft.HBase.Client.Tests
             // scan all and retrieve timestamps
             var client = new HBaseClient(_credentials);
             var scanner = new Scanner();
-            ScannerInformation scanAll = client.CreateScanner(_tableName, scanner);
-            List<long> timestamps = RetrieveTimestamps(scanAll).ToList();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanAll = null;
+            List<long> timestamps = null;
+            try
+            {
+                scanAll = client.CreateScanner(_tableName, scanner, scanOptions);
+                timestamps = RetrieveTimestamps(scanAll, scanOptions).ToList();
+            }
+            finally
+            {
+                if (scanAll != null)
+                {
+                    client.DeleteScanner(_tableName, scanAll, scanOptions);
+                }
+            }
+
+            Assert.IsNotNull(timestamps);
 
             // timestamps scan
             scanner = new Scanner();
             var filter = new TimestampsFilter(timestamps);
             scanner.filter = filter.ToEncodedString();
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -768,11 +1184,23 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new ValueFilter(CompareFilter.CompareOp.Equal, new BinaryComparator(BitConverter.GetBytes(3)));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -784,11 +1212,23 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new ValueFilter(CompareFilter.CompareOp.Equal, new RegexStringComparator(".*"));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
         [TestMethod]
@@ -801,21 +1241,33 @@ namespace Microsoft.HBase.Client.Tests
             var scanner = new Scanner();
             var filter = new WhileMatchFilter(new ValueFilter(CompareFilter.CompareOp.NotEqual, new BinaryComparator(BitConverter.GetBytes(0))));
             scanner.filter = filter.ToEncodedString();
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scanInfo = null;
+            try
+            {
+                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
-            ScannerInformation scanInfo = client.CreateScanner(_tableName, scanner);
-            List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo).ToList();
-
-            actualRecords.ShouldContainOnly(expectedRecords);
+                actualRecords.ShouldContainOnly(expectedRecords);
+            }
+            finally
+            {
+                if (scanInfo != null)
+                {
+                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                }
+            }
         }
 
-        private IEnumerable<long> RetrieveTimestamps(ScannerInformation scanInfo)
+        private IEnumerable<long> RetrieveTimestamps(ScannerInformation scanInfo, RequestOptions scanOptions)
         {
             var rv = new HashSet<long>();
 
             var client = new HBaseClient(_credentials);
             CellSet next;
 
-            while ((next = client.ScannerGetNext(scanInfo)) != null)
+            while ((next = client.ScannerGetNext(scanInfo, scanOptions)) != null)
             {
                 foreach (CellSet.Row row in next.rows)
                 {
@@ -830,14 +1282,14 @@ namespace Microsoft.HBase.Client.Tests
             return rv;
         }
 
-        private IEnumerable<FilterTestRecord> RetrieveResults(ScannerInformation scanInfo)
+        private IEnumerable<FilterTestRecord> RetrieveResults(ScannerInformation scanInfo, RequestOptions scanOptions)
         {
             var rv = new List<FilterTestRecord>();
 
             var client = new HBaseClient(_credentials);
             CellSet next;
 
-            while ((next = client.ScannerGetNext(scanInfo)) != null)
+            while ((next = client.ScannerGetNext(scanInfo, scanOptions)) != null)
             {
                 foreach (CellSet.Row row in next.rows)
                 {

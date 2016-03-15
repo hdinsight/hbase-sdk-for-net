@@ -33,7 +33,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
         private const string TestTablePrefix = "marlintest";
         private readonly Random _random = new Random();
 
-        private string _testTableName;
+        public string testTableName;
         private TableSchema _testTableSchema;
 
         protected override void Context()
@@ -51,9 +51,9 @@ namespace Microsoft.HBase.Client.Tests.Clients
             }
 
             // add a table specific to this test
-            _testTableName = TestTablePrefix + _random.Next(10000);
+            testTableName = TestTablePrefix + _random.Next(10000);
             _testTableSchema = new TableSchema();
-            _testTableSchema.name = _testTableName;
+            _testTableSchema.name = testTableName;
             _testTableSchema.columns.Add(new ColumnSchema { name = "d" });
 
             client.CreateTable(_testTableSchema);
@@ -63,44 +63,12 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        public void TestFullScan()
-        {
-            var client = CreateClient();
-
-            StoreTestData(client);
-
-            // full range scan
-            var scanSettings = new Scanner { batch = 10 };
-            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, scanSettings);
-
-            CellSet next;
-            var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
-            while ((next = client.ScannerGetNext(scannerInfo)) != null)
-            {
-                Assert.AreEqual(10, next.rows.Count);
-                foreach (CellSet.Row row in next.rows)
-                {
-                    int k = BitConverter.ToInt32(row.key, 0);
-                    expectedSet.Remove(k);
-                }
-            }
-            Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
-        }
+        public abstract void TestFullScan();
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        public async Task TestScannerDeletion()
-        {
-            var client = CreateClient();
-
-            // full range scan
-            var scanSettings = new Scanner { batch = 10 };
-            var options = RequestOptions.GetDefaultOptions();
-            options.AlternativeEndpoint = "hbaserest0/";
-            ScannerInformation scannerInfo = await client.CreateScannerAsync(_testTableName, scanSettings, options);
-            await client.DeleteScannerAsync(scannerInfo.TableName, scannerInfo.ScannerId, options);
-            // TODO add asserts this is actually deleted
-        }
+        [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
+        public abstract void TestScannerDeletion();
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
@@ -117,14 +85,14 @@ namespace Microsoft.HBase.Client.Tests.Clients
             var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
 
-            client.StoreCells(_testTableName, set);
-            CellSet cell = await client.GetCellsAsync(_testTableName, testKey);
+            client.StoreCells(testTableName, set);
+            CellSet cell = await client.GetCellsAsync(testTableName, testKey);
             // make sure the cell is in the table
             Assert.AreEqual(Encoding.UTF8.GetString(cell.rows[0].key), testKey);
             // delete cell
-            await client.DeleteCellsAsync(_testTableName, testKey);
+            await client.DeleteCellsAsync(testTableName, testKey);
             // get cell again, 404 exception expected
-            await client.GetCellsAsync(_testTableName, testKey);
+            await client.GetCellsAsync(testTableName, testKey);
         }
 
         [TestMethod]
@@ -163,22 +131,12 @@ namespace Microsoft.HBase.Client.Tests.Clients
             TableList tables = client.ListTables();
             List<string> testtables = tables.name.Where(item => item.StartsWith("marlintest", StringComparison.Ordinal)).ToList();
             Assert.AreEqual(1, testtables.Count);
-            Assert.AreEqual(_testTableName, testtables[0]);
+            Assert.AreEqual(testTableName, testtables[0]);
         }
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        public void TestScannerCreation()
-        {
-            var client = CreateClient();
-            var batchSetting = new Scanner { batch = 2 };
-
-            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, batchSetting);
-            Assert.AreEqual(_testTableName, scannerInfo.TableName);
-            Assert.IsNotNull(scannerInfo.ScannerId);
-            Assert.IsFalse(scannerInfo.ScannerId.StartsWith("/"), "scanner id starts with a slash");
-            Assert.IsNotNull(scannerInfo.ResponseHeaderCollection);
-        }
+        public abstract void TestScannerCreation();
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
@@ -194,9 +152,9 @@ namespace Microsoft.HBase.Client.Tests.Clients
             var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
 
-            client.StoreCells(_testTableName, set);
+            client.StoreCells(testTableName, set);
 
-            CellSet cells = client.GetCells(_testTableName, testKey);
+            CellSet cells = client.GetCells(testTableName, testKey);
             Assert.AreEqual(1, cells.rows.Count);
             Assert.AreEqual(1, cells.rows[0].values.Count);
             Assert.AreEqual(testValue, Encoding.UTF8.GetString(cells.rows[0].values[0].data));
@@ -204,42 +162,20 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        public void TestSubsetScan()
-        {
-            var client = CreateClient();
-            const int startRow = 15;
-            const int endRow = 15 + 13;
-            StoreTestData(client);
-
-            // subset range scan
-            var scanSettings = new Scanner { batch = 10, startRow = BitConverter.GetBytes(startRow), endRow = BitConverter.GetBytes(endRow) };
-            ScannerInformation scannerInfo = client.CreateScanner(_testTableName, scanSettings);
-
-            CellSet next;
-            var expectedSet = new HashSet<int>(Enumerable.Range(startRow, endRow - startRow));
-            while ((next = client.ScannerGetNext(scannerInfo)) != null)
-            {
-                foreach (CellSet.Row row in next.rows)
-                {
-                    int k = BitConverter.ToInt32(row.key, 0);
-                    expectedSet.Remove(k);
-                }
-            }
-            Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
-        }
+        public abstract void TestSubsetScan();
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
         public void TestTableSchema()
         {
             var client = CreateClient();
-            TableSchema schema = client.GetTableSchema(_testTableName);
-            Assert.AreEqual(_testTableName, schema.name);
+            TableSchema schema = client.GetTableSchema(testTableName);
+            Assert.AreEqual(testTableName, schema.name);
             Assert.AreEqual(_testTableSchema.columns.Count, schema.columns.Count);
             Assert.AreEqual(_testTableSchema.columns[0].name, schema.columns[0].name);
         }
 
-        private void StoreTestData(IHBaseClient hBaseClient)
+        public void StoreTestData(IHBaseClient hBaseClient)
         {
             // we are going to insert the keys 0 to 100 and then do some range queries on that
             const string testValue = "the force is strong in this column";
@@ -252,7 +188,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
                 set.rows.Add(row);
             }
 
-            hBaseClient.StoreCells(_testTableName, set);
+            hBaseClient.StoreCells(testTableName, set);
         }
     }
 }
