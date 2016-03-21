@@ -22,7 +22,7 @@ namespace Microsoft.HBase.Client
     /// A C# connector to HBase. 
     /// </summary>
     /// <remarks>
-    /// It currently targets HBase 0.98 and HDInsight 3.1 on Microsoft Azure.
+    /// It currently targets HBase 0.98.4 and HDInsight 3.2 on Microsoft Azure.
     /// The communication works through HBase REST (StarGate) which uses ProtoBuf as a serialization format.
     /// 
     /// The usage is quite simple:
@@ -34,6 +34,10 @@ namespace Microsoft.HBase.Client
     /// 
     /// Console.WriteLine(version);
     /// </code>
+    /// 
+    /// Scan Requests are stateful. Please provide RequestOption for every scan requests to specify the request is sent to which REST server.
+    /// In Gateway mode, RequestOption.AlternativeEndpoint need to be set to "hbaserest0/","hbaserest1/","hbaserest2/"...etc.
+    /// In VNET mode,  RequestOption.AlternativeEndpoint need to be set to "/" and RequestOption.AlternativeHost need to be set or use loadbalancer.
     /// </remarks>
     public interface IHBaseClient
     {
@@ -43,8 +47,9 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        ScannerInformation CreateScanner(string tableName, Scanner scannerSettings, RequestOptions options = null);
+        ScannerInformation CreateScanner(string tableName, Scanner scannerSettings, RequestOptions options);
 
         /// <summary>
         /// Creates a scanner on the server side.
@@ -52,22 +57,25 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, RequestOptions options = null);
+        Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, RequestOptions options);
 
         /// <summary>
         /// Deletes scanner.        
         /// </summary>
         /// <param name="tableName">the table the scanner is associated with.</param>
-        /// <param name="scannerId">the id of the scanner to delete.</param>
-        void DeleteScanner(string tableName, string scannerId, RequestOptions options = null);
+        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
+        void DeleteScanner(string tableName, ScannerInformation scannerInfo, RequestOptions options);
 
         /// <summary>
         /// Deletes scanner.        
         /// </summary>
         /// <param name="tableName">the table the scanner is associated with.</param>
-        /// <param name="scannerId">the id of the scanner to delete.</param>
-        Task DeleteScannerAsync(string tableName, string scannerId, RequestOptions options = null);
+        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
+        Task DeleteScannerAsync(string tableName, ScannerInformation scannerInfo, RequestOptions options);
 
         /// <summary>
         /// Deletes row with specific row key.        
@@ -239,15 +247,17 @@ namespace Microsoft.HBase.Client
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        CellSet ScannerGetNext(ScannerInformation scannerInfo, RequestOptions options = null);
+        CellSet ScannerGetNext(ScannerInformation scannerInfo, RequestOptions options);
 
         /// <summary>
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options = null);
+        Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options);
 
         /// <summary>
         /// Stores the given cells in the supplied table.

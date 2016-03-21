@@ -17,6 +17,13 @@ namespace Microsoft.HBase.Client.Tests.Clients
 {
     using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Microsoft.HBase.Client.Tests.Utilities;
+    using org.apache.hadoop.hbase.rest.protobuf.generated;
+    using Microsoft.HBase.Client.LoadBalancing;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System;
+    using System.Threading.Tasks;
 
     [TestClass]
     public class GatewayClientTest : HBaseClientTestBase
@@ -28,6 +35,147 @@ namespace Microsoft.HBase.Client.Tests.Clients
             options.TimeoutMillis = 30000;
             options.KeepAlive = false;
             return new HBaseClient(ClusterCredentialsFactory.CreateFromFile(@".\credentials.txt"), options);
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        public override void TestFullScan()
+        {
+            var client = CreateClient();
+
+            StoreTestData(client);
+
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+
+            // full range scan
+            var scanSettings = new Scanner { batch = 10 };
+            ScannerInformation scannerInfo = null;
+            try
+            {
+                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+
+                CellSet next;
+                var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
+                while ((next = client.ScannerGetNext(scannerInfo, scanOptions)) != null)
+                {
+                    Assert.AreEqual(10, next.rows.Count);
+                    foreach (CellSet.Row row in next.rows)
+                    {
+                        int k = BitConverter.ToInt32(row.key, 0);
+                        expectedSet.Remove(k);
+                    }
+                }
+                Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
+            }
+            finally
+            {
+                if (scannerInfo != null)
+                {
+                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                }
+            }
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        public override void TestScannerCreation()
+        {
+            var client = CreateClient();
+            var scanSettings = new Scanner { batch = 2 };
+
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scannerInfo = null;
+            try
+            {
+                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+                Assert.AreEqual(testTableName, scannerInfo.TableName);
+                Assert.IsNotNull(scannerInfo.ScannerId);
+                Assert.IsFalse(scannerInfo.ScannerId.StartsWith("/"), "scanner id starts with a slash");
+                Assert.IsNotNull(scannerInfo.ResponseHeaderCollection);
+            }
+            finally
+            {
+                if (scannerInfo != null)
+                {
+                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                }
+            }
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
+        public override void TestScannerDeletion()
+        {
+            var client = CreateClient();
+
+            // full range scan
+            var scanSettings = new Scanner { batch = 10 };
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scannerInfo = null;
+
+            try
+            {
+                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+                Assert.AreEqual(testTableName, scannerInfo.TableName);
+                Assert.IsNotNull(scannerInfo.ScannerId);
+                Assert.IsFalse(scannerInfo.ScannerId.StartsWith("/"), "scanner id starts with a slash");
+                Assert.IsNotNull(scannerInfo.ResponseHeaderCollection);
+                // delete the scanner
+                client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                // try to fetch data use the deleted scanner
+                scanOptions.RetryPolicy = RetryPolicy.NoRetry;
+                client.ScannerGetNext(scannerInfo, scanOptions);
+            }
+            finally
+            {
+                if (scannerInfo != null)
+                {
+                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                }
+            }
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        public override void TestSubsetScan()
+        {
+            var client = CreateClient();
+            const int startRow = 15;
+            const int endRow = 15 + 13;
+            StoreTestData(client);
+
+            // subset range scan
+            var scanSettings = new Scanner { batch = 10, startRow = BitConverter.GetBytes(startRow), endRow = BitConverter.GetBytes(endRow) };
+            RequestOptions scanOptions = RequestOptions.GetDefaultOptions();
+            scanOptions.AlternativeEndpoint = Constants.RestEndpointBaseZero;
+            ScannerInformation scannerInfo = null;
+            try
+            {
+                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+
+                CellSet next;
+                var expectedSet = new HashSet<int>(Enumerable.Range(startRow, endRow - startRow));
+                while ((next = client.ScannerGetNext(scannerInfo, scanOptions)) != null)
+                {
+                    foreach (CellSet.Row row in next.rows)
+                    {
+                        int k = BitConverter.ToInt32(row.key, 0);
+                        expectedSet.Remove(k);
+                    }
+                }
+                Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
+            }
+            finally
+            {
+                if (scannerInfo != null)
+                {
+                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                }
+            }
         }
     }
 }

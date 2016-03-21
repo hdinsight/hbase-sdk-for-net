@@ -100,8 +100,9 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        public ScannerInformation CreateScanner(string tableName, Scanner scannerSettings, RequestOptions options = null)
+        public ScannerInformation CreateScanner(string tableName, Scanner scannerSettings, RequestOptions options)
         {
             return CreateScannerAsync(tableName, scannerSettings, options).Result;
         }
@@ -112,13 +113,14 @@ namespace Microsoft.HBase.Client
         /// </summary>
         /// <param name="tableName">the table to scan</param>
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, RequestOptions options = null)
+        public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, RequestOptions options)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             scannerSettings.ArgumentNotNull("scannerSettings");
-            var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => CreateScannerAsyncInternal(tableName, scannerSettings, optionToUse));
+            options.ArgumentNotNull("options");
+            return await options.RetryPolicy.ExecuteAsync(() => CreateScannerAsyncInternal(tableName, scannerSettings, options));
         }
 
         private async Task<ScannerInformation> CreateScannerAsyncInternal(string tableName, Scanner scannerSettings, RequestOptions options)
@@ -148,28 +150,34 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        public void DeleteScanner(string tableName, string scannerId, RequestOptions options = null)
+        /// <summary>
+        /// Deletes scanner.        
+        /// </summary>
+        /// <param name="tableName">the table the scanner is associated with.</param>
+        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
+        public void DeleteScanner(string tableName, ScannerInformation scannerInfo, RequestOptions options)
         {
-            DeleteScannerAsync(tableName, scannerId, options).Wait();
+            DeleteScannerAsync(tableName, scannerInfo, options).Wait();
         }
 
         /// <summary>
         /// Deletes scanner.        
         /// </summary>
         /// <param name="tableName">the table the scanner is associated with.</param>
-        /// <param name="scannerId">the id of the scanner to delete.</param>
-        public Task DeleteScannerAsync(string tableName, string scannerId, RequestOptions options = null)
+        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
+        public Task DeleteScannerAsync(string tableName, ScannerInformation scannerInfo, RequestOptions options)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
-            scannerId.ArgumentNotNullNorEmpty("scannerId");
-
-            var optionToUse = options ?? _globalRequestOptions;
-            return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerId, optionToUse));
+            scannerInfo.ArgumentNotNull("scannerInfo");
+            options.ArgumentNotNull("options");
+            return options.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerInfo, options));
         }
 
-        private async Task DeleteScannerAsyncInternal(string tableName, string scannerId, RequestOptions options)
+        private async Task DeleteScannerAsyncInternal(string tableName, ScannerInformation scannerInfo, RequestOptions options)
         {
-            using (Response webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner/" + scannerId, null, options))
+            using (Response webResponse = await DeleteRequestAsync<Scanner>(tableName + "/scanner/" + scannerInfo.ScannerId, null, options))
             {
                 if (webResponse.WebResponse.StatusCode != HttpStatusCode.OK)
                 {
@@ -179,7 +187,7 @@ namespace Microsoft.HBase.Client
                         throw new WebException(
                            string.Format(
                               "Couldn't delete scanner {0} associated with {1} table.! Response code was: {2}, expected 200! Response body was: {3}",
-                              scannerId,
+                              scannerInfo.ScannerId,
                               tableName,
                               webResponse.WebResponse.StatusCode,
                               message));
@@ -523,8 +531,9 @@ namespace Microsoft.HBase.Client
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param> 
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        public CellSet ScannerGetNext(ScannerInformation scannerInfo, RequestOptions options = null)
+        public CellSet ScannerGetNext(ScannerInformation scannerInfo, RequestOptions options)
         {
             return ScannerGetNextAsync(scannerInfo, options).Result;
         }
@@ -533,12 +542,13 @@ namespace Microsoft.HBase.Client
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
+        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options = null)
+        public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options)
         {
             scannerInfo.ArgumentNotNull("scannerInfo");
-            var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => ScannerGetNextAsyncInternal(scannerInfo, optionToUse));
+            options.ArgumentNotNull("options");
+            return await options.RetryPolicy.ExecuteAsync(() => ScannerGetNextAsyncInternal(scannerInfo, options));
         }
 
         private async Task<CellSet> ScannerGetNextAsyncInternal(ScannerInformation scannerInfo, RequestOptions options)
