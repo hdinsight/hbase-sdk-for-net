@@ -72,8 +72,8 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        [ExpectedException(typeof(System.Net.WebException), "The remote server returned an error: (404) Not Found.")]
-        public async Task TestCellsDeletion()
+        [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
+        public void TestCellsDeletion()
         {
             const string testKey = "content";
             const string testValue = "the force is strong in this column";
@@ -86,13 +86,13 @@ namespace Microsoft.HBase.Client.Tests.Clients
             row.values.Add(value);
 
             client.StoreCells(testTableName, set);
-            CellSet cell = await client.GetCellsAsync(testTableName, testKey);
+            CellSet cell = client.GetCells(testTableName, testKey);
             // make sure the cell is in the table
             Assert.AreEqual(Encoding.UTF8.GetString(cell.rows[0].key), testKey);
             // delete cell
-            await client.DeleteCellsAsync(testTableName, testKey);
+            client.DeleteCells(testTableName, testKey);
             // get cell again, 404 exception expected
-            await client.GetCellsAsync(testTableName, testKey);
+            client.GetCells(testTableName, testKey);
         }
 
         [TestMethod]

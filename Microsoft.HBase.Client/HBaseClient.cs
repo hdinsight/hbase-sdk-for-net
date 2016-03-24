@@ -173,12 +173,12 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">the table the scanner is associated with.</param>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
-        public Task DeleteScannerAsync(string tableName, ScannerInformation scannerInfo, RequestOptions options)
+        public async Task DeleteScannerAsync(string tableName, ScannerInformation scannerInfo, RequestOptions options)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             scannerInfo.ArgumentNotNull("scannerInfo");
             options.ArgumentNotNull("options");
-            return options.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerInfo, options));
+            await options.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerInfo, options));
         }
 
         private async Task DeleteScannerAsyncInternal(string tableName, ScannerInformation scannerInfo, RequestOptions options)
@@ -207,12 +207,12 @@ namespace Microsoft.HBase.Client
             DeleteCellsAsync(tableName, rowKey, options).Wait();
         }
 
-        public Task DeleteCellsAsync(string tableName, string rowKey, RequestOptions options = null)
+        public async Task DeleteCellsAsync(string tableName, string rowKey, RequestOptions options = null)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             rowKey.ArgumentNotNullNorEmpty("rowKey");
             var optionToUse = options ?? _globalRequestOptions;
-            return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, rowKey, optionToUse));
+            await optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, rowKey, optionToUse));
         }
 
         public void DeleteCells(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
@@ -220,7 +220,7 @@ namespace Microsoft.HBase.Client
             DeleteCellsAsync(tableName, rowKey, columnFamily, timestamp, options).Wait();
         }
 
-        public Task DeleteCellsAsync(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
+        public async Task DeleteCellsAsync(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
         {
 
             tableName.ArgumentNotNullNorEmpty("tableName");
@@ -228,7 +228,7 @@ namespace Microsoft.HBase.Client
             columnFamily.ArgumentNotNullNorEmpty("columnFamily");
             var optionToUse = options ?? _globalRequestOptions;
 
-            return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, String.Format(CultureInfo.InvariantCulture, RowKeyColumnFamilyTimeStampFormat, rowKey, columnFamily, timestamp), optionToUse));
+            await optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, String.Format(CultureInfo.InvariantCulture, RowKeyColumnFamilyTimeStampFormat, rowKey, columnFamily, timestamp), optionToUse));
         }
 
         private async Task DeleteCellsAsyncInternal(string tableName, string path, RequestOptions options)
