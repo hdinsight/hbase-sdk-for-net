@@ -33,13 +33,46 @@ namespace Microsoft.HBase.Client.Requester
         public TimeSpan RequestLatency { get; set; }
         public Action<Response> PostRequestAction { get; set; }
 
+        /// <summary>
+        /// Used to detect redundant calls to <see cref="IDisposable.Dispose"/>.
+        /// </summary>
+        private bool _isDisposed; // To detect redundant calls
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing">
+        /// <see langword="true"/> to release both managed and unmanaged resources; <see
+        /// langword="false"/> to release only unmanaged resources.
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    if (PostRequestAction != null)
+                    {
+                        PostRequestAction(this);
+                        PostRequestAction = null;
+                    }
+                    WebResponse.Dispose();
+                    WebResponse = null;
+                }
+                _isDisposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting
+        /// unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
-            if (PostRequestAction != null)
-            {
-                PostRequestAction(this);
-            }
-            WebResponse.Dispose();
+            Dispose(true);
+            // Since this class is not sealed, derived classes may introduce unmanaged resources, so
+            // suppress Finalize calls if the instance has been disposed.
+            GC.SuppressFinalize(this);
         }
     }
 }

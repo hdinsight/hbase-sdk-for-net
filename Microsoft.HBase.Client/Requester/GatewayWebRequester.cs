@@ -25,11 +25,16 @@ namespace Microsoft.HBase.Client.Requester
     /// <summary>
     /// 
     /// </summary>
-    public sealed class GatewayWebRequester : IWebRequester
+    public sealed class GatewayWebRequester : IWebRequester, IDisposable
     {
         private readonly string _contentType;
         private readonly CredentialCache _credentialCache;
-        private readonly ClusterCredentials _credentials;
+        private ClusterCredentials _credentials;
+
+        /// <summary>
+        /// Used to detect redundant calls to <see cref="IDisposable.Dispose"/>.
+        /// </summary>
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GatewayWebRequester"/> class.
@@ -126,6 +131,28 @@ namespace Microsoft.HBase.Client.Requester
         private void InitCache()
         {
             _credentialCache.Add(_credentials.ClusterUri, "Basic", new NetworkCredential(_credentials.UserName, _credentials.ClusterPassword));
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting
+        /// unmanaged resources.
+        /// </summary>
+        /// <remarks>
+        /// Since this class is <see langword="sealed"/>, the standard <see
+        /// cref="IDisposable.Dispose"/> pattern is not required. Also, <see
+        /// cref="GC.SuppressFinalize"/> is not needed.
+        /// </remarks>
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                if (_credentials != null)
+                {
+                    _credentials.Dispose();
+                    _credentials = null;
+                }
+                _disposed = true;
+            }
         }
     }
 }

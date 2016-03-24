@@ -175,3 +175,9 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+#Roslyn caches
+.vs/
+
+#GhostDoc files
+*.sln.GhostDoc.xml
