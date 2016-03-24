@@ -44,14 +44,19 @@ namespace Microsoft.HBase.Client
     /// Console.WriteLine(version);
     /// </code>
     /// </remarks>
-    public sealed class HBaseClient : IHBaseClient
+    public sealed class HBaseClient : IHBaseClient, IDisposable
     {
-        private readonly IWebRequester _requester;
+        private IWebRequester _requester;
         private readonly RequestOptions _globalRequestOptions;
 
         private const string CheckAndPutQuery = "check=put";
         private const string CheckAndDeleteQuery = "check=delete";
         private const string RowKeyColumnFamilyTimeStampFormat = "{0}/{1}/{2}";
+
+        /// <summary>
+        /// Used to detect redundant calls to <see cref="IDisposable.Dispose"/>.
+        /// </summary>
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HBaseClient"/> class.
@@ -80,6 +85,7 @@ namespace Microsoft.HBase.Client
         /// <param name="credentials">The credentials.</param>
         /// <param name="globalRequestOptions">The global request options.</param>
         /// <param name="loadBalancer">load balancer for vnet modes</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "_requester disposed of in Dispose() if it is an IDisposable")]
         public HBaseClient(ClusterCredentials credentials, RequestOptions globalRequestOptions = null, ILoadBalancer loadBalancer = null)
         {
             _globalRequestOptions = globalRequestOptions ?? RequestOptions.GetDefaultOptions();
@@ -575,7 +581,7 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Automically checks if a row/family/qualifier value matches the expected value and updates
+        /// Atomically checks if a row/family/qualifier value matches the expected value and updates
         /// </summary>
         /// <param name="table">the table</param>
         /// <param name="row">row to update</param>
@@ -589,7 +595,7 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Automically checks if a row/family/qualifier value matches the expected value and updates
+        /// Atomically checks if a row/family/qualifier value matches the expected value and updates
         /// </summary>
         /// <param name="table">the table</param>
         /// <param name="row">row to update</param>
@@ -609,7 +615,7 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Automically checks if a row/family/qualifier value matches the expected value and deletes
+        /// Atomically checks if a row/family/qualifier value matches the expected value and deletes
         /// </summary>
         /// <param name="table">the table</param>
         /// <param name="cellToCheck">cell to check for deleting the row</param>
@@ -752,6 +758,32 @@ namespace Microsoft.HBase.Client
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
             return await ExecuteMethodAsync("PUT", query, endpoint, request, options);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting
+        /// unmanaged resources.
+        /// </summary>
+        /// <remarks>
+        /// Since this class is <see langword="sealed"/>, the standard <see
+        /// cref="IDisposable.Dispose"/> pattern is not required. Also, <see
+        /// cref="GC.SuppressFinalize"/> is not needed.
+        /// </remarks>
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                if (_requester != null)
+                {
+                    var disposable = _requester as IDisposable;
+                    if (disposable != null)
+                    {
+                        disposable.Dispose();
+                    }
+                    _requester = null;
+                }
+                _disposed = true;
+            }
         }
     }
 }
