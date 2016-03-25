@@ -51,13 +51,13 @@ namespace Microsoft.HBase.Client.Tests
             {
                 var client = GetClient();
                 // ensure tables from previous tests are cleaned up
-                TableList tables = client.ListTables();
+                TableList tables = client.ListTablesAsync().Result;
                 foreach (string name in tables.name)
                 {
                     string pinnedName = name;
                     if (name.StartsWith(TableNamePrefix, StringComparison.Ordinal))
                     {
-                        client.DeleteTable(pinnedName);
+                        client.DeleteTableAsync(pinnedName).Wait();
                     }
                 }
 
@@ -90,14 +90,14 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = GetClient();
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("1", "c1", "1A", 10)));
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("1", "c2", "1A", 10)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("1", "c1", "1A", 10))).Wait();
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("1", "c2", "1A", 10))).Wait();
 
-            client.DeleteCells(_tableName, "1", ColumnFamilyName1, 10);
+            client.DeleteCellsAsync(_tableName, "1", ColumnFamilyName1, 10).Wait();
 
             try
             {
-                client.GetCells(_tableName, "1");
+                client.GetCellsAsync(_tableName, "1").Wait();
                 Assert.Fail("Expected to throw an exception as the row is deleted");
             }
             catch(Exception ex)
@@ -108,9 +108,9 @@ namespace Microsoft.HBase.Client.Tests
                 }
             }
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("1", "c1", "1A", 11)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("1", "c1", "1A", 11))).Wait();
 
-            var retrievedCells = client.GetCells(_tableName, "1");
+            var retrievedCells = client.GetCellsAsync(_tableName, "1").Result;
 
             retrievedCells.rows.Count.ShouldEqual(1);
             retrievedCells.rows[0].values[0].timestamp.ShouldEqual(11);
@@ -122,14 +122,14 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = GetClient();
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("2", "c1", "1A", 10)));
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("2", "c2", "1A", 10)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("2", "c1", "1A", 10))).Wait();
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("2", "c2", "1A", 10))).Wait();
 
-            client.DeleteCells(_tableName, "2", ColumnFamilyName1, 10);
+            client.DeleteCellsAsync(_tableName, "2", ColumnFamilyName1, 10).Wait();
 
             try
             {
-                client.GetCells(_tableName, "2");
+                client.GetCellsAsync(_tableName, "2").Wait();
                 Assert.Fail("Expected to throw an exception as the row is deleted");
             }
             catch (Exception ex)
@@ -140,11 +140,11 @@ namespace Microsoft.HBase.Client.Tests
                 }
             }
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("2", "c1", "1A", 9)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("2", "c1", "1A", 9))).Wait();
 
             try
             {
-                client.GetCells(_tableName, "2");
+                client.GetCellsAsync(_tableName, "2").Wait();
                 Assert.Fail("Expected to throw an exception as the row cannot be added with lower timestamp");
             }
             catch (Exception ex)
@@ -163,14 +163,14 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = GetClient();
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c1", "1A", 10)));
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c2", "1A", 10)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c1", "1A", 10))).Wait();
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c2", "1A", 10))).Wait();
 
             bool deleted = await client.CheckAndDeleteAsync(_tableName, GetCell("3","c1","1A",10));
 
             deleted.ShouldEqual(true);
 
-            var retrievedCells = client.GetCells(_tableName, "3");
+            var retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
             // Deletes in the Cell c1 so c2 should be present.
             retrievedCells.rows[0].values.Count.ShouldEqual(1);
 
@@ -180,7 +180,7 @@ namespace Microsoft.HBase.Client.Tests
             try
             {
                 // All  cells are deleted so this should fail
-                retrievedCells = client.GetCells(_tableName, "3");
+                retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
                 throw new AssertFailedException("expecting Get '3' to fail as all cells are removed");
             }
             catch (Exception ex)
@@ -191,11 +191,11 @@ namespace Microsoft.HBase.Client.Tests
                 }
             }
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c1", "1B", 11)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c1", "1B", 11))).Wait();
 
             try
             {
-                retrievedCells = client.GetCells(_tableName, "3");
+                retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
                 throw new AssertFailedException("Expected to throw an exception as the row cannot be added with lower timestamp than servers timestamp");
             }
             catch (Exception ex)
@@ -214,8 +214,8 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = GetClient();
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c1", "1A", 10)));
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c2", "1A", 10)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c1", "1A", 10))).Wait();
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c2", "1A", 10))).Wait();
 
             // Deletes all the ColumnFamily with timestamp less than 10
             CellSet.Row rowToDelete = new CellSet.Row() { key = Encoding.UTF8.GetBytes("3") };
@@ -230,7 +230,7 @@ namespace Microsoft.HBase.Client.Tests
             try
             {
                 // All  cells are deleted so this should fail
-                retrievedCells = client.GetCells(_tableName, "3");
+                retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
                 throw new AssertFailedException("expecting Get '3' to fail as all cells are removed");
             }
             catch (Exception ex)
@@ -245,11 +245,11 @@ namespace Microsoft.HBase.Client.Tests
                 }
             }
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c1", "1B", 11)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c1", "1B", 11))).Wait();
 
             try
             {
-                retrievedCells = client.GetCells(_tableName, "3");
+                retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
                 retrievedCells.rows[0].values.Count.ShouldEqual(1);
                 Encoding.UTF8.GetString(retrievedCells.rows[0].values[0].column).ShouldBeEqualOrdinalIgnoreCase("c1");
             }
@@ -268,8 +268,8 @@ namespace Microsoft.HBase.Client.Tests
         {
             var client = GetClient();
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c1", "1A", 10)));
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c2", "1A", 10)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c1", "1A", 10))).Wait();
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c2", "1A", 10))).Wait();
 
             // Deletes all the ColumnFamily with timestamp less than 10
             CellSet.Row rowToDelete = new CellSet.Row() { key = Encoding.UTF8.GetBytes("3") };
@@ -282,7 +282,7 @@ namespace Microsoft.HBase.Client.Tests
             try
             {
                 // All  cells are deleted so this should fail
-                retrievedCells = client.GetCells(_tableName, "3");
+                retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
                 throw new AssertFailedException("expecting Get '3' to fail as all cells are removed");
             }
             catch (Exception ex)
@@ -293,11 +293,11 @@ namespace Microsoft.HBase.Client.Tests
                 }
             }
 
-            client.StoreCells(_tableName, CreateCellSet(GetCellSet("3", "c1", "1B", 11)));
+            client.StoreCellsAsync(_tableName, CreateCellSet(GetCellSet("3", "c1", "1B", 11))).Wait();
 
             try
             {
-                retrievedCells = client.GetCells(_tableName, "3");
+                retrievedCells = client.GetCellsAsync(_tableName, "3").Result;
                 retrievedCells.rows[0].values.Count.ShouldEqual(1);
             }
             catch (Exception ex)
@@ -367,7 +367,7 @@ namespace Microsoft.HBase.Client.Tests
             _tableSchema.columns.Add(new ColumnSchema { name = ColumnFamilyName1 });
             _tableSchema.columns.Add(new ColumnSchema { name = ColumnFamilyName2 });
 
-            client.CreateTable(_tableSchema);
+            client.CreateTableAsync(_tableSchema).Wait();
         }
     }
 }

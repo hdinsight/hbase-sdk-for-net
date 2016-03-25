@@ -108,19 +108,6 @@ namespace Microsoft.HBase.Client
         /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
         /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
-        public ScannerInformation CreateScanner(string tableName, Scanner scannerSettings, RequestOptions options)
-        {
-            return CreateScannerAsync(tableName, scannerSettings, options).Result;
-        }
-
-        /// <summary>
-        /// Creates a scanner on the server side.
-        /// The resulting ScannerInformation can be used to read query the CellSets returned by this scanner in the #ScannerGetNext/Async method.
-        /// </summary>
-        /// <param name="tableName">the table to scan</param>
-        /// <param name="scannerSettings">the settings to e.g. set the batch size of this scan</param>
-        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
-        /// <returns>A ScannerInformation which contains the continuation url/token and the table name</returns>
         public async Task<ScannerInformation> CreateScannerAsync(string tableName, Scanner scannerSettings, RequestOptions options)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
@@ -162,23 +149,12 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">the table the scanner is associated with.</param>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
-        public void DeleteScanner(string tableName, ScannerInformation scannerInfo, RequestOptions options)
-        {
-            DeleteScannerAsync(tableName, scannerInfo, options).Wait();
-        }
-
-        /// <summary>
-        /// Deletes scanner.        
-        /// </summary>
-        /// <param name="tableName">the table the scanner is associated with.</param>
-        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
-        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
-        public Task DeleteScannerAsync(string tableName, ScannerInformation scannerInfo, RequestOptions options)
+        public async Task DeleteScannerAsync(string tableName, ScannerInformation scannerInfo, RequestOptions options)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             scannerInfo.ArgumentNotNull("scannerInfo");
             options.ArgumentNotNull("options");
-            return options.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerInfo, options));
+            await options.RetryPolicy.ExecuteAsync(() => DeleteScannerAsyncInternal(tableName, scannerInfo, options));
         }
 
         private async Task DeleteScannerAsyncInternal(string tableName, ScannerInformation scannerInfo, RequestOptions options)
@@ -202,25 +178,15 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        public void DeleteCells(string tableName, string rowKey, RequestOptions options = null)
-        {
-            DeleteCellsAsync(tableName, rowKey, options).Wait();
-        }
-
-        public Task DeleteCellsAsync(string tableName, string rowKey, RequestOptions options = null)
+        public async Task DeleteCellsAsync(string tableName, string rowKey, RequestOptions options = null)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             rowKey.ArgumentNotNullNorEmpty("rowKey");
             var optionToUse = options ?? _globalRequestOptions;
-            return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, rowKey, optionToUse));
+            await optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, rowKey, optionToUse));
         }
 
-        public void DeleteCells(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
-        {
-            DeleteCellsAsync(tableName, rowKey, columnFamily, timestamp, options).Wait();
-        }
-
-        public Task DeleteCellsAsync(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
+        public async Task DeleteCellsAsync(string tableName, string rowKey, string columnFamily, long timestamp, RequestOptions options = null)
         {
 
             tableName.ArgumentNotNullNorEmpty("tableName");
@@ -228,7 +194,7 @@ namespace Microsoft.HBase.Client
             columnFamily.ArgumentNotNullNorEmpty("columnFamily");
             var optionToUse = options ?? _globalRequestOptions;
 
-            return optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, String.Format(CultureInfo.InvariantCulture, RowKeyColumnFamilyTimeStampFormat, rowKey, columnFamily, timestamp), optionToUse));
+            await optionToUse.RetryPolicy.ExecuteAsync(() => DeleteCellsAsyncInternal(tableName, String.Format(CultureInfo.InvariantCulture, RowKeyColumnFamilyTimeStampFormat, rowKey, columnFamily, timestamp), optionToUse));
         }
 
         private async Task DeleteCellsAsyncInternal(string tableName, string path, RequestOptions options)
@@ -250,16 +216,6 @@ namespace Microsoft.HBase.Client
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a table and/or fully replaces its schema.
-        /// </summary>
-        /// <param name="schema">the schema</param>
-        /// <returns>returns true if the table was created, false if the table already exists. In case of any other error it throws a WebException.</returns>
-        public bool CreateTable(TableSchema schema, RequestOptions options = null)
-        {
-            return CreateTableAsync(schema, options).Result;
         }
 
         /// <summary>
@@ -312,16 +268,6 @@ namespace Microsoft.HBase.Client
         /// Deletes a table.
         /// If something went wrong, a WebException is thrown.
         /// </summary>
-        /// <param name="tableName">the table name</param>
-        public void DeleteTable(string tableName, RequestOptions options = null)
-        {
-            DeleteTableAsync(tableName, options).Wait();
-        }
-
-        /// <summary>
-        /// Deletes a table.
-        /// If something went wrong, a WebException is thrown.
-        /// </summary>
         /// <param name="table">the table name</param>
         public async Task DeleteTableAsync(string table, RequestOptions options = null)
         {
@@ -351,17 +297,6 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Gets the cells.
-        /// </summary>
-        /// <param name="tableName">Name of the table.</param>
-        /// <param name="rowKey">The row key.</param>
-        /// <returns></returns>
-        public CellSet GetCells(string tableName, string rowKey, RequestOptions options = null)
-        {
-            return GetCellsAsync(tableName, rowKey, options).Result;
-        }
-
-        /// <summary>
         /// Gets the cells asynchronously.
         /// </summary>
         /// <param name="tableName">Name of the table.</param>
@@ -377,16 +312,6 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Gets the storage cluster status.
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public StorageClusterStatus GetStorageClusterStatus(RequestOptions options = null)
-        {
-            return GetStorageClusterStatusAsync(options).Result;
-        }
-
-        /// <summary>
         /// Gets the storage cluster status asynchronous.
         /// </summary>
         /// <returns>
@@ -395,17 +320,6 @@ namespace Microsoft.HBase.Client
         {
             var optionToUse = options ?? _globalRequestOptions;
             return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<StorageClusterStatus>("/status/cluster", optionToUse));
-        }
-
-        /// <summary>
-        /// Gets the table information.
-        /// </summary>
-        /// <param name="table">The table.</param>
-        /// <returns>
-        /// </returns>
-        public TableInfo GetTableInfo(string table, RequestOptions options = null)
-        {
-            return GetTableInfoAsync(table, options).Result;
         }
 
         /// <summary>
@@ -418,17 +332,6 @@ namespace Microsoft.HBase.Client
             table.ArgumentNotNullNorEmpty("table");
             var optionToUse = options ?? _globalRequestOptions;
             return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableInfo>(table + "/regions", optionToUse));
-        }
-
-        /// <summary>
-        /// Gets the table schema.
-        /// </summary>
-        /// <param name="table">The table.</param>
-        /// <returns>
-        /// </returns>
-        public TableSchema GetTableSchema(string table, RequestOptions options = null)
-        {
-            return GetTableSchemaAsync(table, options).Result;
         }
 
         /// <summary>
@@ -445,16 +348,6 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Gets the version.
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public org.apache.hadoop.hbase.rest.protobuf.generated.Version GetVersion(RequestOptions options = null)
-        {
-            return GetVersionAsync(options).Result;
-        }
-
-        /// <summary>
         /// Gets the version asynchronously.
         /// </summary>
         /// <returns>
@@ -466,15 +359,6 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Lists the tables.
-        /// </summary>
-        /// <returns></returns>
-        public TableList ListTables(RequestOptions options = null)
-        {
-            return ListTablesAsync().Result;
-        }
-
-        /// <summary>
         /// Lists the tables asynchronously.
         /// </summary>
         /// <returns>
@@ -483,18 +367,6 @@ namespace Microsoft.HBase.Client
         {
             var optionToUse = options ?? _globalRequestOptions;
             return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableList>("", optionToUse));
-        }
-
-        /// <summary>
-        /// Modifies a table schema. 
-        /// If necessary it creates a new table with the given schema. 
-        /// If something went wrong, a WebException is thrown.
-        /// </summary>
-        /// <param name="tableName">the table name</param>
-        /// <param name="schema">the schema</param>
-        public void ModifyTableSchema(string tableName, TableSchema schema, RequestOptions options = null)
-        {
-            ModifyTableSchemaAsync(tableName, schema, options).Wait();
         }
 
         /// <summary>
@@ -537,17 +409,6 @@ namespace Microsoft.HBase.Client
         /// Scans the next set of messages.
         /// </summary>
         /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
-        /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param> 
-        /// <returns>a cellset, or null if the scanner is exhausted</returns>
-        public CellSet ScannerGetNext(ScannerInformation scannerInfo, RequestOptions options)
-        {
-            return ScannerGetNextAsync(scannerInfo, options).Result;
-        }
-
-        /// <summary>
-        /// Scans the next set of messages.
-        /// </summary>
-        /// <param name="scannerInfo">the scanner information retrieved by #CreateScanner()</param>
         /// <param name="options">the request options, scan requests must set endpoint(Gateway mode) or host(VNET mode) to receive the scan request</param>
         /// <returns>a cellset, or null if the scanner is exhausted</returns>
         public async Task<CellSet> ScannerGetNextAsync(ScannerInformation scannerInfo, RequestOptions options)
@@ -571,30 +432,6 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
-        /// Stores the given cells in the supplied table.
-        /// </summary>
-        /// <param name="table">the table</param>
-        /// <param name="cells">the cells to insert</param>
-        public void StoreCells(string table, CellSet cells, RequestOptions options = null)
-        {
-            StoreCellsAsync(table, cells, options).Wait();
-        }
-
-        /// <summary>
-        /// Atomically checks if a row/family/qualifier value matches the expected value and updates
-        /// </summary>
-        /// <param name="table">the table</param>
-        /// <param name="row">row to update</param>
-        /// <param name="cellToCheck">cell to check</param>
-        /// <returns>true if the record was updated; false if condition failed at check</returns>
-        public bool CheckAndPut(string table, CellSet.Row row, Cell cellToCheck, RequestOptions options = null)
-        {
-            Task<bool> t = CheckAndPutAsync(table, row, cellToCheck, options);
-            t.Wait();
-            return t.Result;
-        }
-
-        /// <summary>
         /// Atomically checks if a row/family/qualifier value matches the expected value and updates
         /// </summary>
         /// <param name="table">the table</param>
@@ -612,19 +449,6 @@ namespace Microsoft.HBase.Client
 
             return await optionToUse.RetryPolicy.ExecuteAsync<bool>(() => StoreCellsAsyncInternal(table, cellSet, optionToUse, Encoding.UTF8.GetString(row.key), CheckAndPutQuery));
            
-        }
-
-        /// <summary>
-        /// Atomically checks if a row/family/qualifier value matches the expected value and deletes
-        /// </summary>
-        /// <param name="table">the table</param>
-        /// <param name="cellToCheck">cell to check for deleting the row</param>
-        /// <returns>true if the record was deleted; false if condition failed at check</returns>
-        public bool CheckAndDelete(string table, Cell cellToCheck, CellSet.Row rowToDelete = null, RequestOptions options = null)
-        {
-            Task<bool> t = CheckAndDeleteAsync(table, cellToCheck, rowToDelete, options);
-            t.Wait();
-            return t.Result;
         }
 
         /// <summary>

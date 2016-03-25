@@ -58,13 +58,13 @@ namespace Microsoft.HBase.Client.Tests
                 var client = new HBaseClient(_credentials);
 
                 // ensure tables from previous tests are cleaned up
-                TableList tables = client.ListTables();
+                TableList tables = client.ListTablesAsync().Result;
                 foreach (string name in tables.name)
                 {
                     string pinnedName = name;
                     if (name.StartsWith(TableNamePrefix, StringComparison.Ordinal))
                     {
-                        client.DeleteTable(pinnedName);
+                        client.DeleteTableAsync(pinnedName).Wait();
                     }
                 }
 
@@ -86,7 +86,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scan, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scan, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
                 actualRecords.ShouldContainOnly(_allExpectedRecords);
             }
@@ -94,7 +94,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -116,7 +116,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -125,7 +125,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -155,7 +155,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -175,7 +175,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -184,7 +184,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -204,7 +204,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -213,7 +213,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -239,7 +239,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -248,7 +248,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -269,7 +269,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -278,7 +278,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -312,7 +312,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -321,7 +321,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -355,7 +355,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -364,7 +364,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -387,7 +387,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -396,7 +396,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -421,7 +421,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -430,7 +430,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -454,7 +454,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -463,7 +463,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -487,7 +487,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -496,7 +496,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -514,7 +514,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner,scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.Count.ShouldBeGreaterThanOrEqualTo(2);
@@ -523,7 +523,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -554,7 +554,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -563,7 +563,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -584,7 +584,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -593,7 +593,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -614,7 +614,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(_allExpectedRecords);
@@ -623,7 +623,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -646,7 +646,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -655,7 +655,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -684,7 +684,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -693,7 +693,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -721,7 +721,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -730,7 +730,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -755,7 +755,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -764,7 +764,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -791,7 +791,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -800,7 +800,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -825,7 +825,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -834,7 +834,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -860,7 +860,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -869,7 +869,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -895,7 +895,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -904,7 +904,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -929,7 +929,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -938,7 +938,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -967,7 +967,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -976,7 +976,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1004,7 +1004,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1013,7 +1013,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
 
@@ -1041,7 +1041,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1050,7 +1050,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1081,7 +1081,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1090,7 +1090,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1110,7 +1110,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1119,7 +1119,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1139,14 +1139,14 @@ namespace Microsoft.HBase.Client.Tests
             List<long> timestamps = null;
             try
             {
-                scanAll = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanAll = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 timestamps = RetrieveTimestamps(scanAll, scanOptions).ToList();
             }
             finally
             {
                 if (scanAll != null)
                 {
-                    client.DeleteScanner(_tableName, scanAll, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanAll, scanOptions).Wait();
                 }
             }
 
@@ -1159,7 +1159,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1168,7 +1168,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1189,7 +1189,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1198,7 +1198,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1217,7 +1217,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1226,7 +1226,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1246,7 +1246,7 @@ namespace Microsoft.HBase.Client.Tests
             ScannerInformation scanInfo = null;
             try
             {
-                scanInfo = client.CreateScanner(_tableName, scanner, scanOptions);
+                scanInfo = client.CreateScannerAsync(_tableName, scanner, scanOptions).Result;
                 List<FilterTestRecord> actualRecords = RetrieveResults(scanInfo, scanOptions).ToList();
 
                 actualRecords.ShouldContainOnly(expectedRecords);
@@ -1255,7 +1255,7 @@ namespace Microsoft.HBase.Client.Tests
             {
                 if (scanInfo != null)
                 {
-                    client.DeleteScanner(_tableName, scanInfo, scanOptions);
+                    client.DeleteScannerAsync(_tableName, scanInfo, scanOptions).Wait();
                 }
             }
         }
@@ -1267,7 +1267,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
             CellSet next;
 
-            while ((next = client.ScannerGetNext(scanInfo, scanOptions)) != null)
+            while ((next = client.ScannerGetNextAsync(scanInfo, scanOptions).Result) != null)
             {
                 foreach (CellSet.Row row in next.rows)
                 {
@@ -1289,7 +1289,7 @@ namespace Microsoft.HBase.Client.Tests
             var client = new HBaseClient(_credentials);
             CellSet next;
 
-            while ((next = client.ScannerGetNext(scanInfo, scanOptions)) != null)
+            while ((next = client.ScannerGetNextAsync(scanInfo, scanOptions).Result) != null)
             {
                 foreach (CellSet.Row row in next.rows)
                 {
@@ -1363,7 +1363,7 @@ namespace Microsoft.HBase.Client.Tests
                 cellSet.rows.Add(row);
             }
 
-            client.StoreCells(_tableName, cellSet);
+            client.StoreCellsAsync(_tableName, cellSet).Wait();
         }
 
         private Byte[] BuildCellColumn(string columnFamilyName, string columnName)
@@ -1387,7 +1387,7 @@ namespace Microsoft.HBase.Client.Tests
             _tableSchema.columns.Add(new ColumnSchema { name = ColumnFamilyName1 });
             _tableSchema.columns.Add(new ColumnSchema { name = ColumnFamilyName2 });
 
-            client.CreateTable(_tableSchema);
+            client.CreateTableAsync(_tableSchema).Wait();
         }
     }
 }

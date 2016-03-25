@@ -41,12 +41,12 @@ namespace Microsoft.HBase.Client.Tests.Clients
             var client = CreateClient();
 
             // ensure tables from previous tests are cleaned up
-            TableList tables = client.ListTables();
+            TableList tables = client.ListTablesAsync().Result;
             foreach (string name in tables.name)
             {
                 if (name.StartsWith(TestTablePrefix, StringComparison.Ordinal))
                 {
-                    client.DeleteTable(name);
+                    client.DeleteTableAsync(name).Wait();
                 }
             }
 
@@ -56,7 +56,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             _testTableSchema.name = testTableName;
             _testTableSchema.columns.Add(new ColumnSchema { name = "d" });
 
-            client.CreateTable(_testTableSchema);
+            client.CreateTableAsync(_testTableSchema).Wait();
         }
 
         public abstract IHBaseClient CreateClient();
@@ -72,8 +72,8 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        [ExpectedException(typeof(System.Net.WebException), "The remote server returned an error: (404) Not Found.")]
-        public async Task TestCellsDeletion()
+        [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
+        public void TestCellsDeletion()
         {
             const string testKey = "content";
             const string testValue = "the force is strong in this column";
@@ -85,14 +85,14 @@ namespace Microsoft.HBase.Client.Tests.Clients
             var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
 
-            client.StoreCells(testTableName, set);
-            CellSet cell = await client.GetCellsAsync(testTableName, testKey);
+            client.StoreCellsAsync(testTableName, set).Wait();
+            CellSet cell = client.GetCellsAsync(testTableName, testKey).Result;
             // make sure the cell is in the table
             Assert.AreEqual(Encoding.UTF8.GetString(cell.rows[0].key), testKey);
             // delete cell
-            await client.DeleteCellsAsync(testTableName, testKey);
+            client.DeleteCellsAsync(testTableName, testKey).Wait();
             // get cell again, 404 exception expected
-            await client.GetCellsAsync(testTableName, testKey);
+            client.GetCellsAsync(testTableName, testKey).Wait();
         }
 
         [TestMethod]
@@ -100,7 +100,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
         public void TestGetStorageClusterStatus()
         {
             var client = CreateClient();
-            StorageClusterStatus status = client.GetStorageClusterStatus();
+            StorageClusterStatus status = client.GetStorageClusterStatusAsync().Result;
             // TODO not really a good test
             Assert.IsTrue(status.requests >= 0, "number of requests is negative");
             Assert.IsTrue(status.liveNodes.Count >= 1, "number of live nodes is zero or negative");
@@ -112,7 +112,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
         public void TestGetVersion()
         {
             var client = CreateClient();
-            org.apache.hadoop.hbase.rest.protobuf.generated.Version version = client.GetVersion();
+            org.apache.hadoop.hbase.rest.protobuf.generated.Version version = client.GetVersionAsync().Result;
 
             Trace.WriteLine(version);
 
@@ -128,7 +128,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
         {
             var client = CreateClient();
 
-            TableList tables = client.ListTables();
+            TableList tables = client.ListTablesAsync().Result;
             List<string> testtables = tables.name.Where(item => item.StartsWith("marlintest", StringComparison.Ordinal)).ToList();
             Assert.AreEqual(1, testtables.Count);
             Assert.AreEqual(testTableName, testtables[0]);
@@ -152,9 +152,9 @@ namespace Microsoft.HBase.Client.Tests.Clients
             var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
             row.values.Add(value);
 
-            client.StoreCells(testTableName, set);
+            client.StoreCellsAsync(testTableName, set).Wait();
 
-            CellSet cells = client.GetCells(testTableName, testKey);
+            CellSet cells = client.GetCellsAsync(testTableName, testKey).Result;
             Assert.AreEqual(1, cells.rows.Count);
             Assert.AreEqual(1, cells.rows[0].values.Count);
             Assert.AreEqual(testValue, Encoding.UTF8.GetString(cells.rows[0].values[0].data));
@@ -169,7 +169,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
         public void TestTableSchema()
         {
             var client = CreateClient();
-            TableSchema schema = client.GetTableSchema(testTableName);
+            TableSchema schema = client.GetTableSchemaAsync(testTableName).Result;
             Assert.AreEqual(testTableName, schema.name);
             Assert.AreEqual(_testTableSchema.columns.Count, schema.columns.Count);
             Assert.AreEqual(_testTableSchema.columns[0].name, schema.columns[0].name);
@@ -188,7 +188,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
                 set.rows.Add(row);
             }
 
-            hBaseClient.StoreCells(testTableName, set);
+            hBaseClient.StoreCellsAsync(testTableName, set).Wait();
         }
     }
 }

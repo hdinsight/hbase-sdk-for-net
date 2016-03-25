@@ -53,11 +53,11 @@ namespace Microsoft.HBase.Client.Tests.Clients
             ScannerInformation scannerInfo = null;
             try
             {
-                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+                scannerInfo = client.CreateScannerAsync(testTableName, scanSettings, scanOptions).Result;
 
                 CellSet next;
                 var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
-                while ((next = client.ScannerGetNext(scannerInfo, scanOptions)) != null)
+                while ((next = client.ScannerGetNextAsync(scannerInfo, scanOptions).Result) != null)
                 {
                     Assert.AreEqual(10, next.rows.Count);
                     foreach (CellSet.Row row in next.rows)
@@ -72,7 +72,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             {
                 if (scannerInfo != null)
                 {
-                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                    client.DeleteScannerAsync(testTableName, scannerInfo, scanOptions).Wait();
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             ScannerInformation scannerInfo = null;
             try
             {
-                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+                scannerInfo = client.CreateScannerAsync(testTableName, scanSettings, scanOptions).Result;
                 Assert.AreEqual(testTableName, scannerInfo.TableName);
                 Assert.IsNotNull(scannerInfo.ScannerId);
                 Assert.IsFalse(scannerInfo.ScannerId.StartsWith("/"), "scanner id starts with a slash");
@@ -99,7 +99,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             {
                 if (scannerInfo != null)
                 {
-                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                    client.DeleteScannerAsync(testTableName, scannerInfo, scanOptions).Wait();
                 }
             }
         }
@@ -119,22 +119,22 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
             try
             {
-                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+                scannerInfo = client.CreateScannerAsync(testTableName, scanSettings, scanOptions).Result;
                 Assert.AreEqual(testTableName, scannerInfo.TableName);
                 Assert.IsNotNull(scannerInfo.ScannerId);
                 Assert.IsFalse(scannerInfo.ScannerId.StartsWith("/"), "scanner id starts with a slash");
                 Assert.IsNotNull(scannerInfo.ResponseHeaderCollection);
                 // delete the scanner
-                client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                client.DeleteScannerAsync(testTableName, scannerInfo, scanOptions).Wait();
                 // try to fetch data use the deleted scanner
                 scanOptions.RetryPolicy = RetryPolicy.NoRetry;
-                client.ScannerGetNext(scannerInfo, scanOptions);
+                client.ScannerGetNextAsync(scannerInfo, scanOptions).Wait();
             }
             finally
             {
                 if (scannerInfo != null)
                 {
-                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                    client.DeleteScannerAsync(testTableName, scannerInfo, scanOptions).Wait();
                 }
             }
         }
@@ -155,11 +155,11 @@ namespace Microsoft.HBase.Client.Tests.Clients
             ScannerInformation scannerInfo = null;
             try
             {
-                scannerInfo = client.CreateScanner(testTableName, scanSettings, scanOptions);
+                scannerInfo = client.CreateScannerAsync(testTableName, scanSettings, scanOptions).Result;
 
                 CellSet next;
                 var expectedSet = new HashSet<int>(Enumerable.Range(startRow, endRow - startRow));
-                while ((next = client.ScannerGetNext(scannerInfo, scanOptions)) != null)
+                while ((next = client.ScannerGetNextAsync(scannerInfo, scanOptions).Result) != null)
                 {
                     foreach (CellSet.Row row in next.rows)
                     {
@@ -173,7 +173,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             {
                 if (scannerInfo != null)
                 {
-                    client.DeleteScanner(testTableName, scannerInfo, scanOptions);
+                    client.DeleteScannerAsync(testTableName, scannerInfo, scanOptions).Wait();
                 }
             }
         }
