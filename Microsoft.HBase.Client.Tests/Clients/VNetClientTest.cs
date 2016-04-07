@@ -20,50 +20,68 @@ namespace Microsoft.HBase.Client.Tests.Clients
     using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Microsoft.HBase.Client.Tests.Utilities;
+    using org.apache.hadoop.hbase.rest.protobuf.generated;
+    using System.Linq;
+    using System;
 
-    //[TestClass]
+    [TestClass]
     public class VNetClientTest : HBaseClientTestBase
     {
         public override IHBaseClient CreateClient()
         {
-            var regionServerHostNames = new List<string>();
-            // TODO add different behaviour for linux vs. windows   
-            regionServerHostNames.Add("wn0-");
-            regionServerHostNames.Add("wn1-");
+            var regionServerIPs = new List<string>();
+            // TODO automatically retrieve IPs from Ambari REST APIs   
+            regionServerIPs.Add("10.17.0.7");
+            regionServerIPs.Add("10.17.0.4");
 
             var options = RequestOptions.GetDefaultOptions();
-            options.RetryPolicy = RetryPolicy.NoRetry;
-            options.TimeoutMillis = 30000;
-            options.KeepAlive = false;
             options.Port = 8090;
             options.AlternativeEndpoint = "/";
 
-            return new HBaseClient(null, options, new LoadBalancerRoundRobin(regionServerHostNames));
+            return new HBaseClient(null, options, new LoadBalancerRoundRobin(regionServerIPs));
         }
 
-        //[TestMethod]
-        //[TestCategory(TestRunMode.CheckIn)]
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public override void TestFullScan()
         {
+            var client = CreateClient();
+
+            StoreTestData(client);
+            var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
+            List<CellSet> cells = client.StatelessScannerAsync(testTableName).Result;
+            foreach (CellSet cell in cells)
+            {
+                foreach (CellSet.Row row in cell.rows)
+                {
+                    int k = BitConverter.ToInt32(row.key, 0);
+                    expectedSet.Remove(k);
+                }
+            }
+            Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
         }
 
-        //[TestMethod]
-        //[TestCategory(TestRunMode.CheckIn)]
-        public override void TestScannerCreation()
-        {
-        }
-
-        //[TestMethod]
-        //[TestCategory(TestRunMode.CheckIn)]
-        //[ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
-        public override void TestScannerDeletion()
-        {
-        }
-
-        //[TestMethod]
-        //[TestCategory(TestRunMode.CheckIn)]
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public override void TestSubsetScan()
         {
+            var client = CreateClient();
+            const int startRow = 10;
+            const int endRow = 10 + 5;
+            StoreTestData(client);
+            var expectedSet = new HashSet<int>(Enumerable.Range(startRow, endRow - startRow));
+            // TODO how to change rowkey to internal hbase binary string
+            List<CellSet> cells = client.StatelessScannerAsync(testTableName, "", "startrow=\x0A\x00\x00\x00&endrow=\x0F\x00\x00\x00").Result;
+
+            foreach (CellSet cell in cells)
+            {
+                foreach (CellSet.Row row in cell.rows)
+                {
+                    int k = BitConverter.ToInt32(row.key, 0);
+                    expectedSet.Remove(k);
+                }
+            }
+            Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
         }
     }
 }

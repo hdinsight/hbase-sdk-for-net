@@ -17,7 +17,7 @@ namespace Microsoft.HBase.Client
 {
     using System.Threading.Tasks;
     using org.apache.hadoop.hbase.rest.protobuf.generated;
-
+    using System.Collections.Generic;
     /// <summary>
     /// A C# connector to HBase. 
     /// </summary>
@@ -175,5 +175,8 @@ namespace Microsoft.HBase.Client
         /// <param name="row">row cells to delete</param>
         /// <returns>true if the record was deleted; false if condition failed at check</returns>
         Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, CellSet.Row row = null, RequestOptions options = null);
+
+
+        Task<List<CellSet>> StatelessScannerAsync(string tableName, string optionalRowPrefix = null, string scanParameters = null, RequestOptions options = null);
     }
 }
