@@ -49,7 +49,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
             StoreTestData(client);
             var expectedSet = new HashSet<int>(Enumerable.Range(0, 100));
-            List<CellSet> cells = client.StatelessScannerAsync(testTableName).Result;
+            IEnumerable<CellSet> cells = client.StatelessScannerAsync(testTableName).Result;
             foreach (CellSet cell in cells)
             {
                 foreach (CellSet.Row row in cell.rows)
@@ -71,7 +71,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             StoreTestData(client);
             var expectedSet = new HashSet<int>(Enumerable.Range(startRow, endRow - startRow));
             // TODO how to change rowkey to internal hbase binary string
-            List<CellSet> cells = client.StatelessScannerAsync(testTableName, "", "startrow=\x0A\x00\x00\x00&endrow=\x0F\x00\x00\x00").Result;
+            IEnumerable<CellSet> cells = client.StatelessScannerAsync(testTableName, "", "startrow=\x0A\x00\x00\x00&endrow=\x0F\x00\x00\x00").Result;
 
             foreach (CellSet cell in cells)
             {

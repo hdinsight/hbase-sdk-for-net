@@ -177,6 +177,6 @@ namespace Microsoft.HBase.Client
         Task<bool> CheckAndDeleteAsync(string table, Cell cellToCheck, CellSet.Row row = null, RequestOptions options = null);
 
 
-        Task<List<CellSet>> StatelessScannerAsync(string tableName, string optionalRowPrefix = null, string scanParameters = null, RequestOptions options = null);
+        Task<IEnumerable<CellSet>> StatelessScannerAsync(string tableName, string optionalRowPrefix = null, string scanParameters = null, RequestOptions options = null);
     }
 }

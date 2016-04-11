@@ -433,7 +433,7 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        public async Task<List<CellSet>> StatelessScannerAsync(string tableName, string optionalRowPrefix = null, string scanParameters = null, RequestOptions options = null)
+        public async Task<IEnumerable<CellSet>> StatelessScannerAsync(string tableName, string optionalRowPrefix = null, string scanParameters = null, RequestOptions options = null)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             var optionToUse = options ?? _globalRequestOptions;
@@ -441,20 +441,20 @@ namespace Microsoft.HBase.Client
             return await optionToUse.RetryPolicy.ExecuteAsync(() => StatelessScannerAsyncInternal(tableName, optionalRowPrefix, scanParameters, optionToUse));
         }
 
-        private async Task<List<CellSet>> StatelessScannerAsyncInternal(string tableName, string optionalRowPrefix, string scanParameters, RequestOptions options)
+        private async Task<IEnumerable<CellSet>> StatelessScannerAsyncInternal(string tableName, string optionalRowPrefix, string scanParameters, RequestOptions options)
         {
             using (Response webResponse = await GetRequestAsync(tableName + "/" + optionalRowPrefix + "*", scanParameters, options))
             {
                 if (webResponse.WebResponse.StatusCode == HttpStatusCode.OK)
                 {
-                    return readProtobufStream(webResponse.WebResponse.GetResponseStream());
+                    return ReadProtobufStream(webResponse.WebResponse.GetResponseStream());
                 }
 
                 return null;
             }
         }
 
-        private List<CellSet> readProtobufStream(Stream stream)
+        private IEnumerable<CellSet> ReadProtobufStream(Stream stream)
         {
             List<CellSet> cells = new List<CellSet>();
             var reader = new BinaryReader(stream);
@@ -469,7 +469,7 @@ namespace Microsoft.HBase.Client
                 }
                 sbyte[] slengthBytes = new sbyte[2];
                 Buffer.BlockCopy(lengthBytes, 0, slengthBytes, 0, lengthBytes.Length);
-                int length = (short)(((slengthBytes[0] & 0xFF) << 8) | (slengthBytes[1] & 0xFF));
+                short length = (short)(((slengthBytes[0] & 0xFF) << 8) | (slengthBytes[1] & 0xFF));
                 byte[] cellSet = new byte[length];
                 stream.Read(cellSet, 0, length);
                 CellSet sc = Serializer.Deserialize<CellSet>(new MemoryStream(cellSet));
