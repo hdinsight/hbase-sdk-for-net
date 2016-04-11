@@ -23,7 +23,6 @@ namespace Microsoft.HBase.Client.Tests.Clients
     using System.Collections.Generic;
     using System.Linq;
     using System;
-    using System.Threading.Tasks;
 
     [TestClass]
     public class GatewayClientTest : HBaseClientTestBase
@@ -79,7 +78,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        public override void TestScannerCreation()
+        public void TestScannerCreation()
         {
             var client = CreateClient();
             var scanSettings = new Scanner { batch = 2 };
@@ -107,7 +106,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
         [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
-        public override void TestScannerDeletion()
+        public void TestScannerDeletion()
         {
             var client = CreateClient();
 

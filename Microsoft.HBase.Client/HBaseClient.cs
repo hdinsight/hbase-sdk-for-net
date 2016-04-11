@@ -27,6 +27,8 @@ namespace Microsoft.HBase.Client
     using org.apache.hadoop.hbase.rest.protobuf.generated;
     using ProtoBuf;
     using System.Globalization;
+    using System.Collections.Generic;
+
     /// <summary>
     /// A C# connector to HBase. 
     /// </summary>
@@ -420,7 +422,7 @@ namespace Microsoft.HBase.Client
 
         private async Task<CellSet> ScannerGetNextAsyncInternal(ScannerInformation scannerInfo, RequestOptions options)
         {
-            using (Response webResponse = await GetRequestAsync(scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId, options))
+            using (Response webResponse = await GetRequestAsync(scannerInfo.TableName + "/scanner/" + scannerInfo.ScannerId, null, options))
             {
                 if (webResponse.WebResponse.StatusCode == HttpStatusCode.OK)
                 {
@@ -429,6 +431,52 @@ namespace Microsoft.HBase.Client
 
                 return null;
             }
+        }
+
+        public async Task<IEnumerable<CellSet>> StatelessScannerAsync(string tableName, string optionalRowPrefix = null, string scanParameters = null, RequestOptions options = null)
+        {
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            var optionToUse = options ?? _globalRequestOptions;
+            var rowPrefix = optionalRowPrefix ?? string.Empty;
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => StatelessScannerAsyncInternal(tableName, optionalRowPrefix, scanParameters, optionToUse));
+        }
+
+        private async Task<IEnumerable<CellSet>> StatelessScannerAsyncInternal(string tableName, string optionalRowPrefix, string scanParameters, RequestOptions options)
+        {
+            using (Response webResponse = await GetRequestAsync(tableName + "/" + optionalRowPrefix + "*", scanParameters, options))
+            {
+                if (webResponse.WebResponse.StatusCode == HttpStatusCode.OK)
+                {
+                    return ReadProtobufStream(webResponse.WebResponse.GetResponseStream());
+                }
+
+                return null;
+            }
+        }
+
+        private IEnumerable<CellSet> ReadProtobufStream(Stream stream)
+        {
+            List<CellSet> cells = new List<CellSet>();
+            var reader = new BinaryReader(stream);
+            while (true)
+            {
+                // read chunck length
+                byte[] lengthBytes = new byte[2];
+                int readBytes = reader.Read(lengthBytes, 0, lengthBytes.Length);
+                if (readBytes <= 0)
+                {
+                    break;
+                }
+                sbyte[] slengthBytes = new sbyte[2];
+                Buffer.BlockCopy(lengthBytes, 0, slengthBytes, 0, lengthBytes.Length);
+                short length = (short)(((slengthBytes[0] & 0xFF) << 8) | (slengthBytes[1] & 0xFF));
+                byte[] cellSet = new byte[length];
+                stream.Read(cellSet, 0, length);
+                CellSet sc = Serializer.Deserialize<CellSet>(new MemoryStream(cellSet));
+                cells.Add(sc);
+            }
+
+            return cells;
         }
 
         /// <summary>
@@ -448,7 +496,7 @@ namespace Microsoft.HBase.Client
             var optionToUse = options ?? _globalRequestOptions;
 
             return await optionToUse.RetryPolicy.ExecuteAsync<bool>(() => StoreCellsAsyncInternal(table, cellSet, optionToUse, Encoding.UTF8.GetString(row.key), CheckAndPutQuery));
-           
+
         }
 
         /// <summary>
@@ -478,7 +526,7 @@ namespace Microsoft.HBase.Client
             var optionToUse = options ?? _globalRequestOptions;
 
             return await optionToUse.RetryPolicy.ExecuteAsync<bool>(() => StoreCellsAsyncInternal(table, cellSet, optionToUse, Encoding.UTF8.GetString(row.key), CheckAndDeleteQuery));
-           
+
         }
 
         /// <summary>
@@ -502,7 +550,7 @@ namespace Microsoft.HBase.Client
             // note the fake row key to insert a set of cells
             using (Response webResponse = await PutRequestAsync(path, query, cells, options))
             {
-                if(webResponse.WebResponse.StatusCode == HttpStatusCode.NotModified)
+                if (webResponse.WebResponse.StatusCode == HttpStatusCode.NotModified)
                 {
                     return false;
                 }
@@ -561,11 +609,11 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        private async Task<Response> GetRequestAsync(string endpoint, RequestOptions options)
+        private async Task<Response> GetRequestAsync(string endpoint, string query, RequestOptions options)
         {
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
-            return await _requester.IssueWebRequestAsync(endpoint, null, "GET", null, options);
+            return await _requester.IssueWebRequestAsync(endpoint, query, "GET", null, options);
         }
 
         private async Task<Response> PostRequestAsync<TReq>(string endpoint, TReq request, RequestOptions options)

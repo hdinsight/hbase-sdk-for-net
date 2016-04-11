@@ -68,11 +68,6 @@ namespace Microsoft.HBase.Client.Tests.Clients
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
         [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
-        public abstract void TestScannerDeletion();
-
-        [TestMethod]
-        [TestCategory(TestRunMode.CheckIn)]
-        [ExpectedException(typeof(System.AggregateException), "The remote server returned an error: (404) Not Found.")]
         public void TestCellsDeletion()
         {
             const string testKey = "content";
@@ -136,10 +131,6 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
-        public abstract void TestScannerCreation();
-
-        [TestMethod]
-        [TestCategory(TestRunMode.CheckIn)]
         public void TestStoreSingleCell()
         {
             const string testKey = "content";
@@ -175,7 +166,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             Assert.AreEqual(_testTableSchema.columns[0].name, schema.columns[0].name);
         }
 
-        public void StoreTestData(IHBaseClient hBaseClient)
+        public void StoreTestData(IHBaseClient hbaseClient)
         {
             // we are going to insert the keys 0 to 100 and then do some range queries on that
             const string testValue = "the force is strong in this column";
@@ -188,7 +179,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
                 set.rows.Add(row);
             }
 
-            hBaseClient.StoreCellsAsync(testTableName, set).Wait();
+            hbaseClient.StoreCellsAsync(testTableName, set).Wait();
         }
     }
 }
