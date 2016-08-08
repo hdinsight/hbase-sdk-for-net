@@ -54,7 +54,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
             testTableName = TestTablePrefix + _random.Next(10000);
             _testTableSchema = new TableSchema();
             _testTableSchema.name = testTableName;
-            _testTableSchema.columns.Add(new ColumnSchema { name = "d" });
+            _testTableSchema.columns.Add(new ColumnSchema { name = "d", maxVersions = 3 });
 
             client.CreateTableAsync(_testTableSchema).Wait();
         }

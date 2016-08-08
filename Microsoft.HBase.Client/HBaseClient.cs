@@ -304,13 +304,23 @@ namespace Microsoft.HBase.Client
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
         /// <returns></returns>
-        public async Task<CellSet> GetCellsAsync(string tableName, string rowKey, RequestOptions options = null)
+        public async Task<CellSet> GetCellsAsync(string tableName, string rowKey, string columnName = null, string numOfVersions = null, RequestOptions options = null)
         {
             tableName.ArgumentNotNullNorEmpty("tableName");
             rowKey.ArgumentNotNull("rowKey");
 
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<CellSet>(tableName + "/" + rowKey, optionToUse));
+            string endpoint = tableName + "/" + rowKey;
+            if (columnName != null)
+            {
+                endpoint += "/" + columnName;
+            }
+            string query = null;
+            if (numOfVersions != null)
+            {
+                query = "v=" + numOfVersions;
+            }
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<CellSet>(endpoint, query, optionToUse));
         }
 
         /// <summary>
@@ -321,7 +331,7 @@ namespace Microsoft.HBase.Client
         public async Task<StorageClusterStatus> GetStorageClusterStatusAsync(RequestOptions options = null)
         {
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<StorageClusterStatus>("/status/cluster", optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<StorageClusterStatus>("/status/cluster", null, optionToUse));
         }
 
         /// <summary>
@@ -333,7 +343,7 @@ namespace Microsoft.HBase.Client
         {
             table.ArgumentNotNullNorEmpty("table");
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableInfo>(table + "/regions", optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableInfo>(table + "/regions", null, optionToUse));
         }
 
         /// <summary>
@@ -346,7 +356,7 @@ namespace Microsoft.HBase.Client
         {
             table.ArgumentNotNullNorEmpty("table");
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableSchema>(table + "/schema", optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableSchema>(table + "/schema", null, optionToUse));
         }
 
         /// <summary>
@@ -357,7 +367,7 @@ namespace Microsoft.HBase.Client
         public async Task<org.apache.hadoop.hbase.rest.protobuf.generated.Version> GetVersionAsync(RequestOptions options = null)
         {
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<org.apache.hadoop.hbase.rest.protobuf.generated.Version>("version", optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<org.apache.hadoop.hbase.rest.protobuf.generated.Version>("version", null, optionToUse));
         }
 
         /// <summary>
@@ -368,7 +378,7 @@ namespace Microsoft.HBase.Client
         public async Task<TableList> ListTablesAsync(RequestOptions options = null)
         {
             var optionToUse = options ?? _globalRequestOptions;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableList>("", optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<TableList>("", null, optionToUse));
         }
 
         /// <summary>
@@ -596,11 +606,11 @@ namespace Microsoft.HBase.Client
             }
         }
 
-        private async Task<T> GetRequestAndDeserializeAsync<T>(string endpoint, RequestOptions options)
+        private async Task<T> GetRequestAndDeserializeAsync<T>(string endpoint, string query, RequestOptions options)
         {
             options.ArgumentNotNull("request options");
             endpoint.ArgumentNotNull("endpoint");
-            using (Response response = await _requester.IssueWebRequestAsync(endpoint, null, "GET", null, options))
+            using (Response response = await _requester.IssueWebRequestAsync(endpoint, query, "GET", null, options))
             {
                 using (Stream responseStream = response.WebResponse.GetResponseStream())
                 {

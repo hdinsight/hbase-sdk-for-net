@@ -23,7 +23,7 @@ namespace Microsoft.HBase.Client.Tests.Clients
     using org.apache.hadoop.hbase.rest.protobuf.generated;
     using System.Linq;
     using System;
-
+    using System.Text;
     [TestClass]
     public class VNetClientTest : HBaseClientTestBase
     {
@@ -31,12 +31,12 @@ namespace Microsoft.HBase.Client.Tests.Clients
         {
             var regionServerIPs = new List<string>();
             // TODO automatically retrieve IPs from Ambari REST APIs   
-            regionServerIPs.Add("10.17.0.7");
-            regionServerIPs.Add("10.17.0.4");
+            regionServerIPs.Add("10.17.0.11");
+            regionServerIPs.Add("10.17.0.13");
 
             var options = RequestOptions.GetDefaultOptions();
             options.Port = 8090;
-            options.AlternativeEndpoint = "/";
+            options.AlternativeEndpoint = "";
 
             return new HBaseClient(null, options, new LoadBalancerRoundRobin(regionServerIPs));
         }
@@ -82,6 +82,26 @@ namespace Microsoft.HBase.Client.Tests.Clients
                 }
             }
             Assert.AreEqual(0, expectedSet.Count, "The expected set wasn't empty! Items left {0}!", string.Join(",", expectedSet));
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
+        public void TestCellsMultiVersionGet()
+        {
+            const string testKey = "content";
+            const string testValue = "the force is strong in this column";
+            var client = CreateClient();
+            var set = new CellSet();
+            var row = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey) };
+            set.rows.Add(row);
+
+            var value = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue) };
+            row.values.Add(value);
+
+            client.StoreCellsAsync(testTableName, set).Wait();
+            client.StoreCellsAsync(testTableName, set).Wait();
+            CellSet cell = client.GetCellsAsync(testTableName, testKey, "d:starwars", "3").Result;
+            Assert.AreEqual(2, cell.rows[0].values.Count);
         }
     }
 }
