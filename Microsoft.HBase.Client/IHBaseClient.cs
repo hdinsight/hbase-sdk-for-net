@@ -90,12 +90,14 @@ namespace Microsoft.HBase.Client
         Task DeleteTableAsync(string table, RequestOptions options = null);
 
         /// <summary>
-        /// Gets the cells asynchronously.
+        /// Gets the cells asynchronously. Getting column value by columnName and getting multi-versions only work in VNET mode currently.
         /// </summary>
         /// <param name="tableName">Name of the table.</param>
         /// <param name="rowKey">The row key.</param>
+        /// <param name="columnName">familyname:columnname</param>
+        /// <param name="numOfVersions">Number of versions to fetch</param>
         /// <returns></returns>
-        Task<CellSet> GetCellsAsync(string tableName, string rowKey, RequestOptions options = null);
+        Task<CellSet> GetCellsAsync(string tableName, string rowKey, string columnName=null, string numOfVersions=null, RequestOptions options = null);
 
         /// <summary>
         /// Gets the storage cluster status asynchronous.
