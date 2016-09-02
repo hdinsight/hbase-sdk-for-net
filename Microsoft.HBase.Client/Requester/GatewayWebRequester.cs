@@ -19,9 +19,11 @@ namespace Microsoft.HBase.Client.Requester
     using System.Diagnostics;
     using System.IO;
     using System.Net;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.HBase.Client.Internal;
-    
+    using Microsoft.HBase.Client.Internal.Helpers;
+
     /// <summary>
     /// 
     /// </summary>
@@ -68,6 +70,7 @@ namespace Microsoft.HBase.Client.Requester
         /// Issues the web request asynchronous.
         /// </summary>
         /// <param name="endpoint">The endpoint.</param>
+        /// <param name="query">The query to append.</param>
         /// <param name="method">The method.</param>
         /// <param name="input">The input.</param>
         /// <param name="options">request options</param>
@@ -92,7 +95,7 @@ namespace Microsoft.HBase.Client.Requester
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(builder.Uri);
             httpWebRequest.ServicePoint.ReceiveBufferSize = options.ReceiveBufferSize;
             httpWebRequest.ServicePoint.UseNagleAlgorithm = options.UseNagle;
-            httpWebRequest.Timeout = options.TimeoutMillis;
+            httpWebRequest.Timeout = options.TimeoutMillis; // This has no influence for calls that are made Async
             httpWebRequest.KeepAlive = options.KeepAlive;
             httpWebRequest.Credentials = _credentialCache;
             httpWebRequest.PreAuthenticate = true;
@@ -110,22 +113,63 @@ namespace Microsoft.HBase.Client.Requester
                     httpWebRequest.Headers.Add(kv.Key, kv.Value);
                 }
             }
+            
+            long remainingTime = options.TimeoutMillis;
 
             if (input != null)
             {
                 // expecting the caller to seek to the beginning or to the location where it needs to be copied from
-                using (Stream req = await httpWebRequest.GetRequestStreamAsync())
+                Stream req = null;
+                try
                 {
-                    await input.CopyToAsync(req);
+                    req = await httpWebRequest.GetRequestStreamAsync().WithTimeout(
+                                                TimeSpan.FromMilliseconds(remainingTime),
+                                                "Waiting for RequestStream");
+
+                    remainingTime = options.TimeoutMillis - watch.ElapsedMilliseconds;
+                    if(remainingTime <= 0)
+                    {
+                        remainingTime = 0;
+                    }
+
+                    await input.CopyToAsync(req).WithTimeout(
+                                TimeSpan.FromMilliseconds(remainingTime),
+                                "Waiting for CopyToAsync",
+                                CancellationToken.None);
+                }
+                catch (TimeoutException)
+                {
+                    httpWebRequest.Abort();
+                    throw;
+                }
+                finally
+                {
+                    req?.Close();
                 }
             }
 
-            var response = (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
-            return new Response()
+            try
             {
-                WebResponse = response,
-                RequestLatency = watch.Elapsed
-            };
+                remainingTime = options.TimeoutMillis - watch.ElapsedMilliseconds;
+                if (remainingTime <= 0)
+                {
+                    remainingTime = 0;
+                }
+
+                HttpWebResponse response = (HttpWebResponse) await httpWebRequest.GetResponseAsync().WithTimeout(
+                                                                TimeSpan.FromMilliseconds(remainingTime),
+                                                                "Waiting for GetResponseAsync");
+                return new Response()
+                {
+                    WebResponse = response,
+                    RequestLatency = watch.Elapsed
+                };
+            }
+            catch (TimeoutException)
+            {
+                httpWebRequest.Abort();
+                throw;
+            }
         }
 
         private void InitCache()
