@@ -19,7 +19,9 @@ namespace Microsoft.HBase.Client.Requester
     using System.Diagnostics;
     using System.IO;
     using System.Net;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.HBase.Client.Internal.Helpers;
     using Microsoft.HBase.Client.LoadBalancing;
 
     /// <summary>
@@ -94,7 +96,7 @@ namespace Microsoft.HBase.Client.Requester
                 HttpWebRequest httpWebRequest = WebRequest.CreateHttp(target);
                 httpWebRequest.ServicePoint.ReceiveBufferSize = options.ReceiveBufferSize;
                 httpWebRequest.ServicePoint.UseNagleAlgorithm = options.UseNagle;
-                httpWebRequest.Timeout = options.TimeoutMillis;
+                httpWebRequest.Timeout = options.TimeoutMillis; // This has no influence for calls that are made Async
                 httpWebRequest.KeepAlive = options.KeepAlive;
                 httpWebRequest.Credentials = _credentialCache;
                 httpWebRequest.PreAuthenticate = true;
@@ -112,38 +114,78 @@ namespace Microsoft.HBase.Client.Requester
                         httpWebRequest.Headers.Add(kv.Key, kv.Value);
                     }
                 }
+                long remainingTime = options.TimeoutMillis;
 
                 if (input != null)
                 {
                     // expecting the caller to seek to the beginning or to the location where it needs to be copied from
-                    using (Stream req = await httpWebRequest.GetRequestStreamAsync())
+                    Stream req = null;
+                    try
                     {
-                        await input.CopyToAsync(req);
+                        req = await httpWebRequest.GetRequestStreamAsync().WithTimeout(
+                                                    TimeSpan.FromMilliseconds(remainingTime),
+                                                    "Waiting for RequestStream");
+
+                        remainingTime = options.TimeoutMillis - watch.ElapsedMilliseconds;
+                        if (remainingTime <= 0)
+                        {
+                            remainingTime = 0;
+                        }
+
+                        await input.CopyToAsync(req).WithTimeout(
+                                    TimeSpan.FromMilliseconds(remainingTime),
+                                    "Waiting for CopyToAsync",
+                                    CancellationToken.None);
+                    }
+                    catch (TimeoutException)
+                    {
+                        httpWebRequest.Abort();
+                        throw;
+                    }
+                    finally
+                    {
+                        req?.Close();
                     }
                 }
 
-                Debug.WriteLine("Waiting for response for request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
-
-                var response = (await httpWebRequest.GetResponseAsync()) as HttpWebResponse;
-
-                Debug.WriteLine("Web request {0} to endpoint {1} successful!", Trace.CorrelationManager.ActivityId, target);
-
-                return new Response()
+                try
                 {
-                    WebResponse = response,
-                    RequestLatency = watch.Elapsed,
-                    PostRequestAction = (r) =>
+                    remainingTime = options.TimeoutMillis - watch.ElapsedMilliseconds;
+                    if (remainingTime <= 0)
                     {
-                        if (r.WebResponse.StatusCode == HttpStatusCode.OK || r.WebResponse.StatusCode == HttpStatusCode.Created || r.WebResponse.StatusCode == HttpStatusCode.NotModified)
-                        {
-                            _balancer.RecordSuccess(balancedEndpoint);
-                        }
-                        else
-                        {
-                            _balancer.RecordFailure(balancedEndpoint);
-                        }
+                        remainingTime = 0;
                     }
-                };
+
+                    Debug.WriteLine("Waiting for response for request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
+
+                    HttpWebResponse response = (HttpWebResponse)await httpWebRequest.GetResponseAsync().WithTimeout(
+                                                                    TimeSpan.FromMilliseconds(remainingTime),
+                                                                    "Waiting for GetResponseAsync");
+
+                    Debug.WriteLine("Web request {0} to endpoint {1} successful!", Trace.CorrelationManager.ActivityId, target);
+
+                    return new Response()
+                    {
+                        WebResponse = response,
+                        RequestLatency = watch.Elapsed,
+                        PostRequestAction = (r) =>
+                        {
+                            if (r.WebResponse.StatusCode == HttpStatusCode.OK || r.WebResponse.StatusCode == HttpStatusCode.Created || r.WebResponse.StatusCode == HttpStatusCode.NotModified)
+                            {
+                                _balancer.RecordSuccess(balancedEndpoint);
+                            }
+                            else
+                            {
+                                _balancer.RecordFailure(balancedEndpoint);
+                            }
+                        }
+                    };
+                }
+                catch (TimeoutException)
+                {
+                    httpWebRequest.Abort();
+                    throw;
+                }
             }
             catch(WebException we)
             {

@@ -99,6 +99,7 @@
     <Compile Include="Internal\ByteArrayEqualityComparer.cs" />
     <Compile Include="IHBaseClient.cs" />
     <Compile Include="Internal\Extensions\ObjectExtensions.cs" />
+    <Compile Include="Internal\Helpers\TaskHelpers.cs" />
     <Compile Include="Internal\ValidatedNotNullAttribute.cs" />
     <Compile Include="ClusterCredentials.cs" />
     <Compile Include="Exceptions\ArgumentEmptyException.cs" />
