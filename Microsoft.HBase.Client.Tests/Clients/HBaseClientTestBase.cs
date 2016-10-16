@@ -153,6 +153,37 @@ namespace Microsoft.HBase.Client.Tests.Clients
 
         [TestMethod]
         [TestCategory(TestRunMode.CheckIn)]
+        public void TestGetCellsWithMultiGetRequest()
+        {
+            string testKey1 = Guid.NewGuid().ToString();
+            string testKey2 = Guid.NewGuid().ToString();
+            string testValue1 = "the force is strong in this column " + testKey1;
+            string testValue2 = "the force is strong in this column " + testKey2;
+
+            var client = CreateClient();
+            var set = new CellSet();
+            var row1 = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey1) };
+            var row2 = new CellSet.Row { key = Encoding.UTF8.GetBytes(testKey2) };
+            set.rows.Add(row1);
+            set.rows.Add(row2);
+
+            var value1 = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue1) };
+            var value2 = new Cell { column = Encoding.UTF8.GetBytes("d:starwars"), data = Encoding.UTF8.GetBytes(testValue2) };
+            row1.values.Add(value1);
+            row2.values.Add(value2);
+
+            client.StoreCellsAsync(testTableName, set).Wait();
+
+            CellSet cells = client.GetCellsAsync(testTableName, new string[] { testKey1, testKey2 }).Result;
+            Assert.AreEqual(2, cells.rows.Count);
+            Assert.AreEqual(1, cells.rows[0].values.Count);
+            Assert.AreEqual(testValue1, Encoding.UTF8.GetString(cells.rows[0].values[0].data));
+            Assert.AreEqual(1, cells.rows[1].values.Count);
+            Assert.AreEqual(testValue2, Encoding.UTF8.GetString(cells.rows[1].values[0].data));
+        }
+
+        [TestMethod]
+        [TestCategory(TestRunMode.CheckIn)]
         public abstract void TestSubsetScan();
 
         [TestMethod]

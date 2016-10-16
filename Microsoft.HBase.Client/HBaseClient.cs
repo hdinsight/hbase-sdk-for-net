@@ -324,6 +324,37 @@ namespace Microsoft.HBase.Client
         }
 
         /// <summary>
+        /// Gets the cells asynchronous.
+        /// </summary>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="rowKeys">The row keys.</param>
+        /// <param name="options">The request options.</param>
+        /// <returns>A cell set</returns>
+        public async Task<CellSet> GetCellsAsync(string tableName, string[] rowKeys, RequestOptions options = null)
+        {
+            tableName.ArgumentNotNullNorEmpty("tableName");
+            rowKeys.ArgumentNotNull("rowKey");
+
+            var optionToUse = options ?? _globalRequestOptions;
+            string endpoint = tableName + "/multiget";
+            
+            string query = null;
+            for (var i = 0; i < rowKeys.Length; i++)
+            {
+                var prefix = "&";
+                if (i == 0)
+                {
+                    prefix = "";
+                }
+
+                query += prefix + "row=" + rowKeys[i];
+            }
+            
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => GetRequestAndDeserializeAsync<CellSet>(endpoint, query, optionToUse));
+        }
+
+
+        /// <summary>
         /// Gets the storage cluster status asynchronous.
         /// </summary>
         /// <returns>
