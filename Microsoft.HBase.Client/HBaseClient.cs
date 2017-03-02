@@ -479,7 +479,7 @@ namespace Microsoft.HBase.Client
             tableName.ArgumentNotNullNorEmpty("tableName");
             var optionToUse = options ?? _globalRequestOptions;
             var rowPrefix = optionalRowPrefix ?? string.Empty;
-            return await optionToUse.RetryPolicy.ExecuteAsync(() => StatelessScannerAsyncInternal(tableName, optionalRowPrefix, scanParameters, optionToUse));
+            return await optionToUse.RetryPolicy.ExecuteAsync(() => StatelessScannerAsyncInternal(tableName, rowPrefix, scanParameters, optionToUse));
         }
 
         private async Task<IEnumerable<CellSet>> StatelessScannerAsyncInternal(string tableName, string optionalRowPrefix, string scanParameters, RequestOptions options)

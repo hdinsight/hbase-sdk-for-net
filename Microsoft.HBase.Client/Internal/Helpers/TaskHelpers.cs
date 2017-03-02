@@ -49,8 +49,7 @@ namespace Microsoft.HBase.Client.Internal.Helpers
             {
                 token.ThrowIfCancellationRequested();
             }
-
-            throw new TimeoutException($"{errorMessage}. Timeout: {timeout}.");
+            throw new TimeoutException(String.Format("{0}. Timeout: {1}.", errorMessage, timeout));
         }
 
         internal static Task WithTimeout(this Task task, TimeSpan timeout, string errorMessage)
@@ -77,8 +76,7 @@ namespace Microsoft.HBase.Client.Internal.Helpers
             {
                 token.ThrowIfCancellationRequested();
             }
-
-            throw new TimeoutException($"{errorMessage}. Timeout: {timeout}.");
+            throw new TimeoutException(String.Format("{0}. Timeout: {1}.", errorMessage, timeout));
         }
 
         internal static void IgnoreFault(this Task task)

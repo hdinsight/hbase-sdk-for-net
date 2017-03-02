@@ -144,7 +144,9 @@ namespace Microsoft.HBase.Client.Requester
                 }
                 finally
                 {
-                    req?.Close();
+                    if (req != null) {
+                        req.Close();
+                    }
                 }
             }
 

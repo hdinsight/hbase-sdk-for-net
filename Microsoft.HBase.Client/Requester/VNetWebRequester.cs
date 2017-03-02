@@ -94,7 +94,7 @@ namespace Microsoft.HBase.Client.Requester
                 Debug.WriteLine("Issuing request {0} to endpoint {1}", Trace.CorrelationManager.ActivityId, target);
 
                 HttpWebRequest httpWebRequest = WebRequest.CreateHttp(target);
-                httpWebRequest.ServicePoint.ReceiveBufferSize = options.ReceiveBufferSize;
+                //httpWebRequest.ServicePoint.ReceiveBufferSize = options.ReceiveBufferSize;
                 httpWebRequest.ServicePoint.UseNagleAlgorithm = options.UseNagle;
                 httpWebRequest.Timeout = options.TimeoutMillis; // This has no influence for calls that are made Async
                 httpWebRequest.KeepAlive = options.KeepAlive;
@@ -144,7 +144,9 @@ namespace Microsoft.HBase.Client.Requester
                     }
                     finally
                     {
-                        req?.Close();
+                        if (req != null) {
+                            req.Close();
+                        }
                     }
                 }
 

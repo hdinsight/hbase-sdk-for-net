@@ -46,7 +46,7 @@ namespace Microsoft.HBase.Client
         {
             return new RequestOptions()
             {
-                RetryPolicy = RetryPolicy.DefaultExponential,
+                RetryPolicy = RetryPolicy.NoRetry,
                 KeepAlive = true,
                 TimeoutMillis = 30000,
                 ReceiveBufferSize = 1024 * 1024 * 1,
