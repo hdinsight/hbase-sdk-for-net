@@ -100,6 +100,15 @@ namespace Microsoft.HBase.Client
         Task<CellSet> GetCellsAsync(string tableName, string rowKey, string columnName=null, string numOfVersions=null, RequestOptions options = null);
 
         /// <summary>
+        /// Gets the cells asynchronous.
+        /// </summary>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="rowKeys">The row keys.</param>
+        /// <param name="options">The options.</param>
+        /// <returns></returns>
+        Task<CellSet> GetCellsAsync(string tableName, string[] rowKeys, RequestOptions options = null);
+        
+        /// <summary>
         /// Gets the storage cluster status asynchronous.
         /// </summary>
         /// <returns>
