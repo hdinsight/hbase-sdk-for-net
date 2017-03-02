@@ -512,8 +512,8 @@ namespace Microsoft.HBase.Client
                 Buffer.BlockCopy(lengthBytes, 0, slengthBytes, 0, lengthBytes.Length);
                 short length = (short)(((slengthBytes[0] & 0xFF) << 8) | (slengthBytes[1] & 0xFF));
                 byte[] cellSet = new byte[length];
-                stream.Read(cellSet, 0, length);
-                CellSet sc = Serializer.Deserialize<CellSet>(new MemoryStream(cellSet));
+                int byteread = stream.Read(cellSet, 0, length);
+                CellSet sc = Serializer.Deserialize<CellSet>(new MemoryStream(cellSet, 0, byteread));
                 cells.Add(sc);
             }
 
